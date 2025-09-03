@@ -14,7 +14,7 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "API is running 🚀")
+		fmt.Fprintln(w, "API is runningggg 🚀")
 	})
 
 	log.Println("Server running at :8080")
