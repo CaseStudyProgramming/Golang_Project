@@ -18,7 +18,17 @@ func main() {
 	TaskRepository := repository.NewTaskRepository(db)
 	TaskHandler := handler.NewTaskHandler(TaskRepository)
 
-	http.HandleFunc("/tasks", TaskHandler.CreateTask)
+	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			TaskHandler.CreateTask(w, r)
+			return
+		}
+		if r.Method == "GET" {
+			TaskHandler.GetAllTasks(w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
