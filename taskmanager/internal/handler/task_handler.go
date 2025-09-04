@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-
 	"taskmanager/internal/entity"
 	"taskmanager/internal/repository"
 )
@@ -43,4 +42,16 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tasks)
+}
+
+func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	task, err := h.Repo.GetByID(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(task)
 }
