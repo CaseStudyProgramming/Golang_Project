@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"taskmanager/internal/entity"
 	"taskmanager/internal/repository"
 )
@@ -45,7 +46,13 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	idStr := r.URL.Path[len("/tasks/"):]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	task, err := h.Repo.GetByID(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
