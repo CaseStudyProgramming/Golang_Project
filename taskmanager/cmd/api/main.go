@@ -30,6 +30,14 @@ func main() {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
+	http.HandleFunc("/tasks/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			TaskHandler.GetTaskByID(w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})
+
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
 	})
