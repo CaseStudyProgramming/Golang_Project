@@ -1,0 +1,12 @@
+# Config untuk air
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  bin = "tmp/main.exe"
+  cmd = "go build -o tmp/main.exe ./cmd/api"
+  include_ext = ["go", "yaml"]
+  exclude_dir = ["vendor", "tmp"]
+
+[log]
+  time = true
