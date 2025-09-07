@@ -51,3 +51,10 @@ func (r *TaskRepository) Update(task *entity.Task) error {
 	_, err := r.DB.Exec(query, task.Title, task.Completed, task.ID)
 	return err
 }
+
+// DELETE
+func (r *TaskRepository) Delete(id int64) error {
+	query := `DELETE FROM tasks WHERE id = $1`
+	_, err := r.DB.Exec(query, id)
+	return err
+}
