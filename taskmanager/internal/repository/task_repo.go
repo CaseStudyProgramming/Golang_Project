@@ -45,6 +45,7 @@ func (r *TaskRepository) GetByID(id int64) (*entity.Task, error) {
 	return &task, nil
 }
 
+// PUT
 func (r *TaskRepository) Update(task *entity.Task) error {
 	query := `UPDATE tasks SET title = $1, completed = $2 WHERE id = $3`
 	_, err := r.DB.Exec(query, task.Title, task.Completed, task.ID)

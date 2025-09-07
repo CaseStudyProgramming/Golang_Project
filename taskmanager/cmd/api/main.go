@@ -27,12 +27,17 @@ func main() {
 			TaskHandler.GetAllTasks(w, r)
 			return
 		}
+
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
 	http.HandleFunc("/tasks/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			TaskHandler.GetTaskByID(w, r)
+			return
+		}
+		if r.Method == "PUT" {
+			TaskHandler.UpdateTask(w, r)
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
