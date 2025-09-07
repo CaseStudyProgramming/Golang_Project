@@ -40,6 +40,10 @@ func main() {
 			TaskHandler.UpdateTask(w, r)
 			return
 		}
+		if r.Method == "DELETE" {
+			TaskHandler.DeleteTask(w, r)
+			return
+		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
