@@ -11,6 +11,16 @@ type APIResponse struct {
 	Data    interface{} `json:"data"`
 }
 
+const (
+	StatusCodeOK                  = http.StatusOK
+	StatusCodeCreated             = http.StatusCreated
+	StatusCodeAccepted            = http.StatusAccepted
+	StatusCodeBadRequest          = http.StatusBadRequest
+	StatusCodeUnauthorized        = http.StatusUnauthorized
+	StatusCodeNotFound            = http.StatusNotFound
+	StatusCodeInternalServerError = http.StatusInternalServerError
+)
+
 func SuccessResponse(w http.ResponseWriter, message string, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

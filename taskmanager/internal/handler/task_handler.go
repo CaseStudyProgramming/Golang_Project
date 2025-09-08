@@ -24,6 +24,11 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if task.Title == "" {
+		response_test.ErrorResponse(w, "Title tidak boleh kosong")
+		return
+	}
+
 	task.Completed = false // default
 
 	if err := h.Repo.Create(&task); err != nil {
