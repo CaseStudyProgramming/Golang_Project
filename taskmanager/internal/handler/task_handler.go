@@ -93,13 +93,12 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/tasks/"):]
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if err := h.Repo.Delete(id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Task deleted successfully"})
+	response_test.SuccessResponse(w, http.StatusOK, "Task deleted successfully", nil)
 }
