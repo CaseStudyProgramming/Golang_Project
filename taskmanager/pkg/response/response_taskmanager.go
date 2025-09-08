@@ -1,7 +1,18 @@
-package main
+package response_test
 
-import "fmt"
+import (
+	"encoding/json"
+	"net/http"
+)
 
-func main() {
-	fmt.Println("halo")
+type APIResponse struct {
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+func SuccessResponse(w http.ResponseWriter, message string, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(APIResponse{Status: "success", Message: message, Data: data})
 }
