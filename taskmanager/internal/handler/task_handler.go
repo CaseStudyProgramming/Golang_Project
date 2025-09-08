@@ -72,21 +72,20 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/tasks/"):]
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	var task entity.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	task.ID = id
 	if err := h.Repo.Update(&task); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	response_test.SuccessResponse(w, http.StatusOK, "Task updated successfully", task)
 }
 
 // DELETE
