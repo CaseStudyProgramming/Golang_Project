@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"taskmanager/internal/entity"
 	"taskmanager/internal/repository"
+	response_test "taskmanager/pkg/response"
 )
 
 type TaskHandler struct {
@@ -26,12 +27,11 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	task.Completed = false // default
 
 	if err := h.Repo.Create(&task); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response_test.InternalErrorResponse(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
+	response_test.SuccessResponse(w, "Task created successfully", task)
 }
 
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
