@@ -36,6 +36,8 @@ func (r *TaskRepository) GetAll() ([]entity.Task, error) {
 	}
 	return tasks, nil
 }
+
+// GET BY ID
 func (r *TaskRepository) GetByID(id int64) (*entity.Task, error) {
 	query := `SELECT id, title, completed, created_at FROM tasks WHERE id = $1`
 	var task entity.Task
