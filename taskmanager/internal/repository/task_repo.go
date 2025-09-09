@@ -18,6 +18,8 @@ func (r *TaskRepository) Create(task *entity.Task) error {
 	return r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.CreatedAt)
 }
 
+// GET ALL DATA
+
 func (r *TaskRepository) GetAll() ([]entity.Task, error) {
 	query := `SELECT id, title, completed, created_at FROM tasks ORDER BY id ASC`
 	rows, err := r.DB.Query(query)
