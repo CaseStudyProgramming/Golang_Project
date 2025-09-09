@@ -39,7 +39,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusCreated, "Task created successfully", task)
 }
 
-// GET
+// GET ALL
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.Repo.GetAll()
 	if err != nil {
