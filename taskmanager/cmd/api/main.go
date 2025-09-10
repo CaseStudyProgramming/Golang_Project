@@ -18,7 +18,7 @@ func main() {
 	TaskRepository := repository.NewTaskRepository(db)
 	TaskHandler := handler.NewTaskHandler(TaskRepository)
 
-	// endpo
+	// endpoint
 	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			TaskHandler.CreateTask(w, r)
