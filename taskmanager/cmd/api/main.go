@@ -32,7 +32,7 @@ func main() {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
-	// endpoint with i
+	// endpoint with id
 	http.HandleFunc("/tasks/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			TaskHandler.GetTaskByID(w, r)
