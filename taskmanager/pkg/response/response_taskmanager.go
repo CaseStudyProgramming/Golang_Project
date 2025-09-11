@@ -11,6 +11,7 @@ type APIResponse struct {
 	Data    interface{} `json:"data"`
 }
 
+// universal
 const (
 	StatusCodeOK                  = http.StatusOK
 	StatusCodeCreated             = http.StatusCreated
