@@ -2,7 +2,7 @@ package entity
 
 import "time"
 
-// Task enti
+// Task entit
 type Task struct {
 	ID        int64     `json:"id"`
 	Title     string    `json:"title"`
