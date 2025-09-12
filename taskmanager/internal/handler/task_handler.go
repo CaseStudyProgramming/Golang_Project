@@ -105,6 +105,5 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
-	response_test.SuccessResponse(w, http.StatusNoContent, "Task deleted successfully", nil)
-}
+	w.WriteHeader(http.StatusAccepted)
+	response_test.SuccessResponse(w, http.StatusAccepted, "Task deleted successfully", nil)
