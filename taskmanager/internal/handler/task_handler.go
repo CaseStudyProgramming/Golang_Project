@@ -89,6 +89,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	response_test.SuccessResponse(w, http.StatusOK, "Task updated successfully", task)
 }
 
