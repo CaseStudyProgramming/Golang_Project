@@ -64,7 +64,7 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 
 	task, err := h.Repo.GetByID(id)
 	if err != nil {
-		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		response_test.ErrorResponse(w, http.StatusNotFound, err.Error())
 		return
 	}
 
