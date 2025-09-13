@@ -93,7 +93,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusOK, "Task updated successfully", task)
 }
 
-//PATC
+//PATCH
 
 // DELETE
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
