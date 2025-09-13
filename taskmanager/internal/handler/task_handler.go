@@ -94,6 +94,20 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 //PATCH
+func (h *TaskHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Path[len("/tasks/"):]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := h.Repo.Complete(id); err != nil {
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	response_test.SuccessResponse(w, http.StatusOK, "Task completed successfully", nil)
+}
 
 // DELETE
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
