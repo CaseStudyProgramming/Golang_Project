@@ -59,6 +59,8 @@ func (r *TaskRepository) Update(task *entity.Task) error {
 	return err
 }
 
+// P
+
 // DELETE
 func (r *TaskRepository) Delete(id int64) error {
 	query := `DELETE FROM tasks WHERE id = $1`
