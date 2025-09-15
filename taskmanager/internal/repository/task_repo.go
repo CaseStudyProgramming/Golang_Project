@@ -59,7 +59,7 @@ func (r *TaskRepository) Update(task *entity.Task) error {
 	return err
 }
 
-// PATC
+// PATCH
 
 // DELETE
 func (r *TaskRepository) Delete(id int64) error {
