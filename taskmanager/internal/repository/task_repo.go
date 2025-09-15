@@ -60,6 +60,11 @@ func (r *TaskRepository) Update(task *entity.Task) error {
 }
 
 // PATCH
+func (r *TaskRepository) Complete(id int64) error {
+	query := `UPDATE tasks SET completed = true WHERE id = $1`
+	_, err := r.DB.Exec(query, id)
+	return err
+}
 
 // DELETE
 func (r *TaskRepository) Delete(id int64) error {
