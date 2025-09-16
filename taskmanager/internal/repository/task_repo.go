@@ -59,7 +59,7 @@ func (r *TaskRepository) Update(task *entity.Task) error {
 	return err
 }
 
-// PAT
+// PATC
 func (r *TaskRepository) Complete(id int64) error {
 	query := `UPDATE tasks SET completed = true WHERE id = $1`
 	_, err := r.DB.Exec(query, id)
