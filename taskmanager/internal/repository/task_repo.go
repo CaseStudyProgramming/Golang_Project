@@ -3,24 +3,22 @@ package repository
 import (
 	"database/sql"
 	"taskmanager/internal/entity"
-	"time"
 )
 
 type TaskRepository struct {
 	DB *sql.DB
 }
 
-// NewTaskRepository
+// Cre
 func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{DB: db}
 }
 
 // POST
 
-func (r *TaskRepository) Create(task *entity.Task) (int64, time.Time, error) {
+func (r *TaskRepository) Create(task *entity.Task) error {
 	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING id, created_at`
-	err := r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.CreatedAt)
-	return task.ID, task.CreatedAt, err
+	return r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.CreatedAt)
 }
 
 // GET ALL DATA
