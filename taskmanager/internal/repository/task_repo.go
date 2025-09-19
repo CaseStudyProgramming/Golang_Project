@@ -9,7 +9,7 @@ type TaskRepository struct {
 	DB *sql.DB
 }
 
-// Cre
+// CREATE
 func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{DB: db}
 }
