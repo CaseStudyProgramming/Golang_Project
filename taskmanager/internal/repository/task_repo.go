@@ -16,10 +16,9 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 
 // POST
 
-func (r *TaskRepository) Create(task *entity.Task) error {
-	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING id, created_at`
-	return r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.CreatedAt)
-}
+func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
+	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING *`
+	return r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt)
 
 // GET ALL DATA
 
