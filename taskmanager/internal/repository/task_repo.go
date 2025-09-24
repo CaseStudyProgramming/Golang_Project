@@ -14,11 +14,16 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{DB: db}
 }
 
-// POST REPOSITO
+// POST REPOSITOR
 
 func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
-	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING *`
-	return r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt)
+	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING id, title, completed, created_at`
+	err := r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
+}
 
 // GET ALL DATA
 
