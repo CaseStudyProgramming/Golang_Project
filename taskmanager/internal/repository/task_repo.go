@@ -14,7 +14,7 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{DB: db}
 }
 
-// POST REPO
+// POST REPOS
 
 func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
 	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING *`
