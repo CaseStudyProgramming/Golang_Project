@@ -25,7 +25,7 @@ func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
 	return task, nil
 }
 
-// GET ALL DATA REPOSIT
+// GET ALL DATA REPOSITO
 
 func (r *TaskRepository) GetAll() ([]entity.Task, error) {
 	query := `SELECT id, title, completed, created_at FROM tasks ORDER BY id ASC`
