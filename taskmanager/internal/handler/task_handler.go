@@ -32,12 +32,13 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	task.Completed = false // default
 
-	if err := h.Repo.Create(&task); err != nil {
+	createdTask, err := h.Repo.Create(&task)
+	if err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response_test.SuccessResponse(w, http.StatusCreated, "Task created successfully", task)
+	response_test.SuccessResponse(w, http.StatusCreated, "Task created successfully", createdTask)
 }
 
 // GET ALL DATA
