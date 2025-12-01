@@ -26,7 +26,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if task.Title == "" {
-		response_test.ErrorResponse(w, "Title tidak boleh kosong")
+		response_test.ErrorResponse(w, http.StatusBadRequest, "Title tidak boleh kosong")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusOK, "Task updated successfully", task)
 }
 
-//PATCH
+// PATCH
 func (h *TaskHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/tasks/"):]
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -123,3 +123,4 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusAccepted)
 	response_test.SuccessResponse(w, http.StatusAccepted, "Task deleted successfully", nil)
+}
