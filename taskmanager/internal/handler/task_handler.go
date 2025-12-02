@@ -30,7 +30,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task.Completed = false // default
+	task.Completed = false // default1
 
 	createdTask, err := h.Repo.Create(&task)
 	if err != nil {
