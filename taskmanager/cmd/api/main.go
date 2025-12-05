@@ -51,7 +51,7 @@ func main() {
 
 	// health check endpoint
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		_ = r // use in fut
+		_ = r // use in futu
 		fmt.Fprintln(w, "API is runningggg 🚀")
 	})
 
