@@ -55,6 +55,6 @@ func main() {
 		fmt.Fprintln(w, "API is runningggg 🚀")
 	})
 
-	log.Println("Server running at :8080") // start server1234657
+	log.Println("Server running at :8080") // start server123465
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
