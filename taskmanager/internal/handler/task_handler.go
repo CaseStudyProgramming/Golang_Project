@@ -92,6 +92,10 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	task.ID = id
+	if task.DueDate != nil && task.DueDate.Before(time.Now()) {
+		response_test.ErrorResponse(w, http.StatusBadRequest, "Due date must be equal or greater than current date")
+		return
+	}
 	if err := h.Repo.Update(&task); err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -106,6 +110,16 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	var task entity.Task
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	task.ID = id
+	if task.DueDate != nil && task.DueDate.Before(time.Now()) {
+		response_test.ErrorResponse(w, http.StatusBadRequest, "Due date must be equal or greater than current date")
 		return
 	}
 	if err := h.Repo.Complete(id); err != nil {
