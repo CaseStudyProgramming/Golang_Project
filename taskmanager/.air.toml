@@ -10,3 +10,5 @@ tmp_dir = "tmp"
 
 [log]
   time = true
+[misc]
+  clean_on_exit = true

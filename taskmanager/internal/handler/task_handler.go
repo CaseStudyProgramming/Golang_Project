@@ -7,6 +7,7 @@ import (
 	"taskmanager/internal/entity"
 	"taskmanager/internal/repository"
 	response_test "taskmanager/pkg/response"
+	"time"
 )
 
 type TaskHandler struct {
@@ -27,6 +28,11 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	if task.Title == "" {
 		response_test.ErrorResponse(w, http.StatusBadRequest, "Title tidak boleh kosong")
+		return
+	}
+
+	if task.DueDate != nil && task.DueDate.Before(time.Now()) {
+		response_test.ErrorResponse(w, http.StatusBadRequest, "Due date must be equal or greater than current date")
 		return
 	}
 
