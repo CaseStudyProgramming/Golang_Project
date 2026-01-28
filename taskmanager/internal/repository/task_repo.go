@@ -76,3 +76,10 @@ func (r *TaskRepository) Delete(id int64) error {
 	_, err := r.DB.Exec(query, id)
 	return err
 }
+
+// MarkTaskAsCompleted
+func (r *TaskRepository) MarkTaskAsCompleted(id int64) error {
+	query := `UPDATE tasks SET completed = true WHERE id = $1`
+	_, err := r.DB.Exec(query, id)
+	return err
+}

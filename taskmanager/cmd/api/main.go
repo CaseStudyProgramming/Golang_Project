@@ -46,6 +46,10 @@ func main() {
 			TaskHandler.DeleteTask(w, r)
 			return
 		}
+		if r.Method == "PATCH" {
+			TaskHandler.MarkTaskAsCompleted(w, r)
+			return
+		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
