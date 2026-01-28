@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"taskmanager/internal/handler"
 	"taskmanager/internal/repository"
@@ -47,7 +48,15 @@ func main() {
 			return
 		}
 		if r.Method == "PATCH" {
-			TaskHandler.MarkTaskAsCompleted(w, r)
+			if strings.Contains(r.URL.Path, "/complete") {
+				TaskHandler.MarkTaskAsCompleted(w, r)
+				return
+			}
+			if strings.Contains(r.URL.Path, "/uncomplete") {
+				TaskHandler.MarkTaskAsUncompleted(w, r)
+				return
+			}
+			http.Error(w, "Invalid endpoint", http.StatusBadRequest)
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

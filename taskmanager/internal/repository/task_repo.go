@@ -9,6 +9,10 @@ type TaskRepository struct {
 	DB *sql.DB
 }
 
+func (r *TaskRepository) Uncomplete(id int64) any {
+	panic("unimplemented")
+}
+
 // CREATE REPOSITORY
 func NewTaskRepository(db *sql.DB) *TaskRepository {
 	return &TaskRepository{DB: db}
@@ -80,6 +84,13 @@ func (r *TaskRepository) Delete(id int64) error {
 // MarkTaskAsCompleted
 func (r *TaskRepository) MarkTaskAsCompleted(id int64) error {
 	query := `UPDATE tasks SET completed = true WHERE id = $1`
+	_, err := r.DB.Exec(query, id)
+	return err
+}
+
+// MarkTaskAsUncompleted
+func (r *TaskRepository) MarkTaskAsUncompleted(id int64) error {
+	query := `UPDATE tasks SET completed = false WHERE id = $1`
 	_, err := r.DB.Exec(query, id)
 	return err
 }

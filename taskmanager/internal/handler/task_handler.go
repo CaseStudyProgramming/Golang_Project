@@ -161,3 +161,19 @@ func (h *TaskHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	response_test.SuccessResponse(w, http.StatusOK, "Task completed successfully", nil)
 }
+
+// Mark Task as Uncompleted /tasks/{id}/uncomplete
+func (h *TaskHandler) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Path[len("/tasks/") : len(r.URL.Path)-len("/uncomplete")]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := h.Repo.MarkTaskAsUncompleted(id); err != nil {
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	response_test.SuccessResponse(w, http.StatusOK, "Task uncompleted successfully", nil)
+}
