@@ -49,15 +49,25 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 // GET ALL DATA
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.Repo.GetAll()
+	var completed *bool
+
+	completedParam := r.URL.Query().Get("completed")
+	if completedParam != "" {
+		value, err := strconv.ParseBool(completedParam)
+		if err != nil {
+			response_test.ErrorResponse(w, http.StatusBadRequest, "completed must be true or false")
+			return
+		}
+		completed = &value
+	}
+
+	tasks, err := h.Repo.GetAll(completed)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(tasks)
+	response_test.SuccessResponse(w, http.StatusOK, "success", tasks)
 }
 
 // GET BY ID

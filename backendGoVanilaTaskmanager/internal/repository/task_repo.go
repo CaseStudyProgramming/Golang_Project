@@ -31,22 +31,48 @@ func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
 
 // GET ALL DATA REPOSITORY
 
-func (r *TaskRepository) GetAll() ([]entity.Task, error) {
-	query := `SELECT id, title, completed, created_at FROM tasks ORDER BY id ASC`
-	rows, err := r.DB.Query(query)
+func (r *TaskRepository) GetAll(completed *bool) ([]entity.Task, error) {
+	var (
+		query string
+		args  []interface{}
+	)
+
+	if completed == nil {
+		query = `
+			SELECT id, title, completed, created_at
+			FROM tasks
+			ORDER BY created_at DESC
+		`
+	} else {
+		query = `
+			SELECT id, title, completed, created_at
+			FROM tasks
+			WHERE completed = $1
+			ORDER BY created_at DESC
+		`
+		args = append(args, *completed)
+	}
+
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var tasks []entity.Task
+	tasks := make([]entity.Task, 0)
 	for rows.Next() {
 		var task entity.Task
-		if err := rows.Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.Completed,
+			&task.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		tasks = append(tasks, task)
 	}
+
 	return tasks, nil
 }
 
