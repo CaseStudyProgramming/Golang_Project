@@ -35,6 +35,7 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int) ([]entit
 	// Get total count
 	var countQuery string
 	var countArgs []interface{}
+	var total int
 
 	if completed == nil {
 		countQuery = `SELECT COUNT(*) FROM tasks`
@@ -43,7 +44,6 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int) ([]entit
 		countArgs = append(countArgs, *completed)
 	}
 
-	var total int
 	if err := r.DB.QueryRow(countQuery, countArgs...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
