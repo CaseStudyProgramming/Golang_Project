@@ -1,1 +1,1 @@
-kumpulan project golang baik fullstack atau backend saja
+backend Golang Vanila atau Murni Taskmanager
