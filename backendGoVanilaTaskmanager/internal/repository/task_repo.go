@@ -31,7 +31,24 @@ func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
 
 // GET ALL DATA REPOSITORY
 
-func (r *TaskRepository) GetAll(completed *bool) ([]entity.Task, error) {
+func (r *TaskRepository) GetAll(completed *bool, offset int, limit int) ([]entity.Task, int, error) {
+	// Get total count
+	var countQuery string
+	var countArgs []interface{}
+
+	if completed == nil {
+		countQuery = `SELECT COUNT(*) FROM tasks`
+	} else {
+		countQuery = `SELECT COUNT(*) FROM tasks WHERE completed = $1`
+		countArgs = append(countArgs, *completed)
+	}
+
+	var total int
+	if err := r.DB.QueryRow(countQuery, countArgs...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated data
 	var (
 		query string
 		args  []interface{}
@@ -42,20 +59,23 @@ func (r *TaskRepository) GetAll(completed *bool) ([]entity.Task, error) {
 			SELECT id, title, completed, created_at
 			FROM tasks
 			ORDER BY created_at DESC
+			LIMIT $1 OFFSET $2
 		`
+		args = append(args, limit, offset)
 	} else {
 		query = `
 			SELECT id, title, completed, created_at
 			FROM tasks
 			WHERE completed = $1
 			ORDER BY created_at DESC
+			LIMIT $2 OFFSET $3
 		`
-		args = append(args, *completed)
+		args = append(args, *completed, limit, offset)
 	}
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -68,12 +88,12 @@ func (r *TaskRepository) GetAll(completed *bool) ([]entity.Task, error) {
 			&task.Completed,
 			&task.CreatedAt,
 		); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		tasks = append(tasks, task)
 	}
 
-	return tasks, nil
+	return tasks, total, nil
 }
 
 // GET BY ID

@@ -50,6 +50,8 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 // GET ALL DATA
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var completed *bool
+	var page int
+	var limit int
 
 	completedParam := r.URL.Query().Get("completed")
 	if completedParam != "" {
@@ -61,9 +63,42 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		completed = &value
 	}
 
-	tasks, err := h.Repo.GetAll(completed)
+	pageParam := r.URL.Query().Get("page")
+	if pageParam == "" {
+		page = 1
+	} else {
+		pageInt, err := strconv.Atoi(pageParam)
+		if err != nil || pageInt < 1 {
+			response_test.ErrorResponse(w, http.StatusBadRequest, "page must be greater than 0")
+			return
+		}
+		page = pageInt
+	}
+
+	limitParam := r.URL.Query().Get("limit")
+	if limitParam == "" {
+		limit = 5
+	} else {
+		limitInt, err := strconv.Atoi(limitParam)
+		if err != nil || limitInt < 1 {
+			response_test.ErrorResponse(w, http.StatusBadRequest, "limit must be greater than 0")
+			return
+		}
+		limit = limitInt
+	}
+
+	offset := (page - 1) * limit
+
+	tasks, total, err := h.Repo.GetAll(completed, offset, limit)
 	if err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Validate page
+	totalPages := (total + limit - 1) / limit // ceil division
+	if total > 0 && page > totalPages {
+		response_test.ErrorResponse(w, http.StatusBadRequest, "page must be less than or equal to "+strconv.Itoa(totalPages))
 		return
 	}
 
