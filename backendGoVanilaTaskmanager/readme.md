@@ -1,3 +1,3 @@
 backend Golang Vanila atau Murni Taskmanager
 
-FrontEnd svelte 
+FrontEnd svelte coming soon
