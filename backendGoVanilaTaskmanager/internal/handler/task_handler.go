@@ -49,6 +49,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET ALL DATA
+// GET ALL DATA
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var completed *bool
 	var page int
@@ -120,7 +121,20 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response_test.SuccessResponse(w, http.StatusOK, "success", tasks)
+	// Add pagination meta
+	meta := map[string]interface{}{
+		"page":       page,
+		"limit":      limit,
+		"total_data": total,
+		"total_page": totalPages,
+		"has_next":   page < totalPages,
+		"has_prev":   page > 1,
+	}
+
+	response_test.SuccessResponse(w, http.StatusOK, "success", map[string]interface{}{
+		"data": tasks,
+		"meta": meta,
+	})
 }
 
 // GET BY ID
