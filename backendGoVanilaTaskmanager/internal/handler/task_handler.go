@@ -121,7 +121,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add pagination meta
+	// Add pagination meta data
 	meta := map[string]interface{}{
 		"page":       page,
 		"limit":      limit,
