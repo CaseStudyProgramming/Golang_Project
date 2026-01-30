@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"taskmanager/internal/entity"
 	"taskmanager/internal/repository"
 	response_test "taskmanager/pkg/response"
@@ -52,6 +53,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var completed *bool
 	var page int
 	var limit int
+	var search string
 
 	completedParam := r.URL.Query().Get("completed")
 	if completedParam != "" {
@@ -87,9 +89,19 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		limit = limitInt
 	}
 
+	// Validate presence of `search` param: if provided it must not be empty/whitespace
+	vals, hasSearch := r.URL.Query()["search"]
+	if hasSearch {
+		if len(vals) == 0 || strings.TrimSpace(vals[0]) == "" {
+			response_test.ErrorResponse(w, http.StatusBadRequest, "search must not be empty")
+			return
+		}
+		search = vals[0]
+	}
+
 	offset := (page - 1) * limit
 
-	tasks, total, err := h.Repo.GetAll(completed, offset, limit)
+	tasks, total, err := h.Repo.GetAll(completed, offset, limit, search)
 	if err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -99,6 +111,12 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	totalPages := (total + limit - 1) / limit // ceil division
 	if total > 0 && page > totalPages {
 		response_test.ErrorResponse(w, http.StatusBadRequest, "page must be less than or equal to "+strconv.Itoa(totalPages))
+		return
+	}
+
+	// If user searched and no results found, return 404
+	if strings.TrimSpace(search) != "" && len(tasks) == 0 {
+		response_test.ErrorResponse(w, http.StatusNotFound, "no tasks found")
 		return
 	}
 

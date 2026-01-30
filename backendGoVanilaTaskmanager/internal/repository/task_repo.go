@@ -31,7 +31,7 @@ func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
 
 // GET ALL DATA REPOSITORY
 
-func (r *TaskRepository) GetAll(completed *bool, offset int, limit int) ([]entity.Task, int, error) {
+func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search string) ([]entity.Task, int, error) {
 	// Get total count
 	var countQuery string
 	var countArgs []interface{}
@@ -42,6 +42,16 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int) ([]entit
 	} else {
 		countQuery = `SELECT COUNT(*) FROM tasks WHERE completed = $1`
 		countArgs = append(countArgs, *completed)
+	}
+
+	if search != "" {
+		if completed == nil {
+			countQuery += " WHERE (title LIKE $1 OR description LIKE $1)"
+			countArgs = append(countArgs, "%"+search+"%")
+		} else {
+			countQuery += " AND (title LIKE $2 OR description LIKE $2)"
+			countArgs = append(countArgs, "%"+search+"%")
+		}
 	}
 
 	if err := r.DB.QueryRow(countQuery, countArgs...).Scan(&total); err != nil {
@@ -58,19 +68,20 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int) ([]entit
 		query = `
 			SELECT id, title, completed, created_at
 			FROM tasks
+			WHERE (title LIKE $1 OR description LIKE $1)
 			ORDER BY created_at DESC
-			LIMIT $1 OFFSET $2
+			LIMIT $2 OFFSET $3
 		`
-		args = append(args, limit, offset)
+		args = append(args, "%"+search+"%", limit, offset)
 	} else {
 		query = `
 			SELECT id, title, completed, created_at
 			FROM tasks
-			WHERE completed = $1
+			WHERE completed = $1 AND (title LIKE $2 OR description LIKE $2)
 			ORDER BY created_at DESC
-			LIMIT $2 OFFSET $3
+			LIMIT $3 OFFSET $4
 		`
-		args = append(args, *completed, limit, offset)
+		args = append(args, *completed, "%"+search+"%", limit, offset)
 	}
 
 	rows, err := r.DB.Query(query, args...)
