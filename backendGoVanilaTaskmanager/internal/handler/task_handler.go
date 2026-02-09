@@ -215,7 +215,7 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	softDelete := true
-	if err := h.Repo.DeleteTask(id, softDelete); err != nil {
+	if err := h.Repo.Delete(id, softDelete); err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
