@@ -136,6 +136,7 @@ func (r *TaskRepository) Delete(id int64) error {
 	query := `UPDATE tasks SET deleted_at = CURRENT_TIMESTAMP() WHERE id = $1`
 	_, err := r.DB.Exec(query, id)
 	return err
+}
 
 // MarkTaskAsCompleted
 func (r *TaskRepository) MarkTaskAsCompleted(id int64) error {
