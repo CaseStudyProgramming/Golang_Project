@@ -209,13 +209,13 @@ func (h *TaskHandler) CompleteTask(w http.ResponseWriter, r *http.Request) {
 
 // DELETE
 func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/"):]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
 		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if err := h.Repo.Delete(id); err != nil {
+	softDelete := true
+	if err := h.Repo.DeleteTask(id, softDelete); err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
