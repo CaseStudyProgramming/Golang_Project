@@ -134,7 +134,7 @@ func (r *TaskRepository) Complete(id int64) error {
 // DELETE// DELETE
 func (r *TaskRepository) Delete(id int64, softDelete bool) error {
 	if softDelete {
-		query := `UPDATE tasks SET deleted_at = CURRENT_TIMESTAMP() WHERE id = $1`
+		query := `UPDATE tasks SET deleted_at = NOW() WHERE id = $1`
 		_, err := r.DB.Exec(query, id)
 		return err
 	} else {
