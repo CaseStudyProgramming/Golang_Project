@@ -131,7 +131,7 @@ func (r *TaskRepository) Complete(id int64) error {
 	return err
 }
 
-// DELETE
+// DELETE// DELETE
 func (r *TaskRepository) Delete(id int64, softDelete bool) error {
 	if softDelete {
 		query := `UPDATE tasks SET deleted_at = CURRENT_TIMESTAMP() WHERE id = $1`
