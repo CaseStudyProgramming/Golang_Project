@@ -109,7 +109,7 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 
 // GET BY ID
 func (r *TaskRepository) GetByID(id int64) (*entity.Task, error) {
-	query := `SELECT id, title, completed, created_at FROM tasks WHERE id = $1`
+	query := `SELECT id, title, completed, created_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`
 	var task entity.Task
 	if err := r.DB.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt); err != nil {
 		return nil, err
