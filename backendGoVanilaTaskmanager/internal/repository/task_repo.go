@@ -38,15 +38,15 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 	var total int
 
 	if completed == nil {
-		countQuery = `SELECT COUNT(*) FROM tasks`
+		countQuery = `SELECT COUNT(*) FROM tasks WHERE deleted_at IS NULL`
 	} else {
-		countQuery = `SELECT COUNT(*) FROM tasks WHERE completed = $1`
+		countQuery = `SELECT COUNT(*) FROM tasks WHERE completed = $1 AND deleted_at IS NULL`
 		countArgs = append(countArgs, *completed)
 	}
 
 	if search != "" {
 		if completed == nil {
-			countQuery += " WHERE (title LIKE $1 OR description LIKE $1)"
+			countQuery += " AND (title LIKE $1 OR description LIKE $1)"
 			countArgs = append(countArgs, "%"+search+"%")
 		} else {
 			countQuery += " AND (title LIKE $2 OR description LIKE $2)"
@@ -66,19 +66,19 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 
 	if completed == nil {
 		query = `
-			SELECT id, title, completed, created_at
+			SELECT id, title, completed, created_at, deleted_at
 			FROM tasks
-			WHERE (title LIKE $1 OR description LIKE $1)
+			WHERE deleted_at IS NULL AND (title LIKE $1 OR description LIKE $1)
 			ORDER BY created_at DESC
 			LIMIT $2 OFFSET $3
 		`
 		args = append(args, "%"+search+"%", limit, offset)
 	} else {
 		query = `
-			SELECT id, title, completed, created_at
+			SELECT id, title, completed, created_at, deleted_at
 			FROM tasks
-			WHERE completed = $1 AND (title LIKE $2 OR description LIKE $2)
-			ORDER BY created_at DESC
+			WHERE completed = $1 AND deleted_at IS NULL AND (title LIKE $2 OR description LIKE $2)
+			order BY created_at DESC
 			LIMIT $3 OFFSET $4
 		`
 		args = append(args, *completed, "%"+search+"%", limit, offset)
@@ -98,6 +98,7 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 			&task.Title,
 			&task.Completed,
 			&task.CreatedAt,
+			&task.DeletedAt,
 		); err != nil {
 			return nil, 0, err
 		}
