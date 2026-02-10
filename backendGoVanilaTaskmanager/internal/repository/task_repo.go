@@ -139,7 +139,7 @@ func (r *TaskRepository) Delete(id int64, softDelete bool) error {
 		_, err := r.DB.Exec(query, id)
 		return err
 	} else {
-		query := `DELETE FROM tasks WHERE id = $1`
+		query := `DELETE FROM tasks WHERE id = $1 AND deleted_at IS NULL`
 		_, err := r.DB.Exec(query, id)
 		return err
 	}

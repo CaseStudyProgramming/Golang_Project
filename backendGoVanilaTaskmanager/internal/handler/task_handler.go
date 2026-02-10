@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -213,6 +215,15 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	_, err = h.Repo.GetByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			response_test.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
+			return
+		}
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	softDelete := true
