@@ -50,7 +50,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusCreated, "Task created successfully", createdTask)
 }
 
-// GET ALL DA
+// GET ALL D
 // GET ALL DATA
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var completed *bool
