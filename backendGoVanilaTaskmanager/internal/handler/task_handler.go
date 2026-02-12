@@ -156,7 +156,7 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusOK, "Task found successfully", task)
 }
 
-// GET DELETED TASKS
+// GET DELETED TASKS tasks/deleted
 func (h *TaskHandler) GetDeletedTasks(w http.ResponseWriter, r *http.Request) {
 	tasks, err := h.Repo.GetDeletedTasks()
 	if err != nil {
