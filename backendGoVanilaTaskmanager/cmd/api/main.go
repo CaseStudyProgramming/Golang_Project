@@ -56,6 +56,10 @@ func main() {
 				TaskHandler.MarkTaskAsUncompleted(w, r)
 				return
 			}
+			if strings.Contains(r.URL.Path, "/restore") {
+				TaskHandler.RestoreDeletedTask(w, r)
+				return
+			}
 			http.Error(w, "Invalid endpoint", http.StatusBadRequest)
 			return
 		}
