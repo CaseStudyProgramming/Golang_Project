@@ -163,6 +163,7 @@ func (h *TaskHandler) GetDeletedTasks(w http.ResponseWriter, r *http.Request) {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	response_test.SuccessResponse(w, http.StatusOK, "Deleted tasks found successfully", tasks)
 }
 
