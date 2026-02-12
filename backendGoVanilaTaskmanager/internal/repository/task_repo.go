@@ -145,6 +145,13 @@ func (r *TaskRepository) Delete(id int64, softDelete bool) error {
 	}
 }
 
+// RestoreTask
+func (r *TaskRepository) RestoreTask(id int64) error {
+	query := `UPDATE tasks SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL`
+	_, err := r.DB.Exec(query, id)
+	return err
+}
+
 // MarkTaskAsCompleted
 func (r *TaskRepository) MarkTaskAsCompleted(id int64) error {
 	query := `UPDATE tasks SET completed = true WHERE id = $1`
