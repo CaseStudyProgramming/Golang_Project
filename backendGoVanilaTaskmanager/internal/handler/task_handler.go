@@ -234,6 +234,32 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusAccepted, "Task deleted successfully", nil)
 }
 
+// Restore Deleted Task /tasks/{id}/restore
+func (h *TaskHandler) RestoreDeletedTask(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Path[len("/tasks/") : len(r.URL.Path)-len("/restore")]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	_, err = h.Repo.GetByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			response_test.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
+			return
+		}
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	softDelete := false
+	if err := h.Repo.Delete(id, softDelete); err != nil {
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	response_test.SuccessResponse(w, http.StatusOK, "Task restored successfully", nil)
+}
+
 // Mark Task as Completed /tasks/{id}/complete
 func (h *TaskHandler) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/tasks/") : len(r.URL.Path)-len("/complete")]
