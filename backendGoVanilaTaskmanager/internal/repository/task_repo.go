@@ -108,6 +108,26 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 	return tasks, total, nil
 }
 
+// GET DELETED TASKS REPOSITORY
+func (r *TaskRepository) GetDeletedTasks() ([]entity.Task, error) {
+	query := `SELECT id, title, completed, created_at, deleted_at FROM tasks WHERE deleted_at IS NOT NULL`
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tasks := make([]entity.Task, 0)
+	for rows.Next() {
+		var task entity.Task
+		if err := rows.Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt, &task.DeletedAt); err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
+}
+
 // GET BY ID
 func (r *TaskRepository) GetByID(id int64) (*entity.Task, error) {
 	query := `SELECT id, title, completed, created_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`

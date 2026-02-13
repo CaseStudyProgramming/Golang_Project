@@ -155,16 +155,16 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusOK, "Task found successfully", task)
 }
 
-// // GET DELETED TASKS tasks/deleted
-// func (h *TaskHandler) GetDeletedTasks(w http.ResponseWriter, r *http.Request) {
-// 	tasks, err := h.Repo.GetDeletedTasks()
-// 	if err != nil {
-// 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-// 		return
-// 	}
+// GET DELETED TASKS tasks/deleted
+func (h *TaskHandler) GetDeletedTasks(w http.ResponseWriter, r *http.Request) {
+	tasks, err := h.Repo.GetDeletedTasks()
+	if err != nil {
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-// 	response_test.SuccessResponse(w, http.StatusOK, "Deleted tasks found successfully", tasks)
-// }
+	response_test.SuccessResponse(w, http.StatusOK, "Deleted tasks found successfully", tasks)
+}
 
 // PUT
 func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
