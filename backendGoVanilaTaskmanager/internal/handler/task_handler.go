@@ -252,10 +252,25 @@ func (h *TaskHandler) RestoreDeletedTask(w http.ResponseWriter, r *http.Request)
 		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// Check if the task with the given ID exists in the softdelete table
+	task, err := h.Repo.GetByID(id)
+	if err != nil && err != sql.ErrNoRows {
+		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if task == nil || task.ID == 0 {
+		response_test.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found in the softdelete table", id))
+		return
+	}
+
+	// If the task exists in the softdelete table, restore it
 	if err := h.Repo.RestoreTask(id); err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	response_test.SuccessResponse(w, http.StatusOK, "Task restored successfully", nil)
 }
