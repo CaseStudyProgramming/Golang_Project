@@ -156,16 +156,16 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	response_test.SuccessResponse(w, http.StatusOK, "Task found successfully", task)
 }
 
-// GET DELETED TASKS tasks/deleted
-func (h *TaskHandler) GetDeletedTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.Repo.GetDeletedTasks()
-	if err != nil {
-		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
+// // GET DELETED TASKS tasks/deleted
+// func (h *TaskHandler) GetDeletedTasks(w http.ResponseWriter, r *http.Request) {
+// 	tasks, err := h.Repo.GetDeletedTasks()
+// 	if err != nil {
+// 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+// 		return
+// 	}
 
-	response_test.SuccessResponse(w, http.StatusOK, "Deleted tasks found successfully", tasks)
-}
+// 	response_test.SuccessResponse(w, http.StatusOK, "Deleted tasks found successfully", tasks)
+// }
 
 // PUT
 func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
@@ -253,17 +253,7 @@ func (h *TaskHandler) RestoreDeletedTask(w http.ResponseWriter, r *http.Request)
 		response_test.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	_, err = h.Repo.GetByID(id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			response_test.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
-			return
-		}
-		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	softDelete := false
-	if err := h.Repo.Delete(id, softDelete); err != nil {
+	if err := h.Repo.RestoreTask(id); err != nil {
 		response_test.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
