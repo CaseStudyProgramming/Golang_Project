@@ -138,7 +138,6 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GET BY ID
 func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/tasks/"):]
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -148,8 +147,8 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task, err := h.Repo.GetByID(id)
-	if err != nil {
-		response_test.ErrorResponse(w, http.StatusNotFound, err.Error())
+	if err == sql.ErrNoRows {
+		response_test.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
 		return
 	}
 
