@@ -73,5 +73,5 @@ func main() {
 	})
 
 	log.Println("Server running at :8080") // start server1
-	log.Fatal(http.ListenAndServe(":8080", nil))2
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
