@@ -9,10 +9,10 @@ import (
 )
 
 type TaskService struct {
-	model *models.TaskModel
+	model models.TaskModelInterface
 }
 
-func NewTaskService(model *models.TaskModel) *TaskService {
+func NewTaskService(model models.TaskModelInterface) *TaskService {
 	return &TaskService{model: model}
 }
 

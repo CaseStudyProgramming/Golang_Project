@@ -23,6 +23,19 @@ type TaskModel struct {
 	DB *sql.DB
 }
 
+// TaskModelInterface defines the interface for task model operations
+type TaskModelInterface interface {
+	Create(task *Task) (*Task, error)
+	GetAll(completed *bool, offset, limit int, search string) ([]Task, int, error)
+	GetByID(id int64) (*Task, error)
+	Update(task *Task) error
+	Complete(id int64) error
+	Delete(id int64, softDelete bool) error
+	RestoreTask(id int64) error
+	MarkTaskAsCompleted(id int64) error
+	MarkTaskAsUncompleted(id int64) error
+}
+
 func NewTaskModel(db *sql.DB) *TaskModel {
 	return &TaskModel{DB: db}
 }

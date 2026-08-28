@@ -8,15 +8,26 @@ import (
 	"strconv"
 	"strings"
 	"taskmanager/models"
-	"taskmanager/services"
 	"taskmanager/utils"
 )
 
 type TaskController struct {
-	service *services.TaskService
+	service TaskServiceInterface
 }
 
-func NewTaskController(service *services.TaskService) *TaskController {
+// TaskServiceInterface defines the interface for task service operations
+type TaskServiceInterface interface {
+	Create(task *models.Task) (*models.Task, error)
+	GetAll(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
+	GetByID(id int64) (*models.Task, error)
+	Update(id int64, task *models.Task) (*models.Task, error)
+	Delete(id int64) error
+	Restore(id int64) error
+	MarkAsCompleted(id int64) error
+	MarkAsUncompleted(id int64) error
+}
+
+func NewTaskController(service TaskServiceInterface) *TaskController {
 	return &TaskController{service: service}
 }
 
