@@ -6,6 +6,7 @@ import (
 
 	"taskmanager/config"
 	"taskmanager/controllers"
+	"taskmanager/middlewares"
 	"taskmanager/models"
 	"taskmanager/routes"
 	"taskmanager/services"
@@ -34,6 +35,9 @@ func main() {
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, taskController)
 
+	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
+	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(mux)))
+
 	log.Printf("Server running at :%s", cfg.Server.Port)
-	log.Fatal(http.ListenAndServe(":"+cfg.Server.Port, mux))
+	log.Fatal(http.ListenAndServe(":"+cfg.Server.Port, handler))
 }
