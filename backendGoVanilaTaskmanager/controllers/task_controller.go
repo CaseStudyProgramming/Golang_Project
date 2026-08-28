@@ -107,9 +107,9 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GET /tasks/:id
+// GET /tasks/{id}
 func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/"):]
+	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -129,9 +129,9 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	utils.SuccessResponse(w, http.StatusOK, "Task found successfully", task)
 }
 
-// PUT /tasks/:id
+// PUT /tasks/{id}
 func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/"):]
+	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -157,9 +157,9 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	utils.SuccessResponse(w, http.StatusOK, "Task updated successfully", updatedTask)
 }
 
-// DELETE /tasks/:id
+// DELETE /tasks/{id}
 func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/"):]
+	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -179,9 +179,9 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	utils.SuccessResponse(w, http.StatusAccepted, "Task deleted successfully", nil)
 }
 
-// PATCH /tasks/:id/restore
+// PATCH /tasks/{id}/restore
 func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/") : len(r.URL.Path)-len("/restore")]
+	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -218,9 +218,9 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 	utils.SuccessResponse(w, http.StatusOK, "Task restored successfully", nil)
 }
 
-// PATCH /tasks/:id/complete
+// PATCH /tasks/{id}/complete
 func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/") : len(r.URL.Path)-len("/complete")]
+	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -236,9 +236,9 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 	utils.SuccessResponse(w, http.StatusOK, "Task completed successfully", nil)
 }
 
-// PATCH /tasks/:id/uncomplete
+// PATCH /tasks/{id}/uncomplete
 func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/tasks/") : len(r.URL.Path)-len("/uncomplete")]
+	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
