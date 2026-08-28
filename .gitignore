@@ -1,0 +1,24 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+tmp/
+backendGoVanilaTaskmanager/tmp/
+
+# Environment files
+.env
+.env.*
+*.env
+backendGoVanilaTaskmanager/env/config.yaml
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
