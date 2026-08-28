@@ -12,8 +12,19 @@ import (
 )
 
 func main() {
-	// Sementara hardcode dulu (nanti kita load dari config.yaml)
-	db := config.NewPostgresDB("localhost", 5432, "postgres", "berjuang02", "taskmanager", "disable")
+	cfg, err := config.LoadConfig("env/config.yaml")
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
+	db := config.NewPostgresDB(
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.DBName,
+		cfg.Database.SSLMode,
+	)
 	defer db.Close()
 
 	taskModel := models.NewTaskModel(db)
@@ -23,6 +34,6 @@ func main() {
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, taskController)
 
-	log.Println("Server running at :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Printf("Server running at :%s", cfg.Server.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Server.Port, mux))
 }
