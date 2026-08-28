@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -27,8 +28,11 @@ func NewTaskModel(db *sql.DB) *TaskModel {
 }
 
 func (m *TaskModel) Create(task *Task) (*Task, error) {
-	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING id, title, completed, created_at`
-	err := m.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt)
+	query := `INSERT INTO tasks (title, sub_title, description, completed, due_date) 
+	          VALUES ($1, $2, $3, $4, $5) 
+	          RETURNING id, title, sub_title, description, completed, due_date, created_at, updated_at`
+	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate).
+		Scan(&task.ID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.CreatedAt, &task.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -37,56 +41,44 @@ func (m *TaskModel) Create(task *Task) (*Task, error) {
 
 func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string) ([]Task, int, error) {
 	// Get total count
-	var countQuery string
+	countQuery := `SELECT COUNT(*) FROM tasks WHERE deleted_at IS NULL`
 	var countArgs []interface{}
-	var total int
 
-	if completed == nil {
-		countQuery = `SELECT COUNT(*) FROM tasks WHERE deleted_at IS NULL`
-	} else {
-		countQuery = `SELECT COUNT(*) FROM tasks WHERE completed = $1 AND deleted_at IS NULL`
+	if completed != nil {
+		countQuery += ` AND completed = $1`
 		countArgs = append(countArgs, *completed)
 	}
 
 	if search != "" {
-		if completed == nil {
-			countQuery += " AND (title LIKE $1 OR description LIKE $1)"
-			countArgs = append(countArgs, "%"+search+"%")
-		} else {
-			countQuery += " AND (title LIKE $2 OR description LIKE $2)"
-			countArgs = append(countArgs, "%"+search+"%")
-		}
+		placeholder := fmt.Sprintf("$%d", len(countArgs)+1)
+		countQuery += fmt.Sprintf(` AND (title LIKE %s OR description LIKE %s)`, placeholder, placeholder)
+		countArgs = append(countArgs, "%"+search+"%")
 	}
 
+	var total int
 	if err := m.DB.QueryRow(countQuery, countArgs...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
 	// Get paginated data
-	var (
-		query string
-		args  []interface{}
-	)
+	query := `SELECT id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
+	          FROM tasks 
+	          WHERE deleted_at IS NULL`
+	var args []interface{}
 
-	if completed == nil {
-		query = `
-			SELECT id, title, completed, created_at, deleted_at
-			FROM tasks
-			WHERE deleted_at IS NULL AND (title LIKE $1 OR description LIKE $1)
-			ORDER BY created_at DESC
-			LIMIT $2 OFFSET $3
-		`
-		args = append(args, "%"+search+"%", limit, offset)
-	} else {
-		query = `
-			SELECT id, title, completed, created_at, deleted_at
-			FROM tasks
-			WHERE completed = $1 AND deleted_at IS NULL AND (title LIKE $2 OR description LIKE $2)
-			ORDER BY created_at DESC
-			LIMIT $3 OFFSET $4
-		`
-		args = append(args, *completed, "%"+search+"%", limit, offset)
+	if completed != nil {
+		query += ` AND completed = $1`
+		args = append(args, *completed)
 	}
+
+	if search != "" {
+		placeholder := fmt.Sprintf("$%d", len(args)+1)
+		query += fmt.Sprintf(` AND (title LIKE %s OR description LIKE %s)`, placeholder, placeholder)
+		args = append(args, "%"+search+"%")
+	}
+
+	query += fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, len(args)+1, len(args)+2)
+	args = append(args, limit, offset)
 
 	rows, err := m.DB.Query(query, args...)
 	if err != nil {
@@ -100,8 +92,12 @@ func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string
 		if err := rows.Scan(
 			&task.ID,
 			&task.Title,
+			&task.SubTitle,
+			&task.Description,
 			&task.Completed,
+			&task.DueDate,
 			&task.CreatedAt,
+			&task.UpdatedAt,
 			&task.DeletedAt,
 		); err != nil {
 			return nil, 0, err
@@ -113,22 +109,37 @@ func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string
 }
 
 func (m *TaskModel) GetByID(id int64) (*Task, error) {
-	query := `SELECT id, title, completed, created_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`
+	query := `SELECT id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
+	          FROM tasks WHERE id = $1 AND deleted_at IS NULL`
 	var task Task
-	if err := m.DB.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt); err != nil {
+	err := m.DB.QueryRow(query, id).Scan(
+		&task.ID,
+		&task.Title,
+		&task.SubTitle,
+		&task.Description,
+		&task.Completed,
+		&task.DueDate,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+		&task.DeletedAt,
+	)
+	if err != nil {
 		return nil, err
 	}
 	return &task, nil
 }
 
 func (m *TaskModel) Update(task *Task) error {
-	query := `UPDATE tasks SET title = $1, completed = $2 WHERE id = $3`
-	_, err := m.DB.Exec(query, task.Title, task.Completed, task.ID)
+	query := `UPDATE tasks 
+	          SET title = $1, sub_title = $2, description = $3, completed = $4, due_date = $5, updated_at = NOW() 
+	          WHERE id = $6 
+	          RETURNING updated_at`
+	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.ID).Scan(&task.UpdatedAt)
 	return err
 }
 
 func (m *TaskModel) Complete(id int64) error {
-	query := `UPDATE tasks SET completed = true WHERE id = $1`
+	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1`
 	_, err := m.DB.Exec(query, id)
 	return err
 }
@@ -146,19 +157,19 @@ func (m *TaskModel) Delete(id int64, softDelete bool) error {
 }
 
 func (m *TaskModel) RestoreTask(id int64) error {
-	query := `UPDATE tasks SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL`
+	query := `UPDATE tasks SET deleted_at = NULL, updated_at = NOW() WHERE id = $1 AND deleted_at IS NOT NULL`
 	_, err := m.DB.Exec(query, id)
 	return err
 }
 
 func (m *TaskModel) MarkTaskAsCompleted(id int64) error {
-	query := `UPDATE tasks SET completed = true WHERE id = $1`
+	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1`
 	_, err := m.DB.Exec(query, id)
 	return err
 }
 
 func (m *TaskModel) MarkTaskAsUncompleted(id int64) error {
-	query := `UPDATE tasks SET completed = false WHERE id = $1`
+	query := `UPDATE tasks SET completed = false, updated_at = NOW() WHERE id = $1`
 	_, err := m.DB.Exec(query, id)
 	return err
 }
