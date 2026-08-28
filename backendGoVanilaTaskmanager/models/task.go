@@ -1,37 +1,41 @@
-package repository
+package models
 
 import (
 	"database/sql"
-	"taskmanager/internal/entity"
+	"time"
 )
 
-type TaskRepository struct {
+// Task entity
+type Task struct {
+	ID          int64      `json:"id"`
+	Title       string     `json:"title"`
+	SubTitle    string     `json:"sub_title,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Completed   bool       `json:"completed"`
+	DueDate     *time.Time `json:"due_date,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at"`
+}
+
+type TaskModel struct {
 	DB *sql.DB
 }
 
-func (r *TaskRepository) Uncomplete(id int64) any {
-	panic("unimplemented")
+func NewTaskModel(db *sql.DB) *TaskModel {
+	return &TaskModel{DB: db}
 }
 
-// CREATE REPOSITORY
-func NewTaskRepository(db *sql.DB) *TaskRepository {
-	return &TaskRepository{DB: db}
-}
-
-// POST REPOSITORY
-
-func (r *TaskRepository) Create(task *entity.Task) (*entity.Task, error) {
+func (m *TaskModel) Create(task *Task) (*Task, error) {
 	query := `INSERT INTO tasks (title, completed) VALUES ($1, $2) RETURNING id, title, completed, created_at`
-	err := r.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt)
+	err := m.DB.QueryRow(query, task.Title, task.Completed).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return task, nil
 }
 
-// GET ALL DATA REPOSITORY
-
-func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search string) ([]entity.Task, int, error) {
+func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string) ([]Task, int, error) {
 	// Get total count
 	var countQuery string
 	var countArgs []interface{}
@@ -54,7 +58,7 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 		}
 	}
 
-	if err := r.DB.QueryRow(countQuery, countArgs...).Scan(&total); err != nil {
+	if err := m.DB.QueryRow(countQuery, countArgs...).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 
@@ -78,21 +82,21 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 			SELECT id, title, completed, created_at, deleted_at
 			FROM tasks
 			WHERE completed = $1 AND deleted_at IS NULL AND (title LIKE $2 OR description LIKE $2)
-			order BY created_at DESC
+			ORDER BY created_at DESC
 			LIMIT $3 OFFSET $4
 		`
 		args = append(args, *completed, "%"+search+"%", limit, offset)
 	}
 
-	rows, err := r.DB.Query(query, args...)
+	rows, err := m.DB.Query(query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	tasks := make([]entity.Task, 0)
+	tasks := make([]Task, 0)
 	for rows.Next() {
-		var task entity.Task
+		var task Task
 		if err := rows.Scan(
 			&task.ID,
 			&task.Title,
@@ -108,60 +112,53 @@ func (r *TaskRepository) GetAll(completed *bool, offset int, limit int, search s
 	return tasks, total, nil
 }
 
-// GET BY ID
-func (r *TaskRepository) GetByID(id int64) (*entity.Task, error) {
+func (m *TaskModel) GetByID(id int64) (*Task, error) {
 	query := `SELECT id, title, completed, created_at FROM tasks WHERE id = $1 AND deleted_at IS NULL`
-	var task entity.Task
-	if err := r.DB.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt); err != nil {
+	var task Task
+	if err := m.DB.QueryRow(query, id).Scan(&task.ID, &task.Title, &task.Completed, &task.CreatedAt); err != nil {
 		return nil, err
 	}
 	return &task, nil
 }
 
-// PUT
-func (r *TaskRepository) Update(task *entity.Task) error {
+func (m *TaskModel) Update(task *Task) error {
 	query := `UPDATE tasks SET title = $1, completed = $2 WHERE id = $3`
-	_, err := r.DB.Exec(query, task.Title, task.Completed, task.ID)
+	_, err := m.DB.Exec(query, task.Title, task.Completed, task.ID)
 	return err
 }
 
-// PATCH
-func (r *TaskRepository) Complete(id int64) error {
+func (m *TaskModel) Complete(id int64) error {
 	query := `UPDATE tasks SET completed = true WHERE id = $1`
-	_, err := r.DB.Exec(query, id)
+	_, err := m.DB.Exec(query, id)
 	return err
 }
 
-// DELETE
-func (r *TaskRepository) Delete(id int64, softDelete bool) error {
+func (m *TaskModel) Delete(id int64, softDelete bool) error {
 	if softDelete {
 		query := `UPDATE tasks SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`
-		_, err := r.DB.Exec(query, id)
+		_, err := m.DB.Exec(query, id)
 		return err
 	} else {
 		query := `DELETE FROM tasks WHERE id = $1 AND deleted_at IS NULL`
-		_, err := r.DB.Exec(query, id)
+		_, err := m.DB.Exec(query, id)
 		return err
 	}
 }
 
-// RestoreTask
-func (r *TaskRepository) RestoreTask(id int64) error {
+func (m *TaskModel) RestoreTask(id int64) error {
 	query := `UPDATE tasks SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL`
-	_, err := r.DB.Exec(query, id)
+	_, err := m.DB.Exec(query, id)
 	return err
 }
 
-// MarkTaskAsCompleted
-func (r *TaskRepository) MarkTaskAsCompleted(id int64) error {
+func (m *TaskModel) MarkTaskAsCompleted(id int64) error {
 	query := `UPDATE tasks SET completed = true WHERE id = $1`
-	_, err := r.DB.Exec(query, id)
+	_, err := m.DB.Exec(query, id)
 	return err
 }
 
-// MarkTaskAsUncompleted
-func (r *TaskRepository) MarkTaskAsUncompleted(id int64) error {
+func (m *TaskModel) MarkTaskAsUncompleted(id int64) error {
 	query := `UPDATE tasks SET completed = false WHERE id = $1`
-	_, err := r.DB.Exec(query, id)
+	_, err := m.DB.Exec(query, id)
 	return err
 }
