@@ -69,5 +69,5 @@ func main() {
 		log.Printf("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server exited")1
+	log.Println("Server exited")12
 }
