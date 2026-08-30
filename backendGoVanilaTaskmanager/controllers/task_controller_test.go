@@ -5,23 +5,24 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"taskmanager/models"
 	"testing"
 	"time"
-	"taskmanager/models"
 )
 
 // MockTaskService is a mock implementation of TaskServiceInterface for testing
 type MockTaskService struct {
-	CreateFunc              func(task *models.Task) (*models.Task, error)
-	GetAllFunc              func(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
-	GetByIDFunc             func(id int64) (*models.Task, error)
-	UpdateFunc              func(id int64, task *models.Task) (*models.Task, error)
-	DeleteFunc              func(id int64) error
-	RestoreFunc             func(id int64) error
-	MarkAsCompletedFunc     func(id int64) error
-	MarkAsUncompletedFunc   func(id int64) error
+	CreateFunc            func(task *models.Task) (*models.Task, error)
+	GetAllFunc            func(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
+	GetByIDFunc           func(id int64) (*models.Task, error)
+	UpdateFunc            func(id int64, task *models.Task) (*models.Task, error)
+	DeleteFunc            func(id int64) error
+	RestoreFunc           func(id int64) error
+	MarkAsCompletedFunc   func(id int64) error
+	MarkAsUncompletedFunc func(id int64) error
 }
 
 // Ensure MockTaskService implements TaskServiceInterface
@@ -107,7 +108,7 @@ func TestCreateTaskHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	taskJSON := `{"title": "Test Task", "description": "Test Description"}`
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -130,7 +131,7 @@ func TestCreateTaskHandler_Success(t *testing.T) {
 func TestCreateTaskHandler_InvalidJSON(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	invalidJSON := `{"title": "Test Task", "description": invalid}`
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
@@ -152,7 +153,7 @@ func TestCreateTaskHandler_EmptyTitle(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	taskJSON := `{"title": "", "description": "Test Description"}`
 	req := createRequest("POST", "/tasks", bytes.NewBufferString(taskJSON))
 	w := httptest.NewRecorder()
@@ -170,7 +171,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 		{ID: 1, Title: "Task 1", Completed: false},
 		{ID: 2, Title: "Task 2", Completed: true},
 	}
-	
+
 	mockService := &MockTaskService{
 		GetAllFunc: func(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error) {
 			meta := map[string]interface{}{
@@ -186,7 +187,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := httptest.NewRequest("GET", "/tasks?page=1&limit=10", nil)
 	w := httptest.NewRecorder()
 
@@ -207,7 +208,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 func TestGetAllTasksHandler_InvalidPage(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := httptest.NewRequest("GET", "/tasks?page=0", nil)
 	w := httptest.NewRecorder()
 
@@ -221,7 +222,7 @@ func TestGetAllTasksHandler_InvalidPage(t *testing.T) {
 func TestGetAllTasksHandler_InvalidLimit(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := httptest.NewRequest("GET", "/tasks?limit=0", nil)
 	w := httptest.NewRecorder()
 
@@ -235,7 +236,7 @@ func TestGetAllTasksHandler_InvalidLimit(t *testing.T) {
 func TestGetAllTasksHandler_InvalidCompleted(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := httptest.NewRequest("GET", "/tasks?completed=invalid", nil)
 	w := httptest.NewRecorder()
 
@@ -249,7 +250,7 @@ func TestGetAllTasksHandler_InvalidCompleted(t *testing.T) {
 func TestGetAllTasksHandler_EmptySearch(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := httptest.NewRequest("GET", "/tasks?search=", nil)
 	w := httptest.NewRecorder()
 
@@ -266,7 +267,7 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 		Title:     "Test Task",
 		Completed: false,
 	}
-	
+
 	mockService := &MockTaskService{
 		GetByIDFunc: func(id int64) (*models.Task, error) {
 			return mockTask, nil
@@ -274,7 +275,7 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("GET", "/tasks/1", nil)
 	w := httptest.NewRecorder()
 
@@ -298,7 +299,7 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 func TestGetTaskByIDHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("GET", "/tasks/invalid", nil)
 	w := httptest.NewRecorder()
 
@@ -318,7 +319,7 @@ func TestGetTaskByIDHandler_NotFound(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("GET", "/tasks/999", nil)
 	w := httptest.NewRecorder()
 
@@ -336,7 +337,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 		Title:     "Updated Task",
 		Completed: true,
 	}
-	
+
 	mockService := &MockTaskService{
 		UpdateFunc: func(id int64, task *models.Task) (*models.Task, error) {
 			return mockTask, nil
@@ -344,7 +345,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	taskJSON := `{"title": "Updated Task", "completed": true}`
 	req := createRequest("PUT", "/tasks/1", bytes.NewBufferString(taskJSON))
 	w := httptest.NewRecorder()
@@ -367,7 +368,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 func TestUpdateTaskHandler_InvalidJSON(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	invalidJSON := `{"title": "Updated Task", "completed": invalid}`
 	req := createRequest("PUT", "/tasks/1", bytes.NewBufferString(invalidJSON))
 	w := httptest.NewRecorder()
@@ -383,7 +384,7 @@ func TestUpdateTaskHandler_InvalidJSON(t *testing.T) {
 func TestUpdateTaskHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	taskJSON := `{"title": "Updated Task"}`
 	req := createRequest("PUT", "/tasks/invalid", bytes.NewBufferString(taskJSON))
 	w := httptest.NewRecorder()
@@ -404,7 +405,7 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	taskJSON := `{"title": "Updated Task"}`
 	req := createRequest("PUT", "/tasks/999", bytes.NewBufferString(taskJSON))
 	w := httptest.NewRecorder()
@@ -425,7 +426,7 @@ func TestDeleteTaskHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("DELETE", "/tasks/1", nil)
 	w := httptest.NewRecorder()
 
@@ -447,7 +448,7 @@ func TestDeleteTaskHandler_Success(t *testing.T) {
 func TestDeleteTaskHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("DELETE", "/tasks/invalid", nil)
 	w := httptest.NewRecorder()
 
@@ -467,7 +468,7 @@ func TestDeleteTaskHandler_NotFound(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("DELETE", "/tasks/999", nil)
 	w := httptest.NewRecorder()
 
@@ -487,7 +488,7 @@ func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("PATCH", "/tasks/1/complete", nil)
 	w := httptest.NewRecorder()
 
@@ -509,7 +510,7 @@ func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 func TestMarkTaskAsCompletedHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("PATCH", "/tasks/invalid/complete", nil)
 	w := httptest.NewRecorder()
 
@@ -529,7 +530,7 @@ func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("PATCH", "/tasks/1/uncomplete", nil)
 	w := httptest.NewRecorder()
 
@@ -551,7 +552,7 @@ func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 func TestMarkTaskAsUncompletedHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("PATCH", "/tasks/invalid/uncomplete", nil)
 	w := httptest.NewRecorder()
 
@@ -571,7 +572,7 @@ func TestRestoreDeletedTaskHandler_Success(t *testing.T) {
 	}
 
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("PATCH", "/tasks/1/restore", nil)
 	w := httptest.NewRecorder()
 
@@ -593,7 +594,7 @@ func TestRestoreDeletedTaskHandler_Success(t *testing.T) {
 func TestRestoreDeletedTaskHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
-	
+
 	req := createRequest("PATCH", "/tasks/invalid/restore", nil)
 	w := httptest.NewRecorder()
 
