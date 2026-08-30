@@ -276,13 +276,13 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("GET", "/tasks/1", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}", controller.GetTaskByID)
+
+	req := httptest.NewRequest("GET", "/tasks/1", nil)
 	w := httptest.NewRecorder()
 
-	// For now, skip this test as it requires PathValue which is Go 1.22+ specific
-	// In a real scenario, we would use the actual router or mock the PathValue method
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.GetTaskByID(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -300,11 +300,13 @@ func TestGetTaskByIDHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
-	req := createRequest("GET", "/tasks/invalid", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}", controller.GetTaskByID)
+
+	req := httptest.NewRequest("GET", "/tasks/invalid", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.GetTaskByID(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
@@ -320,11 +322,13 @@ func TestGetTaskByIDHandler_NotFound(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("GET", "/tasks/999", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}", controller.GetTaskByID)
+
+	req := httptest.NewRequest("GET", "/tasks/999", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.GetTaskByID(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404, got %d", w.Code)
@@ -346,12 +350,15 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /tasks/{id}", controller.UpdateTask)
+
 	taskJSON := `{"title": "Updated Task", "completed": true}`
-	req := createRequest("PUT", "/tasks/1", bytes.NewBufferString(taskJSON))
+	req := httptest.NewRequest("PUT", "/tasks/1", bytes.NewBufferString(taskJSON))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.UpdateTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -369,12 +376,15 @@ func TestUpdateTaskHandler_InvalidJSON(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /tasks/{id}", controller.UpdateTask)
+
 	invalidJSON := `{"title": "Updated Task", "completed": invalid}`
-	req := createRequest("PUT", "/tasks/1", bytes.NewBufferString(invalidJSON))
+	req := httptest.NewRequest("PUT", "/tasks/1", bytes.NewBufferString(invalidJSON))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.UpdateTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
@@ -385,12 +395,15 @@ func TestUpdateTaskHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /tasks/{id}", controller.UpdateTask)
+
 	taskJSON := `{"title": "Updated Task"}`
-	req := createRequest("PUT", "/tasks/invalid", bytes.NewBufferString(taskJSON))
+	req := httptest.NewRequest("PUT", "/tasks/invalid", bytes.NewBufferString(taskJSON))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.UpdateTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
@@ -406,12 +419,15 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /tasks/{id}", controller.UpdateTask)
+
 	taskJSON := `{"title": "Updated Task"}`
-	req := createRequest("PUT", "/tasks/999", bytes.NewBufferString(taskJSON))
+	req := httptest.NewRequest("PUT", "/tasks/999", bytes.NewBufferString(taskJSON))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.UpdateTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404, got %d", w.Code)
@@ -427,11 +443,13 @@ func TestDeleteTaskHandler_Success(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("DELETE", "/tasks/1", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}", controller.DeleteTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/1", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.DeleteTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusAccepted {
 		t.Errorf("Expected status 202, got %d", w.Code)
@@ -449,11 +467,13 @@ func TestDeleteTaskHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
-	req := createRequest("DELETE", "/tasks/invalid", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}", controller.DeleteTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/invalid", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.DeleteTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
@@ -469,11 +489,13 @@ func TestDeleteTaskHandler_NotFound(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("DELETE", "/tasks/999", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}", controller.DeleteTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/999", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.DeleteTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("Expected status 404, got %d", w.Code)
@@ -489,11 +511,13 @@ func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("PATCH", "/tasks/1/complete", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("PATCH /tasks/{id}/complete", controller.MarkTaskAsCompleted)
+
+	req := httptest.NewRequest("PATCH", "/tasks/1/complete", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.MarkTaskAsCompleted(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -511,11 +535,13 @@ func TestMarkTaskAsCompletedHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
-	req := createRequest("PATCH", "/tasks/invalid/complete", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("PATCH /tasks/{id}/complete", controller.MarkTaskAsCompleted)
+
+	req := httptest.NewRequest("PATCH", "/tasks/invalid/complete", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.MarkTaskAsCompleted(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
@@ -531,11 +557,13 @@ func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("PATCH", "/tasks/1/uncomplete", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("PATCH /tasks/{id}/uncomplete", controller.MarkTaskAsUncompleted)
+
+	req := httptest.NewRequest("PATCH", "/tasks/1/uncomplete", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.MarkTaskAsUncompleted(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -553,11 +581,13 @@ func TestMarkTaskAsUncompletedHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
-	req := createRequest("PATCH", "/tasks/invalid/uncomplete", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("PATCH /tasks/{id}/uncomplete", controller.MarkTaskAsUncompleted)
+
+	req := httptest.NewRequest("PATCH", "/tasks/invalid/uncomplete", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.MarkTaskAsUncompleted(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
@@ -573,11 +603,13 @@ func TestRestoreDeletedTaskHandler_Success(t *testing.T) {
 
 	controller := NewTaskController(mockService)
 
-	req := createRequest("PATCH", "/tasks/1/restore", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("PATCH /tasks/{id}/restore", controller.RestoreDeletedTask)
+
+	req := httptest.NewRequest("PATCH", "/tasks/1/restore", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.RestoreDeletedTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
@@ -595,11 +627,13 @@ func TestRestoreDeletedTaskHandler_InvalidID(t *testing.T) {
 	mockService := &MockTaskService{}
 	controller := NewTaskController(mockService)
 
-	req := createRequest("PATCH", "/tasks/invalid/restore", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("PATCH /tasks/{id}/restore", controller.RestoreDeletedTask)
+
+	req := httptest.NewRequest("PATCH", "/tasks/invalid/restore", nil)
 	w := httptest.NewRecorder()
 
-	t.Skip("Skipping controller test that requires PathValue method")
-	controller.RestoreDeletedTask(w, req)
+	mux.ServeHTTP(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
