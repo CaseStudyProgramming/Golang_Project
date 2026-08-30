@@ -3,14 +3,13 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-	"time"
 	"taskmanager/controllers"
 	"taskmanager/models"
 	"taskmanager/services"
+	"testing"
+	"time"
 )
 
 // Integration tests for the Task API endpoints
@@ -18,7 +17,7 @@ import (
 
 func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 	SkipIfNoTestDB(t)
-	
+
 	db := SetupTestDB(t)
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
@@ -64,7 +63,7 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 
 func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 	SkipIfNoTestDB(t)
-	
+
 	db := SetupTestDB(t)
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
@@ -117,7 +116,7 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 
 func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	SkipIfNoTestDB(t)
-	
+
 	db := SetupTestDB(t)
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
@@ -169,9 +168,15 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 
 func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 	SkipIfNoTestDB(t)
-	
+
 	db := SetupTestDB(t)
 	defer CleanupTestDB(db)
+
+	// Clean up all test data before this test
+	_, err := db.Exec("DELETE FROM tasks")
+	if err != nil {
+		t.Fatalf("Failed to cleanup all test data: %v", err)
+	}
 	defer CleanupTestData(db, t)
 
 	taskModel := models.NewTaskModel(db)
@@ -221,7 +226,7 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 
 func TestTaskAPIIntegration_WithDueDate(t *testing.T) {
 	SkipIfNoTestDB(t)
-	
+
 	db := SetupTestDB(t)
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
