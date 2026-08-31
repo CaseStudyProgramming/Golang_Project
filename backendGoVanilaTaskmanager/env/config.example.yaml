@@ -8,3 +8,6 @@ database:
   password: "your_password_here"
   dbname: "taskmanager"
   sslmode: "disable"
+
+jwt:
+  secret: "your_jwt_secret_key_here_change_in_production"

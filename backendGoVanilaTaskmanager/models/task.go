@@ -9,6 +9,7 @@ import (
 // Task entity
 type Task struct {
 	ID          int64      `json:"id"`
+	UserID      int64      `json:"user_id"`
 	Title       string     `json:"title"`
 	SubTitle    string     `json:"sub_title,omitempty"`
 	Description string     `json:"description,omitempty"`
@@ -26,14 +27,14 @@ type TaskModel struct {
 // TaskModelInterface defines the interface for task model operations
 type TaskModelInterface interface {
 	Create(task *Task) (*Task, error)
-	GetAll(completed *bool, offset, limit int, search string) ([]Task, int, error)
-	GetByID(id int64) (*Task, error)
-	Update(task *Task) error
-	Complete(id int64) error
-	Delete(id int64, softDelete bool) error
-	RestoreTask(id int64) error
-	MarkTaskAsCompleted(id int64) error
-	MarkTaskAsUncompleted(id int64) error
+	GetAll(userID int64, completed *bool, offset, limit int, search string) ([]Task, int, error)
+	GetByID(userID int64, id int64) (*Task, error)
+	Update(userID int64, task *Task) error
+	Complete(userID int64, id int64) error
+	Delete(userID int64, id int64, softDelete bool) error
+	RestoreTask(userID int64, id int64) error
+	MarkTaskAsCompleted(userID int64, id int64) error
+	MarkTaskAsUncompleted(userID int64, id int64) error
 }
 
 func NewTaskModel(db *sql.DB) *TaskModel {
@@ -41,24 +42,25 @@ func NewTaskModel(db *sql.DB) *TaskModel {
 }
 
 func (m *TaskModel) Create(task *Task) (*Task, error) {
-	query := `INSERT INTO tasks (title, sub_title, description, completed, due_date) 
-	          VALUES ($1, $2, $3, $4, $5) 
-	          RETURNING id, title, sub_title, description, completed, due_date, created_at, updated_at`
-	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate).
-		Scan(&task.ID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.CreatedAt, &task.UpdatedAt)
+	query := `INSERT INTO tasks (user_id, title, sub_title, description, completed, due_date) 
+	          VALUES ($1, $2, $3, $4, $5, $6) 
+	          RETURNING id, user_id, title, sub_title, description, completed, due_date, created_at, updated_at`
+	err := m.DB.QueryRow(query, task.UserID, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate).
+		Scan(&task.ID, &task.UserID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.CreatedAt, &task.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return task, nil
 }
 
-func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string) ([]Task, int, error) {
+func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int, search string) ([]Task, int, error) {
 	// Get total count
-	countQuery := `SELECT COUNT(*) FROM tasks WHERE deleted_at IS NULL`
+	countQuery := `SELECT COUNT(*) FROM tasks WHERE deleted_at IS NULL AND user_id = $1`
 	var countArgs []interface{}
+	countArgs = append(countArgs, userID)
 
 	if completed != nil {
-		countQuery += ` AND completed = $1`
+		countQuery += ` AND completed = $2`
 		countArgs = append(countArgs, *completed)
 	}
 
@@ -74,13 +76,14 @@ func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string
 	}
 
 	// Get paginated data
-	query := `SELECT id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
+	query := `SELECT id, user_id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
 	          FROM tasks 
-	          WHERE deleted_at IS NULL`
+	          WHERE deleted_at IS NULL AND user_id = $1`
 	var args []interface{}
+	args = append(args, userID)
 
 	if completed != nil {
-		query += ` AND completed = $1`
+		query += ` AND completed = $2`
 		args = append(args, *completed)
 	}
 
@@ -104,6 +107,7 @@ func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string
 		var task Task
 		if err := rows.Scan(
 			&task.ID,
+			&task.UserID,
 			&task.Title,
 			&task.SubTitle,
 			&task.Description,
@@ -121,12 +125,13 @@ func (m *TaskModel) GetAll(completed *bool, offset int, limit int, search string
 	return tasks, total, nil
 }
 
-func (m *TaskModel) GetByID(id int64) (*Task, error) {
-	query := `SELECT id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
-	          FROM tasks WHERE id = $1 AND deleted_at IS NULL`
+func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
+	query := `SELECT id, user_id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
+	          FROM tasks WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 	var task Task
-	err := m.DB.QueryRow(query, id).Scan(
+	err := m.DB.QueryRow(query, id, userID).Scan(
 		&task.ID,
+		&task.UserID,
 		&task.Title,
 		&task.SubTitle,
 		&task.Description,
@@ -142,47 +147,47 @@ func (m *TaskModel) GetByID(id int64) (*Task, error) {
 	return &task, nil
 }
 
-func (m *TaskModel) Update(task *Task) error {
+func (m *TaskModel) Update(userID int64, task *Task) error {
 	query := `UPDATE tasks 
 	          SET title = $1, sub_title = $2, description = $3, completed = $4, due_date = $5, updated_at = NOW() 
-	          WHERE id = $6 
+	          WHERE id = $6 AND user_id = $7
 	          RETURNING updated_at`
-	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.ID).Scan(&task.UpdatedAt)
+	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.ID, userID).Scan(&task.UpdatedAt)
 	return err
 }
 
-func (m *TaskModel) Complete(id int64) error {
-	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1`
-	_, err := m.DB.Exec(query, id)
+func (m *TaskModel) Complete(userID int64, id int64) error {
+	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1 AND user_id = $2`
+	_, err := m.DB.Exec(query, id, userID)
 	return err
 }
 
-func (m *TaskModel) Delete(id int64, softDelete bool) error {
+func (m *TaskModel) Delete(userID int64, id int64, softDelete bool) error {
 	if softDelete {
-		query := `UPDATE tasks SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`
-		_, err := m.DB.Exec(query, id)
+		query := `UPDATE tasks SET deleted_at = NOW() WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
+		_, err := m.DB.Exec(query, id, userID)
 		return err
 	} else {
-		query := `DELETE FROM tasks WHERE id = $1 AND deleted_at IS NULL`
-		_, err := m.DB.Exec(query, id)
+		query := `DELETE FROM tasks WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
+		_, err := m.DB.Exec(query, id, userID)
 		return err
 	}
 }
 
-func (m *TaskModel) RestoreTask(id int64) error {
-	query := `UPDATE tasks SET deleted_at = NULL, updated_at = NOW() WHERE id = $1 AND deleted_at IS NOT NULL`
-	_, err := m.DB.Exec(query, id)
+func (m *TaskModel) RestoreTask(userID int64, id int64) error {
+	query := `UPDATE tasks SET deleted_at = NULL, updated_at = NOW() WHERE id = $1 AND user_id = $2 AND deleted_at IS NOT NULL`
+	_, err := m.DB.Exec(query, id, userID)
 	return err
 }
 
-func (m *TaskModel) MarkTaskAsCompleted(id int64) error {
-	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1`
-	_, err := m.DB.Exec(query, id)
+func (m *TaskModel) MarkTaskAsCompleted(userID int64, id int64) error {
+	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1 AND user_id = $2`
+	_, err := m.DB.Exec(query, id, userID)
 	return err
 }
 
-func (m *TaskModel) MarkTaskAsUncompleted(id int64) error {
-	query := `UPDATE tasks SET completed = false, updated_at = NOW() WHERE id = $1`
-	_, err := m.DB.Exec(query, id)
+func (m *TaskModel) MarkTaskAsUncompleted(userID int64, id int64) error {
+	query := `UPDATE tasks SET completed = false, updated_at = NOW() WHERE id = $1 AND user_id = $2`
+	_, err := m.DB.Exec(query, id, userID)
 	return err
 }
