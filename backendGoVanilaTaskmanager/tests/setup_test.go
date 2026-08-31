@@ -26,7 +26,7 @@ func GetTestDBConfig() TestDBConfig {
 		Host:     getEnv("TEST_DB_HOST", "localhost"),
 		Port:     5432,
 		User:     getEnv("TEST_DB_USER", "postgres"),
-		Password: getEnv("TEST_DB_PASSWORD", ""),
+		Password: getEnv("TEST_DB_PASSWORD", "Berjuang#382"),
 		DBName:   getEnv("TEST_DB_NAME", "taskmanager_test"),
 		SSLMode:  getEnv("TEST_DB_SSLMODE", "disable"),
 	}
@@ -35,7 +35,7 @@ func GetTestDBConfig() TestDBConfig {
 // SetupTestDB creates a connection to the test database
 func SetupTestDB(t *testing.T) *sql.DB {
 	cfg := GetTestDBConfig()
-	
+
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName, cfg.SSLMode,
@@ -67,7 +67,11 @@ func CleanupTestDB(db *sql.DB) {
 func CleanupTestData(db *sql.DB, t *testing.T) {
 	_, err := db.Exec("DELETE FROM tasks WHERE title LIKE 'Test%'")
 	if err != nil {
-		t.Logf("Warning: Failed to cleanup test data: %v", err)
+		t.Logf("Warning: Failed to cleanup test tasks: %v", err)
+	}
+	_, err = db.Exec("DELETE FROM users WHERE name LIKE 'testuser%'")
+	if err != nil {
+		t.Logf("Warning: Failed to cleanup test users: %v", err)
 	}
 }
 
@@ -82,7 +86,7 @@ func getEnv(key, defaultValue string) string {
 // SkipIfNoTestDB skips the test if test database is not available
 func SkipIfNoTestDB(t *testing.T) {
 	cfg := GetTestDBConfig()
-	
+
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName, cfg.SSLMode,

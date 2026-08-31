@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -22,6 +23,19 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
 
+	// Create a test user first
+	_, err := db.Exec("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)", "testuser", "test@example.com", "hashedpassword")
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Get the user ID
+	var userID int64
+	err = db.QueryRow("SELECT id FROM users WHERE name = $1", "testuser").Scan(&userID)
+	if err != nil {
+		t.Fatalf("Failed to get test user ID: %v", err)
+	}
+
 	// Setup the application layers
 	taskModel := models.NewTaskModel(db)
 	taskService := services.NewTaskService(taskModel)
@@ -31,6 +45,7 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 	taskJSON := `{"title": "Test Task Integration", "description": "Integration test task"}`
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", userID))
 	w := httptest.NewRecorder()
 
 	taskController.CreateTask(w, req)
@@ -51,7 +66,7 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 	taskID := int64(data["id"].(float64))
 
 	// Get the created task using service directly (skip controller test for PathValue)
-	getTask, err := taskService.GetByID(taskID)
+	getTask, err := taskService.GetByID(userID, taskID)
 	if err != nil {
 		t.Errorf("Failed to get created task: %v", err)
 	}
@@ -68,6 +83,19 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
 
+	// Create a test user first
+	_, err := db.Exec("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)", "testuser2", "test2@example.com", "hashedpassword")
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Get the user ID
+	var userID int64
+	err = db.QueryRow("SELECT id FROM users WHERE name = $1", "testuser2").Scan(&userID)
+	if err != nil {
+		t.Fatalf("Failed to get test user ID: %v", err)
+	}
+
 	taskModel := models.NewTaskModel(db)
 	taskService := services.NewTaskService(taskModel)
 
@@ -76,7 +104,7 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 		Title:       "Test Task for Update",
 		Description: "Initial description",
 	}
-	createdTask, err := taskService.Create(1, task)
+	createdTask, err := taskService.Create(userID, task)
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -85,14 +113,15 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 	updatedTask := &models.Task{
 		Title:       "Updated Task Title",
 		Description: "Updated description",
+		Priority:    models.PriorityMedium,
 	}
-	_, err = taskService.Update(createdTask.ID, updatedTask)
+	_, err = taskService.Update(userID, createdTask.ID, updatedTask)
 	if err != nil {
 		t.Errorf("Failed to update task: %v", err)
 	}
 
 	// Verify the update
-	retrievedTask, err := taskService.GetByID(createdTask.ID)
+	retrievedTask, err := taskService.GetByID(userID, createdTask.ID)
 	if err != nil {
 		t.Errorf("Failed to get updated task: %v", err)
 	}
@@ -102,13 +131,13 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 	}
 
 	// Delete the task using service directly
-	err = taskService.Delete(createdTask.ID)
+	err = taskService.Delete(userID, createdTask.ID)
 	if err != nil {
 		t.Errorf("Failed to delete task: %v", err)
 	}
 
 	// Verify the task is soft-deleted
-	_, err = taskService.GetByID(createdTask.ID)
+	_, err = taskService.GetByID(userID, createdTask.ID)
 	if err == nil {
 		t.Error("Expected error when getting deleted task, got nil")
 	}
@@ -121,6 +150,19 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
 
+	// Create a test user first
+	_, err := db.Exec("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)", "testuser3", "test3@example.com", "hashedpassword")
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Get the user ID
+	var userID int64
+	err = db.QueryRow("SELECT id FROM users WHERE name = $1", "testuser3").Scan(&userID)
+	if err != nil {
+		t.Fatalf("Failed to get test user ID: %v", err)
+	}
+
 	taskModel := models.NewTaskModel(db)
 	taskService := services.NewTaskService(taskModel)
 
@@ -128,19 +170,19 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	task := &models.Task{
 		Title: "Test Task for Completion",
 	}
-	createdTask, err := taskService.Create(1, task)
+	createdTask, err := taskService.Create(userID, task)
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
 
 	// Mark as completed using service directly
-	err = taskService.MarkAsCompleted(createdTask.ID)
+	err = taskService.MarkAsCompleted(userID, createdTask.ID)
 	if err != nil {
 		t.Errorf("Failed to mark task as completed: %v", err)
 	}
 
 	// Verify task is completed
-	updatedTask, err := taskService.GetByID(createdTask.ID)
+	updatedTask, err := taskService.GetByID(userID, createdTask.ID)
 	if err != nil {
 		t.Fatalf("Failed to get updated task: %v", err)
 	}
@@ -150,13 +192,13 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	}
 
 	// Mark as uncompleted using service directly
-	err = taskService.MarkAsUncompleted(createdTask.ID)
+	err = taskService.MarkAsUncompleted(userID, createdTask.ID)
 	if err != nil {
 		t.Errorf("Failed to mark task as uncompleted: %v", err)
 	}
 
 	// Verify task is uncompleted
-	finalTask, err := taskService.GetByID(createdTask.ID)
+	finalTask, err := taskService.GetByID(userID, createdTask.ID)
 	if err != nil {
 		t.Fatalf("Failed to get final task: %v", err)
 	}
@@ -177,7 +219,24 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to cleanup all test data: %v", err)
 	}
+	_, err = db.Exec("DELETE FROM users WHERE name LIKE 'testuser%'")
+	if err != nil {
+		t.Fatalf("Failed to cleanup test users: %v", err)
+	}
 	defer CleanupTestData(db, t)
+
+	// Create a test user first
+	_, err = db.Exec("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)", "testuser4", "test4@example.com", "hashedpassword")
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Get the user ID
+	var userID int64
+	err = db.QueryRow("SELECT id FROM users WHERE name = $1", "testuser4").Scan(&userID)
+	if err != nil {
+		t.Fatalf("Failed to get test user ID: %v", err)
+	}
 
 	taskModel := models.NewTaskModel(db)
 	taskService := services.NewTaskService(taskModel)
@@ -189,7 +248,7 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 			Title:       "Test Task Pagination",
 			Description: "Pagination test task",
 		}
-		_, err := taskService.Create(1, task)
+		_, err := taskService.Create(userID, task)
 		if err != nil {
 			t.Fatalf("Failed to create test task %d: %v", i, err)
 		}
@@ -197,6 +256,7 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 
 	// Test first page
 	req := httptest.NewRequest("GET", "/tasks?page=1&limit=10", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", userID))
 	w := httptest.NewRecorder()
 
 	taskController.GetAllTasks(w, req)
@@ -231,6 +291,19 @@ func TestTaskAPIIntegration_WithDueDate(t *testing.T) {
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
 
+	// Create a test user first
+	_, err := db.Exec("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)", "testuser5", "test5@example.com", "hashedpassword")
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Get the user ID
+	var userID int64
+	err = db.QueryRow("SELECT id FROM users WHERE name = $1", "testuser5").Scan(&userID)
+	if err != nil {
+		t.Fatalf("Failed to get test user ID: %v", err)
+	}
+
 	taskModel := models.NewTaskModel(db)
 	taskService := services.NewTaskService(taskModel)
 	taskController := controllers.NewTaskController(taskService)
@@ -240,6 +313,7 @@ func TestTaskAPIIntegration_WithDueDate(t *testing.T) {
 	taskJSON := `{"title": "Test Task with Due Date", "due_date": "` + futureTime.Format(time.RFC3339) + `"}`
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", userID))
 	w := httptest.NewRecorder()
 
 	taskController.CreateTask(w, req)
@@ -253,6 +327,7 @@ func TestTaskAPIIntegration_WithDueDate(t *testing.T) {
 	pastTaskJSON := `{"title": "Test Task with Past Due Date", "due_date": "` + pastTime.Format(time.RFC3339) + `"}`
 	pastReq := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(pastTaskJSON))
 	pastReq.Header.Set("Content-Type", "application/json")
+	pastReq = pastReq.WithContext(context.WithValue(pastReq.Context(), "user_id", userID))
 	pastW := httptest.NewRecorder()
 
 	taskController.CreateTask(pastW, pastReq)

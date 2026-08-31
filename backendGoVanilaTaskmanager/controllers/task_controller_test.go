@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -15,14 +16,14 @@ import (
 
 // MockTaskService is a mock implementation of TaskServiceInterface for testing
 type MockTaskService struct {
-	CreateFunc            func(task *models.Task) (*models.Task, error)
-	GetAllFunc            func(completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
-	GetByIDFunc           func(id int64) (*models.Task, error)
-	UpdateFunc            func(id int64, task *models.Task) (*models.Task, error)
-	DeleteFunc            func(id int64) error
-	RestoreFunc           func(id int64) error
-	MarkAsCompletedFunc   func(id int64) error
-	MarkAsUncompletedFunc func(id int64) error
+	CreateFunc            func(userID int64, task *models.Task) (*models.Task, error)
+	GetAllFunc            func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
+	GetByIDFunc           func(userID int64, id int64) (*models.Task, error)
+	UpdateFunc            func(userID int64, id int64, task *models.Task) (*models.Task, error)
+	DeleteFunc            func(userID int64, id int64) error
+	RestoreFunc           func(userID int64, id int64) error
+	MarkAsCompletedFunc   func(userID int64, id int64) error
+	MarkAsUncompletedFunc func(userID int64, id int64) error
 }
 
 // Ensure MockTaskService implements TaskServiceInterface
@@ -38,68 +39,70 @@ func createRequest(method, path string, body *bytes.Buffer) *http.Request {
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	// Add user_id to context for authentication
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	return req
 }
 
-func (m *MockTaskService) Create(task *models.Task) (*models.Task, error) {
+func (m *MockTaskService) Create(userID int64, task *models.Task) (*models.Task, error) {
 	if m.CreateFunc != nil {
-		return m.CreateFunc(task)
+		return m.CreateFunc(userID, task)
 	}
 	return nil, nil
 }
 
-func (m *MockTaskService) GetAll(completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
+func (m *MockTaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 	if m.GetAllFunc != nil {
-		return m.GetAllFunc(completed, page, limit, search, priority, sortBy, sortOrder)
+		return m.GetAllFunc(userID, completed, page, limit, search, priority, sortBy, sortOrder)
 	}
 	return nil, nil, nil
 }
 
-func (m *MockTaskService) GetByID(id int64) (*models.Task, error) {
+func (m *MockTaskService) GetByID(userID int64, id int64) (*models.Task, error) {
 	if m.GetByIDFunc != nil {
-		return m.GetByIDFunc(id)
+		return m.GetByIDFunc(userID, id)
 	}
 	return nil, nil
 }
 
-func (m *MockTaskService) Update(id int64, task *models.Task) (*models.Task, error) {
+func (m *MockTaskService) Update(userID int64, id int64, task *models.Task) (*models.Task, error) {
 	if m.UpdateFunc != nil {
-		return m.UpdateFunc(id, task)
+		return m.UpdateFunc(userID, id, task)
 	}
 	return nil, nil
 }
 
-func (m *MockTaskService) Delete(id int64) error {
+func (m *MockTaskService) Delete(userID int64, id int64) error {
 	if m.DeleteFunc != nil {
-		return m.DeleteFunc(id)
+		return m.DeleteFunc(userID, id)
 	}
 	return nil
 }
 
-func (m *MockTaskService) Restore(id int64) error {
+func (m *MockTaskService) Restore(userID int64, id int64) error {
 	if m.RestoreFunc != nil {
-		return m.RestoreFunc(id)
+		return m.RestoreFunc(userID, id)
 	}
 	return nil
 }
 
-func (m *MockTaskService) MarkAsCompleted(id int64) error {
+func (m *MockTaskService) MarkAsCompleted(userID int64, id int64) error {
 	if m.MarkAsCompletedFunc != nil {
-		return m.MarkAsCompletedFunc(id)
+		return m.MarkAsCompletedFunc(userID, id)
 	}
 	return nil
 }
 
-func (m *MockTaskService) MarkAsUncompleted(id int64) error {
+func (m *MockTaskService) MarkAsUncompleted(userID int64, id int64) error {
 	if m.MarkAsUncompletedFunc != nil {
-		return m.MarkAsUncompletedFunc(id)
+		return m.MarkAsUncompletedFunc(userID, id)
 	}
 	return nil
 }
 
 func TestCreateTaskHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		CreateFunc: func(task *models.Task) (*models.Task, error) {
+		CreateFunc: func(userID int64, task *models.Task) (*models.Task, error) {
 			task.ID = 1
 			task.CreatedAt = time.Now()
 			task.UpdatedAt = time.Now()
@@ -112,6 +115,7 @@ func TestCreateTaskHandler_Success(t *testing.T) {
 	taskJSON := `{"title": "Test Task", "description": "Test Description"}`
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.CreateTask(w, req)
@@ -135,6 +139,7 @@ func TestCreateTaskHandler_InvalidJSON(t *testing.T) {
 	invalidJSON := `{"title": "Test Task", "description": invalid}`
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.CreateTask(w, req)
@@ -146,7 +151,7 @@ func TestCreateTaskHandler_InvalidJSON(t *testing.T) {
 
 func TestCreateTaskHandler_EmptyTitle(t *testing.T) {
 	mockService := &MockTaskService{
-		CreateFunc: func(task *models.Task) (*models.Task, error) {
+		CreateFunc: func(userID int64, task *models.Task) (*models.Task, error) {
 			// Service layer should validate empty title and return error
 			return nil, errors.New("Title tidak boleh kosong")
 		},
@@ -173,7 +178,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 	}
 
 	mockService := &MockTaskService{
-		GetAllFunc: func(completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
+		GetAllFunc: func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 			meta := map[string]interface{}{
 				"page":       page,
 				"limit":      limit,
@@ -189,6 +194,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 	controller := NewTaskController(mockService)
 
 	req := httptest.NewRequest("GET", "/tasks?page=1&limit=10", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -210,6 +216,7 @@ func TestGetAllTasksHandler_InvalidPage(t *testing.T) {
 	controller := NewTaskController(mockService)
 
 	req := httptest.NewRequest("GET", "/tasks?page=0", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -224,6 +231,7 @@ func TestGetAllTasksHandler_InvalidLimit(t *testing.T) {
 	controller := NewTaskController(mockService)
 
 	req := httptest.NewRequest("GET", "/tasks?limit=0", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -238,6 +246,7 @@ func TestGetAllTasksHandler_InvalidCompleted(t *testing.T) {
 	controller := NewTaskController(mockService)
 
 	req := httptest.NewRequest("GET", "/tasks?completed=invalid", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -252,6 +261,7 @@ func TestGetAllTasksHandler_EmptySearch(t *testing.T) {
 	controller := NewTaskController(mockService)
 
 	req := httptest.NewRequest("GET", "/tasks?search=", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -269,7 +279,7 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 	}
 
 	mockService := &MockTaskService{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return mockTask, nil
 		},
 	}
@@ -280,6 +290,7 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 	mux.HandleFunc("GET /tasks/{id}", controller.GetTaskByID)
 
 	req := httptest.NewRequest("GET", "/tasks/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -304,6 +315,7 @@ func TestGetTaskByIDHandler_InvalidID(t *testing.T) {
 	mux.HandleFunc("GET /tasks/{id}", controller.GetTaskByID)
 
 	req := httptest.NewRequest("GET", "/tasks/invalid", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -315,7 +327,7 @@ func TestGetTaskByIDHandler_InvalidID(t *testing.T) {
 
 func TestGetTaskByIDHandler_NotFound(t *testing.T) {
 	mockService := &MockTaskService{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
 	}
@@ -326,6 +338,7 @@ func TestGetTaskByIDHandler_NotFound(t *testing.T) {
 	mux.HandleFunc("GET /tasks/{id}", controller.GetTaskByID)
 
 	req := httptest.NewRequest("GET", "/tasks/999", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -343,7 +356,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 	}
 
 	mockService := &MockTaskService{
-		UpdateFunc: func(id int64, task *models.Task) (*models.Task, error) {
+		UpdateFunc: func(userID int64, id int64, task *models.Task) (*models.Task, error) {
 			return mockTask, nil
 		},
 	}
@@ -356,6 +369,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 	taskJSON := `{"title": "Updated Task", "completed": true}`
 	req := httptest.NewRequest("PUT", "/tasks/1", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -382,6 +396,7 @@ func TestUpdateTaskHandler_InvalidJSON(t *testing.T) {
 	invalidJSON := `{"title": "Updated Task", "completed": invalid}`
 	req := httptest.NewRequest("PUT", "/tasks/1", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -401,6 +416,7 @@ func TestUpdateTaskHandler_InvalidID(t *testing.T) {
 	taskJSON := `{"title": "Updated Task"}`
 	req := httptest.NewRequest("PUT", "/tasks/invalid", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -412,7 +428,7 @@ func TestUpdateTaskHandler_InvalidID(t *testing.T) {
 
 func TestUpdateTaskHandler_NotFound(t *testing.T) {
 	mockService := &MockTaskService{
-		UpdateFunc: func(id int64, task *models.Task) (*models.Task, error) {
+		UpdateFunc: func(userID int64, id int64, task *models.Task) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
 	}
@@ -425,6 +441,7 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 	taskJSON := `{"title": "Updated Task"}`
 	req := httptest.NewRequest("PUT", "/tasks/999", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -436,7 +453,7 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 
 func TestDeleteTaskHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		DeleteFunc: func(id int64) error {
+		DeleteFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
@@ -447,6 +464,7 @@ func TestDeleteTaskHandler_Success(t *testing.T) {
 	mux.HandleFunc("DELETE /tasks/{id}", controller.DeleteTask)
 
 	req := httptest.NewRequest("DELETE", "/tasks/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -471,6 +489,7 @@ func TestDeleteTaskHandler_InvalidID(t *testing.T) {
 	mux.HandleFunc("DELETE /tasks/{id}", controller.DeleteTask)
 
 	req := httptest.NewRequest("DELETE", "/tasks/invalid", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -482,7 +501,7 @@ func TestDeleteTaskHandler_InvalidID(t *testing.T) {
 
 func TestDeleteTaskHandler_NotFound(t *testing.T) {
 	mockService := &MockTaskService{
-		DeleteFunc: func(id int64) error {
+		DeleteFunc: func(userID int64, id int64) error {
 			return sql.ErrNoRows
 		},
 	}
@@ -493,6 +512,7 @@ func TestDeleteTaskHandler_NotFound(t *testing.T) {
 	mux.HandleFunc("DELETE /tasks/{id}", controller.DeleteTask)
 
 	req := httptest.NewRequest("DELETE", "/tasks/999", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -504,7 +524,7 @@ func TestDeleteTaskHandler_NotFound(t *testing.T) {
 
 func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		MarkAsCompletedFunc: func(id int64) error {
+		MarkAsCompletedFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
@@ -515,6 +535,7 @@ func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 	mux.HandleFunc("PATCH /tasks/{id}/complete", controller.MarkTaskAsCompleted)
 
 	req := httptest.NewRequest("PATCH", "/tasks/1/complete", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -539,6 +560,7 @@ func TestMarkTaskAsCompletedHandler_InvalidID(t *testing.T) {
 	mux.HandleFunc("PATCH /tasks/{id}/complete", controller.MarkTaskAsCompleted)
 
 	req := httptest.NewRequest("PATCH", "/tasks/invalid/complete", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -550,7 +572,7 @@ func TestMarkTaskAsCompletedHandler_InvalidID(t *testing.T) {
 
 func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		MarkAsUncompletedFunc: func(id int64) error {
+		MarkAsUncompletedFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
@@ -561,6 +583,7 @@ func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 	mux.HandleFunc("PATCH /tasks/{id}/uncomplete", controller.MarkTaskAsUncompleted)
 
 	req := httptest.NewRequest("PATCH", "/tasks/1/uncomplete", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -585,6 +608,7 @@ func TestMarkTaskAsUncompletedHandler_InvalidID(t *testing.T) {
 	mux.HandleFunc("PATCH /tasks/{id}/uncomplete", controller.MarkTaskAsUncompleted)
 
 	req := httptest.NewRequest("PATCH", "/tasks/invalid/uncomplete", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -596,7 +620,7 @@ func TestMarkTaskAsUncompletedHandler_InvalidID(t *testing.T) {
 
 func TestRestoreDeletedTaskHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		RestoreFunc: func(id int64) error {
+		RestoreFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
@@ -607,6 +631,7 @@ func TestRestoreDeletedTaskHandler_Success(t *testing.T) {
 	mux.HandleFunc("PATCH /tasks/{id}/restore", controller.RestoreDeletedTask)
 
 	req := httptest.NewRequest("PATCH", "/tasks/1/restore", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -631,6 +656,7 @@ func TestRestoreDeletedTaskHandler_InvalidID(t *testing.T) {
 	mux.HandleFunc("PATCH /tasks/{id}/restore", controller.RestoreDeletedTask)
 
 	req := httptest.NewRequest("PATCH", "/tasks/invalid/restore", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
