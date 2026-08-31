@@ -76,7 +76,7 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 		Title:       "Test Task for Update",
 		Description: "Initial description",
 	}
-	createdTask, err := taskService.Create(task)
+	createdTask, err := taskService.Create(1, task)
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	task := &models.Task{
 		Title: "Test Task for Completion",
 	}
-	createdTask, err := taskService.Create(task)
+	createdTask, err := taskService.Create(1, task)
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -189,7 +189,7 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 			Title:       "Test Task Pagination",
 			Description: "Pagination test task",
 		}
-		_, err := taskService.Create(task)
+		_, err := taskService.Create(1, task)
 		if err != nil {
 			t.Fatalf("Failed to create test task %d: %v", i, err)
 		}
