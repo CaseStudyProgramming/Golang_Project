@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
+	JWT      JWTConfig      `yaml:"jwt"`
 }
 
 type ServerConfig struct {
@@ -24,6 +25,10 @@ type DatabaseConfig struct {
 	SSLMode  string `yaml:"sslmode"`
 }
 
+type JWTConfig struct {
+	Secret string `yaml:"secret"`
+}
+
 // LoadConfig loads configuration from yaml file
 func LoadConfig(filePath string) (*Config, error) {
 	file, err := os.Open(filePath)
@@ -36,6 +41,16 @@ func LoadConfig(filePath string) (*Config, error) {
 	decoder := yaml.NewDecoder(file)
 	if err := decoder.Decode(&cfg); err != nil {
 		return nil, err
+	}
+
+	// Fallback to environment variables for JWT secret
+	if cfg.JWT.Secret == "" {
+		cfg.JWT.Secret = os.Getenv("JWT_SECRET")
+	}
+
+	// Default JWT secret for development (should be changed in production)
+	if cfg.JWT.Secret == "" {
+		cfg.JWT.Secret = "dev-secret-key-change-in-production"
 	}
 
 	return &cfg, nil

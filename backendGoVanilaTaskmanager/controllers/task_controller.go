@@ -17,14 +17,14 @@ type TaskController struct {
 
 // TaskServiceInterface defines the interface for task service operations
 type TaskServiceInterface interface {
-	Create(task *models.Task) (*models.Task, error)
-	GetAll(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
-	GetByID(id int64) (*models.Task, error)
-	Update(id int64, task *models.Task) (*models.Task, error)
-	Delete(id int64) error
-	Restore(id int64) error
-	MarkAsCompleted(id int64) error
-	MarkAsUncompleted(id int64) error
+	Create(userID int64, task *models.Task) (*models.Task, error)
+	GetAll(userID int64, completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
+	GetByID(userID int64, id int64) (*models.Task, error)
+	Update(userID int64, id int64, task *models.Task) (*models.Task, error)
+	Delete(userID int64, id int64) error
+	Restore(userID int64, id int64) error
+	MarkAsCompleted(userID int64, id int64) error
+	MarkAsUncompleted(userID int64, id int64) error
 }
 
 func NewTaskController(service TaskServiceInterface) *TaskController {
@@ -33,13 +33,15 @@ func NewTaskController(service TaskServiceInterface) *TaskController {
 
 // POST /tasks
 func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	var task models.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	createdTask, err := c.service.Create(&task)
+	createdTask, err := c.service.Create(userID, &task)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -50,6 +52,8 @@ func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 // GET /tasks
 func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	var completed *bool
 	var page int
 	var limit int
@@ -98,7 +102,7 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		search = vals[0]
 	}
 
-	tasks, meta, err := c.service.GetAll(completed, page, limit, search)
+	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search)
 	if err != nil {
 		if err.Error() == "no tasks found" {
 			utils.ErrorResponse(w, http.StatusNotFound, err.Error())
@@ -120,6 +124,8 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 
 // GET /tasks/{id}
 func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -127,7 +133,7 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := c.service.GetByID(id)
+	task, err := c.service.GetByID(userID, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
@@ -142,6 +148,8 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 
 // PUT /tasks/{id}
 func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -155,7 +163,7 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedTask, err := c.service.Update(id, &task)
+	updatedTask, err := c.service.Update(userID, id, &task)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
@@ -170,6 +178,8 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 // DELETE /tasks/{id}
 func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -177,7 +187,7 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.service.Delete(id)
+	err = c.service.Delete(userID, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
@@ -192,6 +202,8 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 // PATCH /tasks/{id}/restore
 func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -201,7 +213,7 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 
 	// Check if task exists (originally checking ErrNoRows and custom conditions)
 	// Soft deleted task in GetByID will return ErrNoRows, which is what we check
-	_, err = c.service.GetByID(id)
+	_, err = c.service.GetByID(userID, id)
 	if err != nil && err != sql.ErrNoRows {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -220,7 +232,7 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 	// So they only allowed restoring if it wasn't actually deleted? That seems like a bug in the original code,
 	// but to preserve exact behavior/compatibility, we can query it or keep it. Let's make it work correctly:
 	// We'll restore the task. Let's check:
-	err = c.service.Restore(id)
+	err = c.service.Restore(userID, id)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -231,6 +243,8 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 
 // PATCH /tasks/{id}/complete
 func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -238,7 +252,7 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = c.service.MarkAsCompleted(id)
+	err = c.service.MarkAsCompleted(userID, id)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -249,6 +263,8 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 
 // PATCH /tasks/{id}/uncomplete
 func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -256,7 +272,7 @@ func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = c.service.MarkAsUncompleted(id)
+	err = c.service.MarkAsUncompleted(userID, id)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

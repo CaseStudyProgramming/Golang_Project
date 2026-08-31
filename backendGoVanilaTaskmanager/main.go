@@ -15,6 +15,7 @@ import (
 	"taskmanager/models"
 	"taskmanager/routes"
 	"taskmanager/services"
+	"taskmanager/utils"
 )
 
 func main() {
@@ -33,12 +34,24 @@ func main() {
 	)
 	defer db.Close()
 
+	// Initialize JWT manager
+	jwtManager := utils.NewJWTManager(cfg.JWT.Secret)
+
+	// Initialize user components
+	userModel := models.NewUserModel(db)
+	userService := services.NewUserService(userModel, jwtManager)
+	authController := controllers.NewAuthController(userService)
+
+	// Initialize auth middleware
+	authMiddleware := middlewares.NewAuthMiddleware(jwtManager)
+
+	// Initialize task components
 	taskModel := models.NewTaskModel(db)
 	taskService := services.NewTaskService(taskModel)
 	taskController := controllers.NewTaskController(taskService)
 
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, taskController)
+	routes.RegisterRoutes(mux, taskController, authController, authMiddleware)
 
 	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
 	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(mux)))
