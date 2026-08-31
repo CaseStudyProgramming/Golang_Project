@@ -1,0 +1,2 @@
+ALTER TABLE tasks
+ADD COLUMN priority VARCHAR(10) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT'));

@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+// Priority represents task priority levels
+type Priority string
+
+const (
+	PriorityLow    Priority = "LOW"
+	PriorityMedium Priority = "MEDIUM"
+	PriorityHigh   Priority = "HIGH"
+	PriorityUrgent Priority = "URGENT"
+)
+
 // Task entity
 type Task struct {
 	ID          int64      `json:"id"`
@@ -15,6 +25,7 @@ type Task struct {
 	Description string     `json:"description,omitempty"`
 	Completed   bool       `json:"completed"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
+	Priority    Priority   `json:"priority"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	DeletedAt   *time.Time `json:"deleted_at"`
@@ -27,7 +38,7 @@ type TaskModel struct {
 // TaskModelInterface defines the interface for task model operations
 type TaskModelInterface interface {
 	Create(task *Task) (*Task, error)
-	GetAll(userID int64, completed *bool, offset, limit int, search string) ([]Task, int, error)
+	GetAll(userID int64, completed *bool, offset, limit int, search string, priority *Priority, sortBy string, sortOrder string) ([]Task, int, error)
 	GetByID(userID int64, id int64) (*Task, error)
 	Update(userID int64, task *Task) error
 	Complete(userID int64, id int64) error
@@ -42,18 +53,18 @@ func NewTaskModel(db *sql.DB) *TaskModel {
 }
 
 func (m *TaskModel) Create(task *Task) (*Task, error) {
-	query := `INSERT INTO tasks (user_id, title, sub_title, description, completed, due_date) 
-	          VALUES ($1, $2, $3, $4, $5, $6) 
-	          RETURNING id, user_id, title, sub_title, description, completed, due_date, created_at, updated_at`
-	err := m.DB.QueryRow(query, task.UserID, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate).
-		Scan(&task.ID, &task.UserID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.CreatedAt, &task.UpdatedAt)
+	query := `INSERT INTO tasks (user_id, title, sub_title, description, completed, due_date, priority) 
+	          VALUES ($1, $2, $3, $4, $5, $6, $7) 
+	          RETURNING id, user_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at`
+	err := m.DB.QueryRow(query, task.UserID, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.Priority).
+		Scan(&task.ID, &task.UserID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.Priority, &task.CreatedAt, &task.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return task, nil
 }
 
-func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int, search string) ([]Task, int, error) {
+func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int, search string, priority *Priority, sortBy string, sortOrder string) ([]Task, int, error) {
 	// Get total count
 	countQuery := `SELECT COUNT(*) FROM tasks WHERE deleted_at IS NULL AND user_id = $1`
 	var countArgs []interface{}
@@ -62,6 +73,11 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 	if completed != nil {
 		countQuery += ` AND completed = $2`
 		countArgs = append(countArgs, *completed)
+	}
+
+	if priority != nil {
+		countQuery += ` AND priority = $` + fmt.Sprintf("%d", len(countArgs)+1)
+		countArgs = append(countArgs, *priority)
 	}
 
 	if search != "" {
@@ -76,7 +92,7 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 	}
 
 	// Get paginated data
-	query := `SELECT id, user_id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
+	query := `SELECT id, user_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, deleted_at 
 	          FROM tasks 
 	          WHERE deleted_at IS NULL AND user_id = $1`
 	var args []interface{}
@@ -87,13 +103,37 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 		args = append(args, *completed)
 	}
 
+	if priority != nil {
+		query += ` AND priority = $` + fmt.Sprintf("%d", len(args)+1)
+		args = append(args, *priority)
+	}
+
 	if search != "" {
 		placeholder := fmt.Sprintf("$%d", len(args)+1)
 		query += fmt.Sprintf(` AND (title LIKE %s OR description LIKE %s)`, placeholder, placeholder)
 		args = append(args, "%"+search+"%")
 	}
 
-	query += fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d OFFSET $%d`, len(args)+1, len(args)+2)
+	// Handle sorting
+	orderBy := "created_at DESC"
+	if sortBy != "" {
+		validSortFields := map[string]bool{
+			"created_at": true,
+			"updated_at": true,
+			"due_date":   true,
+			"priority":   true,
+			"title":      true,
+		}
+		if validSortFields[sortBy] {
+			order := "ASC"
+			if sortOrder == "DESC" {
+				order = "DESC"
+			}
+			orderBy = sortBy + " " + order
+		}
+	}
+
+	query += fmt.Sprintf(` ORDER BY %s LIMIT $%d OFFSET $%d`, orderBy, len(args)+1, len(args)+2)
 	args = append(args, limit, offset)
 
 	rows, err := m.DB.Query(query, args...)
@@ -113,6 +153,7 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 			&task.Description,
 			&task.Completed,
 			&task.DueDate,
+			&task.Priority,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 			&task.DeletedAt,
@@ -126,7 +167,7 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 }
 
 func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
-	query := `SELECT id, user_id, title, sub_title, description, completed, due_date, created_at, updated_at, deleted_at 
+	query := `SELECT id, user_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, deleted_at 
 	          FROM tasks WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 	var task Task
 	err := m.DB.QueryRow(query, id, userID).Scan(
@@ -137,6 +178,7 @@ func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
 		&task.Description,
 		&task.Completed,
 		&task.DueDate,
+		&task.Priority,
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.DeletedAt,
@@ -149,10 +191,10 @@ func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
 
 func (m *TaskModel) Update(userID int64, task *Task) error {
 	query := `UPDATE tasks 
-	          SET title = $1, sub_title = $2, description = $3, completed = $4, due_date = $5, updated_at = NOW() 
-	          WHERE id = $6 AND user_id = $7
+	          SET title = $1, sub_title = $2, description = $3, completed = $4, due_date = $5, priority = $6, updated_at = NOW() 
+	          WHERE id = $7 AND user_id = $8
 	          RETURNING updated_at`
-	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.ID, userID).Scan(&task.UpdatedAt)
+	err := m.DB.QueryRow(query, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.Priority, task.ID, userID).Scan(&task.UpdatedAt)
 	return err
 }
 
