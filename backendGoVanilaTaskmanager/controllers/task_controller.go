@@ -18,7 +18,7 @@ type TaskController struct {
 // TaskServiceInterface defines the interface for task service operations
 type TaskServiceInterface interface {
 	Create(userID int64, task *models.Task) (*models.Task, error)
-	GetAll(userID int64, completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
+	GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
 	GetByID(userID int64, id int64) (*models.Task, error)
 	Update(userID int64, id int64, task *models.Task) (*models.Task, error)
 	Delete(userID int64, id int64) error
@@ -58,6 +58,9 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var page int
 	var limit int
 	var search string
+	var priority *models.Priority
+	var sortBy string
+	var sortOrder string
 
 	completedParam := r.URL.Query().Get("completed")
 	if completedParam != "" {
@@ -102,7 +105,20 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		search = vals[0]
 	}
 
-	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search)
+	priorityParam := r.URL.Query().Get("priority")
+	if priorityParam != "" {
+		p := models.Priority(priorityParam)
+		if p != models.PriorityLow && p != models.PriorityMedium && p != models.PriorityHigh && p != models.PriorityUrgent {
+			utils.ErrorResponse(w, http.StatusBadRequest, "priority must be LOW, MEDIUM, HIGH, or URGENT")
+			return
+		}
+		priority = &p
+	}
+
+	sortBy = r.URL.Query().Get("sort_by")
+	sortOrder = r.URL.Query().Get("sort_order")
+
+	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search, priority, sortBy, sortOrder)
 	if err != nil {
 		if err.Error() == "no tasks found" {
 			utils.ErrorResponse(w, http.StatusNotFound, err.Error())

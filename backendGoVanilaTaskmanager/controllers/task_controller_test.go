@@ -16,7 +16,7 @@ import (
 // MockTaskService is a mock implementation of TaskServiceInterface for testing
 type MockTaskService struct {
 	CreateFunc            func(task *models.Task) (*models.Task, error)
-	GetAllFunc            func(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error)
+	GetAllFunc            func(completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
 	GetByIDFunc           func(id int64) (*models.Task, error)
 	UpdateFunc            func(id int64, task *models.Task) (*models.Task, error)
 	DeleteFunc            func(id int64) error
@@ -48,9 +48,9 @@ func (m *MockTaskService) Create(task *models.Task) (*models.Task, error) {
 	return nil, nil
 }
 
-func (m *MockTaskService) GetAll(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error) {
+func (m *MockTaskService) GetAll(completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 	if m.GetAllFunc != nil {
-		return m.GetAllFunc(completed, page, limit, search)
+		return m.GetAllFunc(completed, page, limit, search, priority, sortBy, sortOrder)
 	}
 	return nil, nil, nil
 }
@@ -173,7 +173,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 	}
 
 	mockService := &MockTaskService{
-		GetAllFunc: func(completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error) {
+		GetAllFunc: func(completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 			meta := map[string]interface{}{
 				"page":       page,
 				"limit":      limit,

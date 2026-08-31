@@ -25,14 +25,19 @@ func (s *TaskService) Create(userID int64, task *models.Task) (*models.Task, err
 		return nil, errors.New("Due date must be equal or greater than current date")
 	}
 
+	// Set default priority if not provided
+	if task.Priority == "" {
+		task.Priority = models.PriorityMedium
+	}
+
 	task.UserID = userID
 	task.Completed = false
 	return s.model.Create(task)
 }
 
-func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, search string) ([]models.Task, map[string]interface{}, error) {
+func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 	offset := (page - 1) * limit
-	tasks, total, err := s.model.GetAll(userID, completed, offset, limit, search)
+	tasks, total, err := s.model.GetAll(userID, completed, offset, limit, search, priority, sortBy, sortOrder)
 	if err != nil {
 		return nil, nil, err
 	}
