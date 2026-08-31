@@ -202,7 +202,7 @@ func TestGetAllTasks_Success(t *testing.T) {
 
 	service := NewTaskService(mockModel)
 
-	tasks, meta, err := service.GetAll(nil, 1, 10, "", nil, "", "")
+	tasks, meta, err := service.GetAll(1, nil, 1, 10, "", nil, "", "")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -234,7 +234,7 @@ func TestGetAllTasks_WithFilter(t *testing.T) {
 
 	service := NewTaskService(mockModel)
 
-	tasks, meta, err := service.GetAll(&completed, 1, 10, "", nil, "", "")
+	tasks, meta, err := service.GetAll(1, &completed, 1, 10, "", nil, "", "")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -267,7 +267,7 @@ func TestGetAllTasks_InvalidPage(t *testing.T) {
 	service := NewTaskService(mockModel)
 
 	// Request page 2 when only 1 page exists
-	_, _, err := service.GetAll(nil, 2, 5, "", nil, "", "")
+	_, _, err := service.GetAll(1, nil, 2, 5, "", nil, "", "")
 
 	if err == nil {
 		t.Error("Expected error for invalid page, got nil")
@@ -288,7 +288,7 @@ func TestGetAllTasks_NoResults(t *testing.T) {
 
 	service := NewTaskService(mockModel)
 
-	_, _, err := service.GetAll(nil, 1, 10, "nonexistent", nil, "", "")
+	_, _, err := service.GetAll(1, nil, 1, 10, "nonexistent", nil, "", "")
 
 	if err == nil {
 		t.Error("Expected error for no results, got nil")
@@ -317,7 +317,7 @@ func TestGetByID_Success(t *testing.T) {
 
 	service := NewTaskService(mockModel)
 
-	task, err := service.GetByID(1)
+	task, err := service.GetByID(1, 1)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -330,14 +330,14 @@ func TestGetByID_Success(t *testing.T) {
 
 func TestGetByID_NotFound(t *testing.T) {
 	mockModel := &MockTaskModel{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	_, err := service.GetByID(999)
+	_, err := service.GetByID(1, 999)
 
 	if err != sql.ErrNoRows {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
@@ -352,10 +352,10 @@ func TestUpdate_Success(t *testing.T) {
 	}
 
 	mockModel := &MockTaskModel{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return mockTask, nil
 		},
-		UpdateFunc: func(task *models.Task) error {
+		UpdateFunc: func(userID int64, task *models.Task) error {
 			return nil
 		},
 	}
@@ -367,7 +367,7 @@ func TestUpdate_Success(t *testing.T) {
 		Completed: true,
 	}
 
-	result, err := service.Update(1, updatedTask)
+	result, err := service.Update(1, 1, updatedTask)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -388,7 +388,7 @@ func TestUpdate_PastDueDate(t *testing.T) {
 		DueDate: &pastTime,
 	}
 
-	_, err := service.Update(1, updatedTask)
+	_, err := service.Update(1, 1, updatedTask)
 
 	if err == nil {
 		t.Error("Expected error for past due date, got nil")
@@ -401,7 +401,7 @@ func TestUpdate_PastDueDate(t *testing.T) {
 
 func TestUpdate_NotFound(t *testing.T) {
 	mockModel := &MockTaskModel{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
 	}
@@ -412,7 +412,7 @@ func TestUpdate_NotFound(t *testing.T) {
 		Title: "Updated Task",
 	}
 
-	_, err := service.Update(999, updatedTask)
+	_, err := service.Update(1, 999, updatedTask)
 
 	if err != sql.ErrNoRows {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
@@ -427,17 +427,17 @@ func TestDelete_Success(t *testing.T) {
 	}
 
 	mockModel := &MockTaskModel{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return mockTask, nil
 		},
-		DeleteFunc: func(id int64, softDelete bool) error {
+		DeleteFunc: func(userID int64, id int64, softDelete bool) error {
 			return nil
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	err := service.Delete(1)
+	err := service.Delete(1, 1)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -446,14 +446,14 @@ func TestDelete_Success(t *testing.T) {
 
 func TestDelete_NotFound(t *testing.T) {
 	mockModel := &MockTaskModel{
-		GetByIDFunc: func(id int64) (*models.Task, error) {
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	err := service.Delete(999)
+	err := service.Delete(1, 999)
 
 	if err != sql.ErrNoRows {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
@@ -462,14 +462,14 @@ func TestDelete_NotFound(t *testing.T) {
 
 func TestMarkAsCompleted_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
-		MarkTaskAsCompletedFunc: func(id int64) error {
+		MarkTaskAsCompletedFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	err := service.MarkAsCompleted(1)
+	err := service.MarkAsCompleted(1, 1)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -478,14 +478,14 @@ func TestMarkAsCompleted_Success(t *testing.T) {
 
 func TestMarkAsUncompleted_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
-		MarkTaskAsUncompletedFunc: func(id int64) error {
+		MarkTaskAsUncompletedFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	err := service.MarkAsUncompleted(1)
+	err := service.MarkAsUncompleted(1, 1)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -494,14 +494,14 @@ func TestMarkAsUncompleted_Success(t *testing.T) {
 
 func TestRestore_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
-		RestoreTaskFunc: func(id int64) error {
+		RestoreTaskFunc: func(userID int64, id int64) error {
 			return nil
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	err := service.Restore(1)
+	err := service.Restore(1, 1)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -510,14 +510,14 @@ func TestRestore_Success(t *testing.T) {
 
 func TestRestore_Error(t *testing.T) {
 	mockModel := &MockTaskModel{
-		RestoreTaskFunc: func(id int64) error {
+		RestoreTaskFunc: func(userID int64, id int64) error {
 			return errors.New("restore failed")
 		},
 	}
 
 	service := NewTaskService(mockModel)
 
-	err := service.Restore(1)
+	err := service.Restore(1, 1)
 
 	if err == nil {
 		t.Error("Expected error, got nil")
