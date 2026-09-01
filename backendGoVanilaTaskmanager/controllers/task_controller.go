@@ -18,13 +18,15 @@ type TaskController struct {
 // TaskServiceInterface defines the interface for task service operations
 type TaskServiceInterface interface {
 	Create(userID int64, task *models.Task) (*models.Task, error)
-	GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
+	GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
 	GetByID(userID int64, id int64) (*models.Task, error)
 	Update(userID int64, id int64, task *models.Task) (*models.Task, error)
 	Delete(userID int64, id int64) error
 	Restore(userID int64, id int64) error
 	MarkAsCompleted(userID int64, id int64) error
 	MarkAsUncompleted(userID int64, id int64) error
+	AddTagToTask(userID int64, taskID int64, tagID int64) error
+	RemoveTagFromTask(userID int64, taskID int64, tagID int64) error
 }
 
 func NewTaskController(service TaskServiceInterface) *TaskController {
@@ -59,6 +61,7 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var limit int
 	var search string
 	var priority *models.Priority
+	var categoryID *int64
 	var sortBy string
 	var sortOrder string
 
@@ -115,10 +118,20 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		priority = &p
 	}
 
+	categoryIDParam := r.URL.Query().Get("category_id")
+	if categoryIDParam != "" {
+		catID, err := strconv.ParseInt(categoryIDParam, 10, 64)
+		if err != nil || catID < 1 {
+			utils.ErrorResponse(w, http.StatusBadRequest, "category_id must be a positive integer")
+			return
+		}
+		categoryID = &catID
+	}
+
 	sortBy = r.URL.Query().Get("sort_by")
 	sortOrder = r.URL.Query().Get("sort_order")
 
-	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search, priority, sortBy, sortOrder)
+	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search, priority, categoryID, sortBy, sortOrder)
 	if err != nil {
 		if err.Error() == "no tasks found" {
 			utils.ErrorResponse(w, http.StatusNotFound, err.Error())
@@ -295,4 +308,64 @@ func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Re
 	}
 
 	utils.SuccessResponse(w, http.StatusOK, "Task uncompleted successfully", nil)
+}
+
+// POST /tasks/{id}/tags
+func (c *TaskController) AddTagToTask(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	idStr := r.PathValue("id")
+	taskID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var request struct {
+		TagID int64 `json:"tag_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if request.TagID == 0 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "tag_id is required")
+		return
+	}
+
+	err = c.service.AddTagToTask(userID, taskID, request.TagID)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, "Tag added to task successfully", nil)
+}
+
+// DELETE /tasks/{id}/tags/{tagId}
+func (c *TaskController) RemoveTagFromTask(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	idStr := r.PathValue("id")
+	taskID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tagIdStr := r.PathValue("tagId")
+	tagID, err := strconv.ParseInt(tagIdStr, 10, 64)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = c.service.RemoveTagFromTask(userID, taskID, tagID)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, "Tag removed from task successfully", nil)
 }
