@@ -22,6 +22,8 @@ type MockTaskModel struct {
 	AddTagToTaskFunc          func(taskID int64, tagID int64) error
 	RemoveTagFromTaskFunc     func(taskID int64, tagID int64) error
 	LoadTagsFunc              func(task *models.Task) error
+	LoadSubtasksFunc          func(task *models.Task) error
+	UpdateProgressFunc        func(taskID int64) error
 }
 
 // Ensure MockTaskModel implements TaskModelInterface
@@ -107,6 +109,20 @@ func (m *MockTaskModel) RemoveTagFromTask(taskID int64, tagID int64) error {
 func (m *MockTaskModel) LoadTags(task *models.Task) error {
 	if m.LoadTagsFunc != nil {
 		return m.LoadTagsFunc(task)
+	}
+	return nil
+}
+
+func (m *MockTaskModel) LoadSubtasks(task *models.Task) error {
+	if m.LoadSubtasksFunc != nil {
+		return m.LoadSubtasksFunc(task)
+	}
+	return nil
+}
+
+func (m *MockTaskModel) UpdateProgress(taskID int64) error {
+	if m.UpdateProgressFunc != nil {
+		return m.UpdateProgressFunc(taskID)
 	}
 	return nil
 }
