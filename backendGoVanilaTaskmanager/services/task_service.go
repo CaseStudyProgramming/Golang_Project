@@ -52,9 +52,12 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 		return nil, nil, errors.New("no tasks found")
 	}
 
-	// Load tags for each task
+	// Load tags and subtasks for each task
 	for i := range tasks {
 		if err := s.model.LoadTags(&tasks[i]); err != nil {
+			return nil, nil, err
+		}
+		if err := s.model.LoadSubtasks(&tasks[i]); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -78,6 +81,10 @@ func (s *TaskService) GetByID(userID int64, id int64) (*models.Task, error) {
 	}
 	// Load tags for the task
 	if err := s.model.LoadTags(task); err != nil {
+		return nil, err
+	}
+	// Load subtasks for the task
+	if err := s.model.LoadSubtasks(task); err != nil {
 		return nil, err
 	}
 	return task, nil

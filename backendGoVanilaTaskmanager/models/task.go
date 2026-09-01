@@ -18,19 +18,21 @@ const (
 
 // Task entity
 type Task struct {
-	ID          int64      `json:"id"`
-	UserID      int64      `json:"user_id"`
-	CategoryID  *int64     `json:"category_id,omitempty"`
-	Title       string     `json:"title"`
-	SubTitle    string     `json:"sub_title,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Completed   bool       `json:"completed"`
-	DueDate     *time.Time `json:"due_date,omitempty"`
-	Priority    Priority   `json:"priority"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	DeletedAt   *time.Time `json:"deleted_at"`
-	Tags        []Tag      `json:"tags,omitempty"`
+	ID                 int64      `json:"id"`
+	UserID             int64      `json:"user_id"`
+	CategoryID         *int64     `json:"category_id,omitempty"`
+	Title              string     `json:"title"`
+	SubTitle           string     `json:"sub_title,omitempty"`
+	Description        string     `json:"description,omitempty"`
+	Completed          bool       `json:"completed"`
+	DueDate            *time.Time `json:"due_date,omitempty"`
+	Priority           Priority   `json:"priority"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
+	DeletedAt          *time.Time `json:"deleted_at"`
+	Tags               []Tag      `json:"tags,omitempty"`
+	ProgressPercentage int        `json:"progress_percentage"`
+	Subtasks           []Subtask  `json:"subtasks,omitempty"`
 }
 
 type TaskModel struct {
@@ -51,6 +53,8 @@ type TaskModelInterface interface {
 	LoadTags(task *Task) error
 	AddTagToTask(taskID int64, tagID int64) error
 	RemoveTagFromTask(taskID int64, tagID int64) error
+	LoadSubtasks(task *Task) error
+	UpdateProgress(taskID int64) error
 }
 
 func NewTaskModel(db *sql.DB) *TaskModel {
@@ -58,11 +62,11 @@ func NewTaskModel(db *sql.DB) *TaskModel {
 }
 
 func (m *TaskModel) Create(task *Task) (*Task, error) {
-	query := `INSERT INTO tasks (user_id, category_id, title, sub_title, description, completed, due_date, priority) 
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-	          RETURNING id, user_id, category_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at`
+	query := `INSERT INTO tasks (user_id, category_id, title, sub_title, description, completed, due_date, priority, progress_percentage) 
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0) 
+	          RETURNING id, user_id, category_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, progress_percentage`
 	err := m.DB.QueryRow(query, task.UserID, task.CategoryID, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.Priority).
-		Scan(&task.ID, &task.UserID, &task.CategoryID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.Priority, &task.CreatedAt, &task.UpdatedAt)
+		Scan(&task.ID, &task.UserID, &task.CategoryID, &task.Title, &task.SubTitle, &task.Description, &task.Completed, &task.DueDate, &task.Priority, &task.CreatedAt, &task.UpdatedAt, &task.ProgressPercentage)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +106,7 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 	}
 
 	// Get paginated data
-	query := `SELECT id, user_id, category_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, deleted_at 
+	query := `SELECT id, user_id, category_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, deleted_at, progress_percentage 
 	          FROM tasks 
 	          WHERE deleted_at IS NULL AND user_id = $1`
 	var args []interface{}
@@ -173,6 +177,7 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 			&task.CreatedAt,
 			&task.UpdatedAt,
 			&task.DeletedAt,
+			&task.ProgressPercentage,
 		); err != nil {
 			return nil, 0, err
 		}
@@ -187,7 +192,7 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 }
 
 func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
-	query := `SELECT id, user_id, category_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, deleted_at 
+	query := `SELECT id, user_id, category_id, title, sub_title, description, completed, due_date, priority, created_at, updated_at, deleted_at, progress_percentage 
 	          FROM tasks WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
 	var task Task
 	err := m.DB.QueryRow(query, id, userID).Scan(
@@ -203,6 +208,7 @@ func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
 		&task.CreatedAt,
 		&task.UpdatedAt,
 		&task.DeletedAt,
+		&task.ProgressPercentage,
 	)
 	if err != nil {
 		return nil, err
@@ -300,5 +306,53 @@ func (m *TaskModel) AddTagToTask(taskID int64, tagID int64) error {
 func (m *TaskModel) RemoveTagFromTask(taskID int64, tagID int64) error {
 	query := `DELETE FROM task_tags WHERE task_id = $1 AND tag_id = $2`
 	_, err := m.DB.Exec(query, taskID, tagID)
+	return err
+}
+
+func (m *TaskModel) LoadSubtasks(task *Task) error {
+	query := `SELECT id, task_id, title, is_completed, created_at, updated_at 
+	          FROM subtasks 
+	          WHERE task_id = $1 
+	          ORDER BY created_at ASC`
+
+	rows, err := m.DB.Query(query, task.ID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	subtasks := make([]Subtask, 0)
+	for rows.Next() {
+		var subtask Subtask
+		if err := rows.Scan(
+			&subtask.ID,
+			&subtask.TaskID,
+			&subtask.Title,
+			&subtask.IsCompleted,
+			&subtask.CreatedAt,
+			&subtask.UpdatedAt,
+		); err != nil {
+			return err
+		}
+		subtasks = append(subtasks, subtask)
+	}
+
+	if err = rows.Err(); err != nil {
+		return err
+	}
+
+	task.Subtasks = subtasks
+	return nil
+}
+
+func (m *TaskModel) UpdateProgress(taskID int64) error {
+	subtaskModel := NewSubtaskModel(m.DB)
+	progress, err := subtaskModel.CalculateProgress(taskID)
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE tasks SET progress_percentage = $1, updated_at = NOW() WHERE id = $2`
+	_, err = m.DB.Exec(query, progress, taskID)
 	return err
 }
