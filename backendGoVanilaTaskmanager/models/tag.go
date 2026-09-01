@@ -60,7 +60,7 @@ func (m *TagModel) GetAll(userID int64) ([]Tag, error) {
 	          FROM tags 
 	          WHERE user_id = $1 
 	          ORDER BY created_at DESC`
-	
+
 	rows, err := m.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
@@ -80,6 +80,10 @@ func (m *TagModel) GetAll(userID int64) ([]Tag, error) {
 			return nil, err
 		}
 		tags = append(tags, tag)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return tags, nil
@@ -135,7 +139,7 @@ func (m *TagModel) GetTagsByTaskID(taskID int64) ([]Tag, error) {
 	          INNER JOIN task_tags tt ON t.id = tt.tag_id 
 	          WHERE tt.task_id = $1 
 	          ORDER BY t.created_at DESC`
-	
+
 	rows, err := m.DB.Query(query, taskID)
 	if err != nil {
 		return nil, err
@@ -157,6 +161,10 @@ func (m *TagModel) GetTagsByTaskID(taskID int64) ([]Tag, error) {
 		tags = append(tags, tag)
 	}
 
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return tags, nil
 }
 
@@ -166,7 +174,7 @@ func (m *TagModel) GetTasksByTagID(tagID int64) ([]Task, error) {
 	          INNER JOIN task_tags tt ON t.id = tt.task_id 
 	          WHERE tt.tag_id = $1 AND t.deleted_at IS NULL 
 	          ORDER BY t.created_at DESC`
-	
+
 	rows, err := m.DB.Query(query, tagID)
 	if err != nil {
 		return nil, err
@@ -193,6 +201,10 @@ func (m *TagModel) GetTasksByTagID(tagID int64) ([]Task, error) {
 			return nil, err
 		}
 		tasks = append(tasks, task)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return tasks, nil

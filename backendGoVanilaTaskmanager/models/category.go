@@ -48,7 +48,7 @@ func (m *CategoryModel) GetAll(userID int64) ([]Category, error) {
 	          FROM categories 
 	          WHERE user_id = $1 
 	          ORDER BY created_at DESC`
-	
+
 	rows, err := m.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
@@ -68,6 +68,10 @@ func (m *CategoryModel) GetAll(userID int64) ([]Category, error) {
 			return nil, err
 		}
 		categories = append(categories, category)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return categories, nil
