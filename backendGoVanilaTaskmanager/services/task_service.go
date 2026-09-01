@@ -9,15 +9,21 @@ import (
 )
 
 type TaskService struct {
-	model    models.TaskModelInterface
-	tagModel models.TagModelInterface
+	model           models.TaskModelInterface
+	tagModel        models.TagModelInterface
+	activityService ActivityLogServiceInterface
 }
 
-func NewTaskService(model models.TaskModelInterface, tagModel models.TagModelInterface) *TaskService {
-	return &TaskService{model: model, tagModel: tagModel}
+// ActivityLogServiceInterface defines the interface for activity logging
+type ActivityLogServiceInterface interface {
+	LogActivity(userID int64, taskID *int64, action string, entityType string, entityID *int64, details string, ipAddress string, userAgent string) error
 }
 
-func (s *TaskService) Create(userID int64, task *models.Task) (*models.Task, error) {
+func NewTaskService(model models.TaskModelInterface, tagModel models.TagModelInterface, activityService ActivityLogServiceInterface) *TaskService {
+	return &TaskService{model: model, tagModel: tagModel, activityService: activityService}
+}
+
+func (s *TaskService) Create(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 	if task.Title == "" {
 		return nil, errors.New("Title tidak boleh kosong")
 	}
@@ -33,7 +39,19 @@ func (s *TaskService) Create(userID int64, task *models.Task) (*models.Task, err
 
 	task.UserID = userID
 	task.Completed = false
-	return s.model.Create(task)
+	createdTask, err := s.model.Create(task)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log activity
+	taskID := createdTask.ID
+	if s.activityService != nil {
+		details := fmt.Sprintf("Created task: %s", task.Title)
+		_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionCreate), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+	}
+
+	return createdTask, nil
 }
 
 func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
@@ -90,7 +108,7 @@ func (s *TaskService) GetByID(userID int64, id int64) (*models.Task, error) {
 	return task, nil
 }
 
-func (s *TaskService) Update(userID int64, id int64, task *models.Task) (*models.Task, error) {
+func (s *TaskService) Update(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 	task.ID = id
 	task.UserID = userID
 	if task.DueDate != nil && task.DueDate.Before(time.Now()) {
@@ -106,6 +124,13 @@ func (s *TaskService) Update(userID int64, id int64, task *models.Task) (*models
 	if err := s.model.Update(userID, task); err != nil {
 		return nil, err
 	}
+
+	// Log activity
+	if s.activityService != nil {
+		details := fmt.Sprintf("Updated task: %s", task.Title)
+		_ = s.activityService.LogActivity(userID, &id, string(models.ActionUpdate), string(models.EntityTask), &id, details, ipAddress, userAgent)
+	}
+
 	return task, nil
 }
 
@@ -113,13 +138,24 @@ func (s *TaskService) Complete(userID int64, id int64) error {
 	return s.model.Complete(userID, id)
 }
 
-func (s *TaskService) Delete(userID int64, id int64) error {
+func (s *TaskService) Delete(userID int64, id int64, ipAddress string, userAgent string) error {
 	// Check if task exists
-	_, err := s.model.GetByID(userID, id)
+	task, err := s.model.GetByID(userID, id)
 	if err != nil {
 		return err
 	}
-	return s.model.Delete(userID, id, true)
+
+	if err := s.model.Delete(userID, id, true); err != nil {
+		return err
+	}
+
+	// Log activity
+	if s.activityService != nil {
+		details := fmt.Sprintf("Deleted task: %s", task.Title)
+		_ = s.activityService.LogActivity(userID, &id, string(models.ActionDelete), string(models.EntityTask), &id, details, ipAddress, userAgent)
+	}
+
+	return nil
 }
 
 func (s *TaskService) Restore(userID int64, id int64) error {
@@ -131,12 +167,44 @@ func (s *TaskService) Restore(userID int64, id int64) error {
 	return s.model.RestoreTask(userID, id)
 }
 
-func (s *TaskService) MarkAsCompleted(userID int64, id int64) error {
-	return s.model.MarkTaskAsCompleted(userID, id)
+func (s *TaskService) MarkAsCompleted(userID int64, id int64, ipAddress string, userAgent string) error {
+	// Get task for logging
+	task, err := s.model.GetByID(userID, id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.model.MarkTaskAsCompleted(userID, id); err != nil {
+		return err
+	}
+
+	// Log activity
+	if s.activityService != nil {
+		details := fmt.Sprintf("Marked task as completed: %s", task.Title)
+		_ = s.activityService.LogActivity(userID, &id, string(models.ActionComplete), string(models.EntityTask), &id, details, ipAddress, userAgent)
+	}
+
+	return nil
 }
 
-func (s *TaskService) MarkAsUncompleted(userID int64, id int64) error {
-	return s.model.MarkTaskAsUncompleted(userID, id)
+func (s *TaskService) MarkAsUncompleted(userID int64, id int64, ipAddress string, userAgent string) error {
+	// Get task for logging
+	task, err := s.model.GetByID(userID, id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.model.MarkTaskAsUncompleted(userID, id); err != nil {
+		return err
+	}
+
+	// Log activity
+	if s.activityService != nil {
+		details := fmt.Sprintf("Marked task as uncompleted: %s", task.Title)
+		_ = s.activityService.LogActivity(userID, &id, string(models.ActionUncomplete), string(models.EntityTask), &id, details, ipAddress, userAgent)
+	}
+
+	return nil
 }
 
 // Tag operations for tasks

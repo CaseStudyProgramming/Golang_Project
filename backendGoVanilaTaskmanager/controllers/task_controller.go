@@ -17,14 +17,14 @@ type TaskController struct {
 
 // TaskServiceInterface defines the interface for task service operations
 type TaskServiceInterface interface {
-	Create(userID int64, task *models.Task) (*models.Task, error)
+	Create(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error)
 	GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
 	GetByID(userID int64, id int64) (*models.Task, error)
-	Update(userID int64, id int64, task *models.Task) (*models.Task, error)
-	Delete(userID int64, id int64) error
+	Update(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error)
+	Delete(userID int64, id int64, ipAddress string, userAgent string) error
 	Restore(userID int64, id int64) error
-	MarkAsCompleted(userID int64, id int64) error
-	MarkAsUncompleted(userID int64, id int64) error
+	MarkAsCompleted(userID int64, id int64, ipAddress string, userAgent string) error
+	MarkAsUncompleted(userID int64, id int64, ipAddress string, userAgent string) error
 	AddTagToTask(userID int64, taskID int64, tagID int64) error
 	RemoveTagFromTask(userID int64, taskID int64, tagID int64) error
 }
@@ -43,7 +43,10 @@ func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdTask, err := c.service.Create(userID, &task)
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	createdTask, err := c.service.Create(userID, &task, ipAddress, userAgent)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -192,7 +195,10 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedTask, err := c.service.Update(userID, id, &task)
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	updatedTask, err := c.service.Update(userID, id, &task, ipAddress, userAgent)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
@@ -216,7 +222,10 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.service.Delete(userID, id)
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err = c.service.Delete(userID, id, ipAddress, userAgent)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
@@ -281,7 +290,10 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = c.service.MarkAsCompleted(userID, id)
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err = c.service.MarkAsCompleted(userID, id, ipAddress, userAgent)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -301,7 +313,10 @@ func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = c.service.MarkAsUncompleted(userID, id)
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err = c.service.MarkAsUncompleted(userID, id, ipAddress, userAgent)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
