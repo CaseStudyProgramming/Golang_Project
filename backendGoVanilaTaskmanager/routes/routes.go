@@ -7,10 +7,17 @@ import (
 	"taskmanager/middlewares"
 )
 
-func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, authMiddleware *middlewares.AuthMiddleware) {
+func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, swaggerController *controllers.SwaggerController, authMiddleware *middlewares.AuthMiddleware) {
 	// health check endpoint
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
+	})
+
+	// swagger documentation endpoints (public)
+	mux.HandleFunc("GET /swagger/index.html", swaggerController.ServeSwaggerUI)
+	mux.HandleFunc("GET /swagger/openapi.yaml", swaggerController.ServeOpenAPISpec)
+	mux.HandleFunc("GET /swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
 	})
 
 	// auth endpoints (public)
