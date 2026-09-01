@@ -7,7 +7,7 @@ import (
 	"taskmanager/middlewares"
 )
 
-func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, authMiddleware *middlewares.AuthMiddleware) {
+func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, authMiddleware *middlewares.AuthMiddleware) {
 	// health check endpoint
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
@@ -50,4 +50,12 @@ func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskControll
 	mux.HandleFunc("POST /tasks/{id}/tags", authMiddleware.Authenticate(taskController.AddTagToTask))
 	mux.HandleFunc("DELETE /tasks/{id}/tags/{tagId}", authMiddleware.Authenticate(taskController.RemoveTagFromTask))
 	mux.HandleFunc("GET /tasks/{id}/tags", authMiddleware.Authenticate(tagController.GetTagsByTaskID))
+
+	// subtask endpoints (protected)
+	mux.HandleFunc("POST /tasks/{id}/subtasks", authMiddleware.Authenticate(subtaskController.CreateSubtask))
+	mux.HandleFunc("GET /tasks/{id}/subtasks", authMiddleware.Authenticate(subtaskController.GetSubtasksByTaskID))
+	mux.HandleFunc("GET /subtasks/{id}", authMiddleware.Authenticate(subtaskController.GetSubtaskByID))
+	mux.HandleFunc("PUT /subtasks/{id}", authMiddleware.Authenticate(subtaskController.UpdateSubtask))
+	mux.HandleFunc("DELETE /subtasks/{id}", authMiddleware.Authenticate(subtaskController.DeleteSubtask))
+	mux.HandleFunc("PATCH /subtasks/{id}/toggle", authMiddleware.Authenticate(subtaskController.ToggleSubtask))
 }

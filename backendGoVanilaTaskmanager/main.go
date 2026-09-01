@@ -60,8 +60,13 @@ func main() {
 	tagService := services.NewTagService(tagModel)
 	tagController := controllers.NewTagController(tagService)
 
+	// Initialize subtask components
+	subtaskModel := models.NewSubtaskModel(db)
+	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
+	subtaskController := controllers.NewSubtaskController(subtaskService)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, authMiddleware)
+	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, authMiddleware)
 
 	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
 	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(mux)))
