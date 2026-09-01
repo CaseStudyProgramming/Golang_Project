@@ -1,6 +1,8 @@
 package services
 
 import (
+	"bytes"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"strings"
@@ -271,4 +273,59 @@ func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress stri
 	}
 
 	return s.model.BulkComplete(userID, taskIDs)
+}
+
+func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+	// Get all tasks without pagination for export
+	tasks, _, err := s.model.GetAll(userID, completed, 0, 0, search, priority, categoryID, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create CSV buffer
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Write CSV header
+	header := []string{"ID", "Title", "SubTitle", "Description", "Completed", "DueDate", "Priority", "CategoryID", "CreatedAt", "UpdatedAt"}
+	if err := writer.Write(header); err != nil {
+		return nil, err
+	}
+
+	// Write task data
+	for _, task := range tasks {
+		dueDate := ""
+		if task.DueDate != nil {
+			dueDate = task.DueDate.Format("2006-01-02 15:04:05")
+		}
+
+		categoryIDVal := ""
+		if task.CategoryID != nil {
+			categoryIDVal = fmt.Sprintf("%d", *task.CategoryID)
+		}
+
+		record := []string{
+			fmt.Sprintf("%d", task.ID),
+			task.Title,
+			task.SubTitle,
+			task.Description,
+			fmt.Sprintf("%t", task.Completed),
+			dueDate,
+			string(task.Priority),
+			categoryIDVal,
+			task.CreatedAt.Format("2006-01-02 15:04:05"),
+			task.UpdatedAt.Format("2006-01-02 15:04:05"),
+		}
+
+		if err := writer.Write(record); err != nil {
+			return nil, err
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }

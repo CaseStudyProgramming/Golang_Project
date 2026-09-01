@@ -24,6 +24,9 @@ type MockTaskModel struct {
 	LoadTagsFunc              func(task *models.Task) error
 	LoadSubtasksFunc          func(task *models.Task) error
 	UpdateProgressFunc        func(taskID int64) error
+	GetAnalyticsSummaryFunc   func(userID int64) (map[string]interface{}, error)
+	BulkDeleteFunc            func(userID int64, taskIDs []int64) error
+	BulkCompleteFunc          func(userID int64, taskIDs []int64) error
 }
 
 // Ensure MockTaskModel implements TaskModelInterface
@@ -127,6 +130,27 @@ func (m *MockTaskModel) UpdateProgress(taskID int64) error {
 	return nil
 }
 
+func (m *MockTaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
+	if m.GetAnalyticsSummaryFunc != nil {
+		return m.GetAnalyticsSummaryFunc(userID)
+	}
+	return nil, nil
+}
+
+func (m *MockTaskModel) BulkDelete(userID int64, taskIDs []int64) error {
+	if m.BulkDeleteFunc != nil {
+		return m.BulkDeleteFunc(userID, taskIDs)
+	}
+	return nil
+}
+
+func (m *MockTaskModel) BulkComplete(userID int64, taskIDs []int64) error {
+	if m.BulkCompleteFunc != nil {
+		return m.BulkCompleteFunc(userID, taskIDs)
+	}
+	return nil
+}
+
 // MockTagModel is a mock implementation of TagModelInterface for testing
 type MockTagModel struct {
 	CreateFunc            func(tag *models.Tag) (*models.Tag, error)
@@ -214,14 +238,14 @@ func TestCreateTask_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	task := &models.Task{
 		Title:       "Test Task",
 		Description: "Test Description",
 	}
 
-	result, err := service.Create(1, task)
+	result, err := service.Create(1, task, "127.0.0.1", "test-agent")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -239,13 +263,13 @@ func TestCreateTask_Success(t *testing.T) {
 func TestCreateTask_EmptyTitle(t *testing.T) {
 	mockModel := &MockTaskModel{}
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	task := &models.Task{
 		Title: "",
 	}
 
-	_, err := service.Create(1, task)
+	_, err := service.Create(1, task, "127.0.0.1", "test-agent")
 
 	if err == nil {
 		t.Error("Expected error for empty title, got nil")
@@ -259,7 +283,7 @@ func TestCreateTask_EmptyTitle(t *testing.T) {
 func TestCreateTask_PastDueDate(t *testing.T) {
 	mockModel := &MockTaskModel{}
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	pastTime := time.Now().Add(-24 * time.Hour)
 	task := &models.Task{
@@ -267,7 +291,7 @@ func TestCreateTask_PastDueDate(t *testing.T) {
 		DueDate: &pastTime,
 	}
 
-	_, err := service.Create(1, task)
+	_, err := service.Create(1, task, "127.0.0.1", "test-agent")
 
 	if err == nil {
 		t.Error("Expected error for past due date, got nil")
@@ -289,7 +313,7 @@ func TestCreateTask_FutureDueDate(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	futureTime := time.Now().Add(24 * time.Hour)
 	task := &models.Task{
@@ -297,7 +321,7 @@ func TestCreateTask_FutureDueDate(t *testing.T) {
 		DueDate: &futureTime,
 	}
 
-	result, err := service.Create(1, task)
+	result, err := service.Create(1, task, "127.0.0.1", "test-agent")
 
 	if err != nil {
 		t.Errorf("Expected no error for future due date, got %v", err)
@@ -321,7 +345,7 @@ func TestGetAllTasks_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	tasks, meta, err := service.GetAll(1, nil, 1, 10, "", nil, nil, "", "")
 
@@ -354,7 +378,7 @@ func TestGetAllTasks_WithFilter(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	tasks, meta, err := service.GetAll(1, &completed, 1, 10, "", nil, nil, "", "")
 
@@ -387,7 +411,7 @@ func TestGetAllTasks_InvalidPage(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	// Request page 2 when only 1 page exists
 	_, _, err := service.GetAll(1, nil, 2, 5, "", nil, nil, "", "")
@@ -410,7 +434,7 @@ func TestGetAllTasks_NoResults(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	_, _, err := service.GetAll(1, nil, 1, 10, "nonexistent", nil, nil, "", "")
 
@@ -440,7 +464,7 @@ func TestGetByID_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	task, err := service.GetByID(1, 1)
 
@@ -461,7 +485,7 @@ func TestGetByID_NotFound(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	_, err := service.GetByID(1, 999)
 
@@ -487,7 +511,7 @@ func TestUpdate_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	updatedTask := &models.Task{
 		Title:     "Updated Task",
@@ -508,7 +532,7 @@ func TestUpdate_Success(t *testing.T) {
 func TestUpdate_PastDueDate(t *testing.T) {
 	mockModel := &MockTaskModel{}
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	pastTime := time.Now().Add(-24 * time.Hour)
 	updatedTask := &models.Task{
@@ -535,7 +559,7 @@ func TestUpdate_NotFound(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	updatedTask := &models.Task{
 		Title: "Updated Task",
@@ -565,7 +589,7 @@ func TestDelete_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Delete(1, 1)
 
@@ -582,7 +606,7 @@ func TestDelete_NotFound(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Delete(1, 999)
 
@@ -599,7 +623,7 @@ func TestMarkAsCompleted_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.MarkAsCompleted(1, 1)
 
@@ -616,7 +640,7 @@ func TestMarkAsUncompleted_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.MarkAsUncompleted(1, 1)
 
@@ -633,7 +657,7 @@ func TestRestore_Success(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Restore(1, 1)
 
@@ -650,7 +674,7 @@ func TestRestore_Error(t *testing.T) {
 	}
 
 	mockTagModel := &MockTagModel{}
-	service := NewTaskService(mockModel, mockTagModel)
+	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Restore(1, 1)
 
