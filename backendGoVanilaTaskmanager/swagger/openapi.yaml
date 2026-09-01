@@ -397,6 +397,88 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /tasks/bulk-delete:
+    post:
+      summary: Bulk delete tasks
+      description: Delete multiple tasks at once
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task_ids
+              properties:
+                task_ids:
+                  type: array
+                  items:
+                    type: integer
+                  maxItems: 100
+                  example: [1, 2, 3]
+      responses:
+        '200':
+          description: Tasks deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tasks/bulk-complete:
+    post:
+      summary: Bulk complete tasks
+      description: Mark multiple tasks as completed at once
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task_ids
+              properties:
+                task_ids:
+                  type: array
+                  items:
+                    type: integer
+                  maxItems: 100
+                  example: [1, 2, 3]
+      responses:
+        '200':
+          description: Tasks completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /tasks/{id}/tags:
     post:
       summary: Add tag to task

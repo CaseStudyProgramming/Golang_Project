@@ -28,6 +28,8 @@ type TaskServiceInterface interface {
 	AddTagToTask(userID int64, taskID int64, tagID int64) error
 	RemoveTagFromTask(userID int64, taskID int64, tagID int64) error
 	GetAnalyticsSummary(userID int64) (map[string]interface{}, error)
+	BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
+	BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
 }
 
 func NewTaskController(service TaskServiceInterface) *TaskController {
@@ -397,4 +399,72 @@ func (c *TaskController) GetAnalyticsSummary(w http.ResponseWriter, r *http.Requ
 	}
 
 	utils.SuccessResponse(w, http.StatusOK, "Analytics summary retrieved successfully", summary)
+}
+
+// POST /tasks/bulk-delete
+func (c *TaskController) BulkDeleteTasks(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	var request struct {
+		TaskIDs []int64 `json:"task_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(request.TaskIDs) == 0 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "task_ids array is required and cannot be empty")
+		return
+	}
+
+	if len(request.TaskIDs) > 100 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Cannot process more than 100 tasks at once")
+		return
+	}
+
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err := c.service.BulkDelete(userID, request.TaskIDs, ipAddress, userAgent)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, fmt.Sprintf("Successfully deleted %d tasks", len(request.TaskIDs)), nil)
+}
+
+// POST /tasks/bulk-complete
+func (c *TaskController) BulkCompleteTasks(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	var request struct {
+		TaskIDs []int64 `json:"task_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(request.TaskIDs) == 0 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "task_ids array is required and cannot be empty")
+		return
+	}
+
+	if len(request.TaskIDs) > 100 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Cannot process more than 100 tasks at once")
+		return
+	}
+
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err := c.service.BulkComplete(userID, request.TaskIDs, ipAddress, userAgent)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, fmt.Sprintf("Successfully completed %d tasks", len(request.TaskIDs)), nil)
 }

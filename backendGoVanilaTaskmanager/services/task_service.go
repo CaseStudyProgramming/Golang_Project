@@ -234,3 +234,41 @@ func (s *TaskService) RemoveTagFromTask(userID int64, taskID int64, tagID int64)
 func (s *TaskService) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
 	return s.model.GetAnalyticsSummary(userID)
 }
+
+func (s *TaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Log activity for each task
+	if s.activityService != nil {
+		for _, taskID := range taskIDs {
+			task, err := s.model.GetByID(userID, taskID)
+			if err == nil {
+				details := fmt.Sprintf("Bulk deleted task: %s", task.Title)
+				_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionDelete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+			}
+		}
+	}
+
+	return s.model.BulkDelete(userID, taskIDs)
+}
+
+func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Log activity for each task
+	if s.activityService != nil {
+		for _, taskID := range taskIDs {
+			task, err := s.model.GetByID(userID, taskID)
+			if err == nil {
+				details := fmt.Sprintf("Bulk completed task: %s", task.Title)
+				_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionComplete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+			}
+		}
+	}
+
+	return s.model.BulkComplete(userID, taskIDs)
+}

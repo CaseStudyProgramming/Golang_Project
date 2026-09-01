@@ -56,6 +56,8 @@ type TaskModelInterface interface {
 	LoadSubtasks(task *Task) error
 	UpdateProgress(taskID int64) error
 	GetAnalyticsSummary(userID int64) (map[string]interface{}, error)
+	BulkDelete(userID int64, taskIDs []int64) error
+	BulkComplete(userID int64, taskIDs []int64) error
 }
 
 func NewTaskModel(db *sql.DB) *TaskModel {
@@ -413,4 +415,26 @@ func (m *TaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, e
 	summary["priority_distribution"] = priorityDistribution
 
 	return summary, nil
+}
+
+func (m *TaskModel) BulkDelete(userID int64, taskIDs []int64) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Build the query with IN clause
+	query := `UPDATE tasks SET deleted_at = NOW() WHERE user_id = $1 AND id = ANY($2) AND deleted_at IS NULL`
+	_, err := m.DB.Exec(query, userID, taskIDs)
+	return err
+}
+
+func (m *TaskModel) BulkComplete(userID int64, taskIDs []int64) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Build the query with IN clause
+	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE user_id = $1 AND id = ANY($2) AND deleted_at IS NULL`
+	_, err := m.DB.Exec(query, userID, taskIDs)
+	return err
 }
