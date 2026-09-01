@@ -17,13 +17,15 @@ import (
 // MockTaskService is a mock implementation of TaskServiceInterface for testing
 type MockTaskService struct {
 	CreateFunc            func(userID int64, task *models.Task) (*models.Task, error)
-	GetAllFunc            func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
+	GetAllFunc            func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
 	GetByIDFunc           func(userID int64, id int64) (*models.Task, error)
 	UpdateFunc            func(userID int64, id int64, task *models.Task) (*models.Task, error)
 	DeleteFunc            func(userID int64, id int64) error
 	RestoreFunc           func(userID int64, id int64) error
 	MarkAsCompletedFunc   func(userID int64, id int64) error
 	MarkAsUncompletedFunc func(userID int64, id int64) error
+	AddTagToTaskFunc      func(userID int64, taskID int64, tagID int64) error
+	RemoveTagFromTaskFunc func(userID int64, taskID int64, tagID int64) error
 }
 
 // Ensure MockTaskService implements TaskServiceInterface
@@ -51,9 +53,9 @@ func (m *MockTaskService) Create(userID int64, task *models.Task) (*models.Task,
 	return nil, nil
 }
 
-func (m *MockTaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
+func (m *MockTaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 	if m.GetAllFunc != nil {
-		return m.GetAllFunc(userID, completed, page, limit, search, priority, sortBy, sortOrder)
+		return m.GetAllFunc(userID, completed, page, limit, search, priority, categoryID, sortBy, sortOrder)
 	}
 	return nil, nil, nil
 }
@@ -96,6 +98,20 @@ func (m *MockTaskService) MarkAsCompleted(userID int64, id int64) error {
 func (m *MockTaskService) MarkAsUncompleted(userID int64, id int64) error {
 	if m.MarkAsUncompletedFunc != nil {
 		return m.MarkAsUncompletedFunc(userID, id)
+	}
+	return nil
+}
+
+func (m *MockTaskService) AddTagToTask(userID int64, taskID int64, tagID int64) error {
+	if m.AddTagToTaskFunc != nil {
+		return m.AddTagToTaskFunc(userID, taskID, tagID)
+	}
+	return nil
+}
+
+func (m *MockTaskService) RemoveTagFromTask(userID int64, taskID int64, tagID int64) error {
+	if m.RemoveTagFromTaskFunc != nil {
+		return m.RemoveTagFromTaskFunc(userID, taskID, tagID)
 	}
 	return nil
 }
@@ -178,7 +194,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 	}
 
 	mockService := &MockTaskService{
-		GetAllFunc: func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
+		GetAllFunc: func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 			meta := map[string]interface{}{
 				"page":       page,
 				"limit":      limit,

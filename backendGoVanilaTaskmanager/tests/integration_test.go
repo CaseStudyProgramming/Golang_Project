@@ -38,7 +38,8 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 
 	// Setup the application layers
 	taskModel := models.NewTaskModel(db)
-	taskService := services.NewTaskService(taskModel)
+	tagModel := models.NewTagModel(db)
+	taskService := services.NewTaskService(taskModel, tagModel)
 	taskController := controllers.NewTaskController(taskService)
 
 	// Create a test task
@@ -52,6 +53,7 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("Expected status 201, got %d. Body: %s", w.Code, w.Body.String())
+		return
 	}
 
 	var createResponse map[string]interface{}
@@ -59,6 +61,7 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 
 	if createResponse["status"] != "success" {
 		t.Errorf("Expected success status, got %v", createResponse["status"])
+		return
 	}
 
 	// Extract the created task ID
@@ -97,7 +100,8 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 	}
 
 	taskModel := models.NewTaskModel(db)
-	taskService := services.NewTaskService(taskModel)
+	tagModel := models.NewTagModel(db)
+	taskService := services.NewTaskService(taskModel, tagModel)
 
 	// Create a task first
 	task := &models.Task{
@@ -164,7 +168,8 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	}
 
 	taskModel := models.NewTaskModel(db)
-	taskService := services.NewTaskService(taskModel)
+	tagModel := models.NewTagModel(db)
+	taskService := services.NewTaskService(taskModel, tagModel)
 
 	// Create a task
 	task := &models.Task{
@@ -239,7 +244,8 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 	}
 
 	taskModel := models.NewTaskModel(db)
-	taskService := services.NewTaskService(taskModel)
+	tagModel := models.NewTagModel(db)
+	taskService := services.NewTaskService(taskModel, tagModel)
 	taskController := controllers.NewTaskController(taskService)
 
 	// Create multiple tasks
@@ -305,7 +311,8 @@ func TestTaskAPIIntegration_WithDueDate(t *testing.T) {
 	}
 
 	taskModel := models.NewTaskModel(db)
-	taskService := services.NewTaskService(taskModel)
+	tagModel := models.NewTagModel(db)
+	taskService := services.NewTaskService(taskModel, tagModel)
 	taskController := controllers.NewTaskController(taskService)
 
 	// Create a task with future due date

@@ -179,6 +179,10 @@ func (m *TaskModel) GetAll(userID int64, completed *bool, offset int, limit int,
 		tasks = append(tasks, task)
 	}
 
+	if err = rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
 	return tasks, total, nil
 }
 
@@ -277,6 +281,10 @@ func (m *TaskModel) LoadTags(task *Task) error {
 			return err
 		}
 		tags = append(tags, tag)
+	}
+
+	if err = rows.Err(); err != nil {
+		return err
 	}
 
 	task.Tags = tags

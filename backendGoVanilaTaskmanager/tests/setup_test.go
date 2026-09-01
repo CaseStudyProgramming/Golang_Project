@@ -32,7 +32,7 @@ func GetTestDBConfig() TestDBConfig {
 	}
 }
 
-// SetupTestDB creates a connection to the test database
+// SetupTestDB creates a connection to the test database and runs migrations
 func SetupTestDB(t *testing.T) *sql.DB {
 	cfg := GetTestDBConfig()
 
@@ -52,7 +52,82 @@ func SetupTestDB(t *testing.T) *sql.DB {
 	}
 
 	log.Println("✅ Connected to test database")
+
+	// Run migrations for test database
+	RunTestMigrations(db, t)
+
 	return db
+}
+
+// RunTestMigrations runs the database migrations for testing
+func RunTestMigrations(db *sql.DB, t *testing.T) {
+	// Drop existing tables to ensure clean state
+	tables := []string{"task_tags", "tasks", "tags", "categories", "users"}
+	for _, table := range tables {
+		_, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table))
+		if err != nil {
+			t.Logf("Warning: Failed to drop table %s: %v", table, err)
+		}
+	}
+
+	migrations := []string{
+		// Users table
+		`CREATE TABLE users (
+			id SERIAL PRIMARY KEY,
+			name VARCHAR(100) NOT NULL,
+			email VARCHAR(150) UNIQUE NOT NULL,
+			password_hash VARCHAR(255) NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		// Categories table
+		`CREATE TABLE categories (
+			id SERIAL PRIMARY KEY,
+			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			name VARCHAR(100) NOT NULL,
+			color_hex VARCHAR(7) DEFAULT '#3B82F6',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		// Tags table
+		`CREATE TABLE tags (
+			id SERIAL PRIMARY KEY,
+			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			name VARCHAR(100) NOT NULL,
+			color_hex VARCHAR(7) DEFAULT '#3B82F6',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		// Tasks table with all required columns
+		`CREATE TABLE tasks (
+			id SERIAL PRIMARY KEY,
+			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			category_id INT NULL REFERENCES categories(id) ON DELETE SET NULL,
+			title VARCHAR(255) NOT NULL,
+			sub_title VARCHAR(255) NULL,
+			description TEXT NULL,
+			completed BOOLEAN DEFAULT false,
+			due_date TIMESTAMP NULL,
+			priority VARCHAR(20) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMP NULL
+		)`,
+		// Task-tags junction table
+		`CREATE TABLE task_tags (
+			task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+			tag_id INT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (task_id, tag_id)
+		)`,
+	}
+
+	for _, migration := range migrations {
+		_, err := db.Exec(migration)
+		if err != nil {
+			t.Fatalf("Migration failed: %v", err)
+		}
+	}
+
+	log.Println("✅ Test database migrations completed")
 }
 
 // CleanupTestDB closes the test database connection
@@ -65,7 +140,19 @@ func CleanupTestDB(db *sql.DB) {
 
 // CleanupTestData removes all test data from the database
 func CleanupTestData(db *sql.DB, t *testing.T) {
-	_, err := db.Exec("DELETE FROM tasks WHERE title LIKE 'Test%'")
+	_, err := db.Exec("DELETE FROM task_tags")
+	if err != nil {
+		t.Logf("Warning: Failed to cleanup test task_tags: %v", err)
+	}
+	_, err = db.Exec("DELETE FROM tags WHERE name LIKE 'Test%'")
+	if err != nil {
+		t.Logf("Warning: Failed to cleanup test tags: %v", err)
+	}
+	_, err = db.Exec("DELETE FROM categories WHERE name LIKE 'Test%'")
+	if err != nil {
+		t.Logf("Warning: Failed to cleanup test categories: %v", err)
+	}
+	_, err = db.Exec("DELETE FROM tasks WHERE title LIKE 'Test%'")
 	if err != nil {
 		t.Logf("Warning: Failed to cleanup test tasks: %v", err)
 	}
