@@ -40,6 +40,7 @@ func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskControll
 	mux.HandleFunc("GET /tasks/{id}", authMiddleware.Authenticate(taskController.GetTaskByID))
 	mux.HandleFunc("PUT /tasks/{id}", authMiddleware.Authenticate(taskController.UpdateTask))
 	mux.HandleFunc("DELETE /tasks/{id}", authMiddleware.Authenticate(taskController.DeleteTask))
+	mux.HandleFunc("GET /tasks/analytics/summary", authMiddleware.Authenticate(taskController.GetAnalyticsSummary))
 
 	// task action endpoints (protected)
 	mux.HandleFunc("PATCH /tasks/{id}/complete", authMiddleware.Authenticate(taskController.MarkTaskAsCompleted))
