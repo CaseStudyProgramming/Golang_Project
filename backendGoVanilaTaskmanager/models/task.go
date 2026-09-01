@@ -30,6 +30,7 @@ type Task struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	DeletedAt   *time.Time `json:"deleted_at"`
+	Tags        []Tag      `json:"tags,omitempty"`
 }
 
 type TaskModel struct {
@@ -47,6 +48,9 @@ type TaskModelInterface interface {
 	RestoreTask(userID int64, id int64) error
 	MarkTaskAsCompleted(userID int64, id int64) error
 	MarkTaskAsUncompleted(userID int64, id int64) error
+	LoadTags(task *Task) error
+	AddTagToTask(taskID int64, tagID int64) error
+	RemoveTagFromTask(taskID int64, tagID int64) error
 }
 
 func NewTaskModel(db *sql.DB) *TaskModel {
@@ -244,5 +248,49 @@ func (m *TaskModel) MarkTaskAsCompleted(userID int64, id int64) error {
 func (m *TaskModel) MarkTaskAsUncompleted(userID int64, id int64) error {
 	query := `UPDATE tasks SET completed = false, updated_at = NOW() WHERE id = $1 AND user_id = $2`
 	_, err := m.DB.Exec(query, id, userID)
+	return err
+}
+
+func (m *TaskModel) LoadTags(task *Task) error {
+	query := `SELECT t.id, t.user_id, t.name, t.color_hex, t.created_at 
+	          FROM tags t 
+	          INNER JOIN task_tags tt ON t.id = tt.tag_id 
+	          WHERE tt.task_id = $1 
+	          ORDER BY t.created_at DESC`
+
+	rows, err := m.DB.Query(query, task.ID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	tags := make([]Tag, 0)
+	for rows.Next() {
+		var tag Tag
+		if err := rows.Scan(
+			&tag.ID,
+			&tag.UserID,
+			&tag.Name,
+			&tag.ColorHex,
+			&tag.CreatedAt,
+		); err != nil {
+			return err
+		}
+		tags = append(tags, tag)
+	}
+
+	task.Tags = tags
+	return nil
+}
+
+func (m *TaskModel) AddTagToTask(taskID int64, tagID int64) error {
+	query := `INSERT INTO task_tags (task_id, tag_id) VALUES ($1, $2)`
+	_, err := m.DB.Exec(query, taskID, tagID)
+	return err
+}
+
+func (m *TaskModel) RemoveTagFromTask(taskID int64, tagID int64) error {
+	query := `DELETE FROM task_tags WHERE task_id = $1 AND tag_id = $2`
+	_, err := m.DB.Exec(query, taskID, tagID)
 	return err
 }
