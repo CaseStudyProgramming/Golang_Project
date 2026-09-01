@@ -35,9 +35,9 @@ func (s *TaskService) Create(userID int64, task *models.Task) (*models.Task, err
 	return s.model.Create(task)
 }
 
-func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
+func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error) {
 	offset := (page - 1) * limit
-	tasks, total, err := s.model.GetAll(userID, completed, offset, limit, search, priority, sortBy, sortOrder)
+	tasks, total, err := s.model.GetAll(userID, completed, offset, limit, search, priority, categoryID, sortBy, sortOrder)
 	if err != nil {
 		return nil, nil, err
 	}

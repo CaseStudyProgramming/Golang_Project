@@ -1,0 +1,2 @@
+ALTER TABLE tasks
+ADD COLUMN category_id INT NULL REFERENCES categories(id) ON DELETE SET NULL;

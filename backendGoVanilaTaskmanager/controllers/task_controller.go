@@ -18,7 +18,7 @@ type TaskController struct {
 // TaskServiceInterface defines the interface for task service operations
 type TaskServiceInterface interface {
 	Create(userID int64, task *models.Task) (*models.Task, error)
-	GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
+	GetAll(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
 	GetByID(userID int64, id int64) (*models.Task, error)
 	Update(userID int64, id int64, task *models.Task) (*models.Task, error)
 	Delete(userID int64, id int64) error
@@ -59,6 +59,7 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var limit int
 	var search string
 	var priority *models.Priority
+	var categoryID *int64
 	var sortBy string
 	var sortOrder string
 
@@ -115,10 +116,20 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		priority = &p
 	}
 
+	categoryIDParam := r.URL.Query().Get("category_id")
+	if categoryIDParam != "" {
+		catID, err := strconv.ParseInt(categoryIDParam, 10, 64)
+		if err != nil || catID < 1 {
+			utils.ErrorResponse(w, http.StatusBadRequest, "category_id must be a positive integer")
+			return
+		}
+		categoryID = &catID
+	}
+
 	sortBy = r.URL.Query().Get("sort_by")
 	sortOrder = r.URL.Query().Get("sort_order")
 
-	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search, priority, sortBy, sortOrder)
+	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search, priority, categoryID, sortBy, sortOrder)
 	if err != nil {
 		if err.Error() == "no tasks found" {
 			utils.ErrorResponse(w, http.StatusNotFound, err.Error())

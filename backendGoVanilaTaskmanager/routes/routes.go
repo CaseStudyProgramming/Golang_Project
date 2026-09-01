@@ -7,7 +7,7 @@ import (
 	"taskmanager/middlewares"
 )
 
-func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, authMiddleware *middlewares.AuthMiddleware) {
+func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, authMiddleware *middlewares.AuthMiddleware) {
 	// health check endpoint
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
@@ -18,6 +18,13 @@ func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskControll
 	mux.HandleFunc("POST /auth/login", authController.Login)
 	mux.HandleFunc("POST /auth/logout", authController.Logout)
 	mux.HandleFunc("GET /auth/me", authMiddleware.Authenticate(authController.GetCurrentUser))
+
+	// categories endpoints (protected)
+	mux.HandleFunc("GET /categories", authMiddleware.Authenticate(categoryController.GetAllCategories))
+	mux.HandleFunc("POST /categories", authMiddleware.Authenticate(categoryController.CreateCategory))
+	mux.HandleFunc("GET /categories/{id}", authMiddleware.Authenticate(categoryController.GetCategoryByID))
+	mux.HandleFunc("PUT /categories/{id}", authMiddleware.Authenticate(categoryController.UpdateCategory))
+	mux.HandleFunc("DELETE /categories/{id}", authMiddleware.Authenticate(categoryController.DeleteCategory))
 
 	// tasks endpoints (protected)
 	mux.HandleFunc("GET /tasks", authMiddleware.Authenticate(taskController.GetAllTasks))

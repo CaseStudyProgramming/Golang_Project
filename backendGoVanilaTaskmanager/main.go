@@ -50,8 +50,13 @@ func main() {
 	taskService := services.NewTaskService(taskModel)
 	taskController := controllers.NewTaskController(taskService)
 
+	// Initialize category components
+	categoryModel := models.NewCategoryModel(db)
+	categoryService := services.NewCategoryService(categoryModel)
+	categoryController := controllers.NewCategoryController(categoryService)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, taskController, authController, authMiddleware)
+	routes.RegisterRoutes(mux, taskController, authController, categoryController, authMiddleware)
 
 	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
 	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(mux)))
