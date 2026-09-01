@@ -7,7 +7,7 @@ import (
 	"taskmanager/middlewares"
 )
 
-func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, authMiddleware *middlewares.AuthMiddleware) {
+func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, authMiddleware *middlewares.AuthMiddleware) {
 	// health check endpoint
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
@@ -58,4 +58,9 @@ func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskControll
 	mux.HandleFunc("PUT /subtasks/{id}", authMiddleware.Authenticate(subtaskController.UpdateSubtask))
 	mux.HandleFunc("DELETE /subtasks/{id}", authMiddleware.Authenticate(subtaskController.DeleteSubtask))
 	mux.HandleFunc("PATCH /subtasks/{id}/toggle", authMiddleware.Authenticate(subtaskController.ToggleSubtask))
+
+	// activity log endpoints (protected)
+	mux.HandleFunc("GET /activity-logs", authMiddleware.Authenticate(activityLogController.GetUserActivityLogs))
+	mux.HandleFunc("GET /activity-logs/{id}", authMiddleware.Authenticate(activityLogController.GetActivityLogByID))
+	mux.HandleFunc("GET /tasks/{id}/activity-logs", authMiddleware.Authenticate(activityLogController.GetTaskActivityLogs))
 }
