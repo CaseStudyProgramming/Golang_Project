@@ -7,10 +7,17 @@ import (
 	"taskmanager/middlewares"
 )
 
-func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, authMiddleware *middlewares.AuthMiddleware) {
+func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, swaggerController *controllers.SwaggerController, authMiddleware *middlewares.AuthMiddleware) {
 	// health check endpoint
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
+	})
+
+	// swagger documentation endpoints (public)
+	mux.HandleFunc("GET /swagger/index.html", swaggerController.ServeSwaggerUI)
+	mux.HandleFunc("GET /swagger/openapi.yaml", swaggerController.ServeOpenAPISpec)
+	mux.HandleFunc("GET /swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
 	})
 
 	// auth endpoints (public)
@@ -41,6 +48,11 @@ func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskControll
 	mux.HandleFunc("PUT /tasks/{id}", authMiddleware.Authenticate(taskController.UpdateTask))
 	mux.HandleFunc("DELETE /tasks/{id}", authMiddleware.Authenticate(taskController.DeleteTask))
 	mux.HandleFunc("GET /tasks/analytics/summary", authMiddleware.Authenticate(taskController.GetAnalyticsSummary))
+
+	// bulk operations endpoints (protected)
+	mux.HandleFunc("POST /tasks/bulk-delete", authMiddleware.Authenticate(taskController.BulkDeleteTasks))
+	mux.HandleFunc("POST /tasks/bulk-complete", authMiddleware.Authenticate(taskController.BulkCompleteTasks))
+	mux.HandleFunc("GET /tasks/export/csv", authMiddleware.Authenticate(taskController.ExportTasksToCSV))
 
 	// task action endpoints (protected)
 	mux.HandleFunc("PATCH /tasks/{id}/complete", authMiddleware.Authenticate(taskController.MarkTaskAsCompleted))

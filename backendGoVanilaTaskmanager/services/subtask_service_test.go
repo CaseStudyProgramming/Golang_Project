@@ -19,6 +19,64 @@ type MockSubtaskModel struct {
 	CalculateProgressFunc func(taskID int64) (int, error)
 }
 
+// MockTaskModel is a mock implementation of TaskModelInterface for testing (minimal version for subtask tests)
+type MockTaskModel struct {
+	GetByIDFunc             func(userID int64, id int64) (*models.Task, error)
+	UpdateProgressFunc      func(taskID int64) error
+	GetAnalyticsSummaryFunc func(userID int64) (map[string]interface{}, error)
+	BulkDeleteFunc          func(userID int64, taskIDs []int64) error
+	BulkCompleteFunc        func(userID int64, taskIDs []int64) error
+}
+
+func (m *MockTaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
+	if m.GetAnalyticsSummaryFunc != nil {
+		return m.GetAnalyticsSummaryFunc(userID)
+	}
+	return nil, nil
+}
+
+func (m *MockTaskModel) BulkDelete(userID int64, taskIDs []int64) error {
+	if m.BulkDeleteFunc != nil {
+		return m.BulkDeleteFunc(userID, taskIDs)
+	}
+	return nil
+}
+
+func (m *MockTaskModel) BulkComplete(userID int64, taskIDs []int64) error {
+	if m.BulkCompleteFunc != nil {
+		return m.BulkCompleteFunc(userID, taskIDs)
+	}
+	return nil
+}
+
+// Implement remaining required methods for TaskModelInterface
+func (m *MockTaskModel) Create(task *models.Task) (*models.Task, error) { return nil, nil }
+func (m *MockTaskModel) GetAll(userID int64, completed *bool, offset, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, int, error) {
+	return nil, 0, nil
+}
+func (m *MockTaskModel) Update(userID int64, task *models.Task) error         { return nil }
+func (m *MockTaskModel) Complete(userID int64, id int64) error                { return nil }
+func (m *MockTaskModel) Delete(userID int64, id int64, softDelete bool) error { return nil }
+func (m *MockTaskModel) RestoreTask(userID int64, id int64) error             { return nil }
+func (m *MockTaskModel) MarkTaskAsCompleted(userID int64, id int64) error     { return nil }
+func (m *MockTaskModel) MarkTaskAsUncompleted(userID int64, id int64) error   { return nil }
+func (m *MockTaskModel) AddTagToTask(taskID int64, tagID int64) error         { return nil }
+func (m *MockTaskModel) RemoveTagFromTask(taskID int64, tagID int64) error    { return nil }
+func (m *MockTaskModel) LoadTags(task *models.Task) error                     { return nil }
+func (m *MockTaskModel) LoadSubtasks(task *models.Task) error                 { return nil }
+func (m *MockTaskModel) UpdateProgress(taskID int64) error {
+	if m.UpdateProgressFunc != nil {
+		return m.UpdateProgressFunc(taskID)
+	}
+	return nil
+}
+func (m *MockTaskModel) GetByID(userID int64, id int64) (*models.Task, error) {
+	if m.GetByIDFunc != nil {
+		return m.GetByIDFunc(userID, id)
+	}
+	return nil, nil
+}
+
 func (m *MockSubtaskModel) Create(subtask *models.Subtask) (*models.Subtask, error) {
 	if m.CreateFunc != nil {
 		return m.CreateFunc(subtask)

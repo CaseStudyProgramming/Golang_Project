@@ -28,6 +28,9 @@ type TaskServiceInterface interface {
 	AddTagToTask(userID int64, taskID int64, tagID int64) error
 	RemoveTagFromTask(userID int64, taskID int64, tagID int64) error
 	GetAnalyticsSummary(userID int64) (map[string]interface{}, error)
+	BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
+	BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
+	ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error)
 }
 
 func NewTaskController(service TaskServiceInterface) *TaskController {
@@ -397,4 +400,134 @@ func (c *TaskController) GetAnalyticsSummary(w http.ResponseWriter, r *http.Requ
 	}
 
 	utils.SuccessResponse(w, http.StatusOK, "Analytics summary retrieved successfully", summary)
+}
+
+// POST /tasks/bulk-delete
+func (c *TaskController) BulkDeleteTasks(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	var request struct {
+		TaskIDs []int64 `json:"task_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(request.TaskIDs) == 0 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "task_ids array is required and cannot be empty")
+		return
+	}
+
+	if len(request.TaskIDs) > 100 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Cannot process more than 100 tasks at once")
+		return
+	}
+
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err := c.service.BulkDelete(userID, request.TaskIDs, ipAddress, userAgent)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, fmt.Sprintf("Successfully deleted %d tasks", len(request.TaskIDs)), nil)
+}
+
+// POST /tasks/bulk-complete
+func (c *TaskController) BulkCompleteTasks(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	var request struct {
+		TaskIDs []int64 `json:"task_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if len(request.TaskIDs) == 0 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "task_ids array is required and cannot be empty")
+		return
+	}
+
+	if len(request.TaskIDs) > 100 {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Cannot process more than 100 tasks at once")
+		return
+	}
+
+	ipAddress := r.RemoteAddr
+	userAgent := r.UserAgent()
+
+	err := c.service.BulkComplete(userID, request.TaskIDs, ipAddress, userAgent)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, fmt.Sprintf("Successfully completed %d tasks", len(request.TaskIDs)), nil)
+}
+
+// GET /tasks/export/csv
+func (c *TaskController) ExportTasksToCSV(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	var completed *bool
+	var search string
+	var priority *models.Priority
+	var categoryID *int64
+
+	completedParam := r.URL.Query().Get("completed")
+	if completedParam != "" {
+		value, err := strconv.ParseBool(completedParam)
+		if err != nil {
+			utils.ErrorResponse(w, http.StatusBadRequest, "completed must be true or false")
+			return
+		}
+		completed = &value
+	}
+
+	vals, hasSearch := r.URL.Query()["search"]
+	if hasSearch {
+		if len(vals) == 0 || strings.TrimSpace(vals[0]) == "" {
+			utils.ErrorResponse(w, http.StatusBadRequest, "search must not be empty")
+			return
+		}
+		search = vals[0]
+	}
+
+	priorityParam := r.URL.Query().Get("priority")
+	if priorityParam != "" {
+		p := models.Priority(priorityParam)
+		if p != models.PriorityLow && p != models.PriorityMedium && p != models.PriorityHigh && p != models.PriorityUrgent {
+			utils.ErrorResponse(w, http.StatusBadRequest, "priority must be LOW, MEDIUM, HIGH, or URGENT")
+			return
+		}
+		priority = &p
+	}
+
+	categoryIDParam := r.URL.Query().Get("category_id")
+	if categoryIDParam != "" {
+		catID, err := strconv.ParseInt(categoryIDParam, 10, 64)
+		if err != nil || catID < 1 {
+			utils.ErrorResponse(w, http.StatusBadRequest, "category_id must be a positive integer")
+			return
+		}
+		categoryID = &catID
+	}
+
+	csvData, err := c.service.ExportToCSV(userID, completed, search, priority, categoryID)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Set headers for CSV download
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=tasks_export.csv")
+	w.Header().Set("Cache-Control", "no-cache")
+
+	w.Write(csvData)
 }

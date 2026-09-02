@@ -73,8 +73,11 @@ func main() {
 	// Initialize activity log controller
 	activityLogController := controllers.NewActivityLogController(activityLogService)
 
+	// Initialize swagger controller
+	swaggerController := controllers.NewSwaggerController()
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, authMiddleware)
+	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, swaggerController, authMiddleware)
 
 	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
 	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(mux)))

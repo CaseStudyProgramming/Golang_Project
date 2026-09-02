@@ -1,6 +1,8 @@
 package services
 
 import (
+	"bytes"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"strings"
@@ -233,4 +235,97 @@ func (s *TaskService) RemoveTagFromTask(userID int64, taskID int64, tagID int64)
 
 func (s *TaskService) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
 	return s.model.GetAnalyticsSummary(userID)
+}
+
+func (s *TaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Log activity for each task
+	if s.activityService != nil {
+		for _, taskID := range taskIDs {
+			task, err := s.model.GetByID(userID, taskID)
+			if err == nil {
+				details := fmt.Sprintf("Bulk deleted task: %s", task.Title)
+				_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionDelete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+			}
+		}
+	}
+
+	return s.model.BulkDelete(userID, taskIDs)
+}
+
+func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Log activity for each task
+	if s.activityService != nil {
+		for _, taskID := range taskIDs {
+			task, err := s.model.GetByID(userID, taskID)
+			if err == nil {
+				details := fmt.Sprintf("Bulk completed task: %s", task.Title)
+				_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionComplete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+			}
+		}
+	}
+
+	return s.model.BulkComplete(userID, taskIDs)
+}
+
+func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+	// Get all tasks without pagination for export
+	tasks, _, err := s.model.GetAll(userID, completed, 0, 0, search, priority, categoryID, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create CSV buffer
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Write CSV header
+	header := []string{"ID", "Title", "SubTitle", "Description", "Completed", "DueDate", "Priority", "CategoryID", "CreatedAt", "UpdatedAt"}
+	if err := writer.Write(header); err != nil {
+		return nil, err
+	}
+
+	// Write task data
+	for _, task := range tasks {
+		dueDate := ""
+		if task.DueDate != nil {
+			dueDate = task.DueDate.Format("2006-01-02 15:04:05")
+		}
+
+		categoryIDVal := ""
+		if task.CategoryID != nil {
+			categoryIDVal = fmt.Sprintf("%d", *task.CategoryID)
+		}
+
+		record := []string{
+			fmt.Sprintf("%d", task.ID),
+			task.Title,
+			task.SubTitle,
+			task.Description,
+			fmt.Sprintf("%t", task.Completed),
+			dueDate,
+			string(task.Priority),
+			categoryIDVal,
+			task.CreatedAt.Format("2006-01-02 15:04:05"),
+			task.UpdatedAt.Format("2006-01-02 15:04:05"),
+		}
+
+		if err := writer.Write(record); err != nil {
+			return nil, err
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
