@@ -16,16 +16,20 @@ import (
 
 // MockTaskService is a mock implementation of TaskServiceInterface for testing
 type MockTaskService struct {
-	CreateFunc            func(userID int64, task *models.Task) (*models.Task, error)
-	GetAllFunc            func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
-	GetByIDFunc           func(userID int64, id int64) (*models.Task, error)
-	UpdateFunc            func(userID int64, id int64, task *models.Task) (*models.Task, error)
-	DeleteFunc            func(userID int64, id int64) error
-	RestoreFunc           func(userID int64, id int64) error
-	MarkAsCompletedFunc   func(userID int64, id int64) error
-	MarkAsUncompletedFunc func(userID int64, id int64) error
-	AddTagToTaskFunc      func(userID int64, taskID int64, tagID int64) error
-	RemoveTagFromTaskFunc func(userID int64, taskID int64, tagID int64) error
+	CreateFunc              func(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error)
+	GetAllFunc              func(userID int64, completed *bool, page, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, map[string]interface{}, error)
+	GetByIDFunc             func(userID int64, id int64) (*models.Task, error)
+	UpdateFunc              func(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error)
+	DeleteFunc              func(userID int64, id int64, ipAddress string, userAgent string) error
+	RestoreFunc             func(userID int64, id int64) error
+	MarkAsCompletedFunc     func(userID int64, id int64, ipAddress string, userAgent string) error
+	MarkAsUncompletedFunc   func(userID int64, id int64, ipAddress string, userAgent string) error
+	AddTagToTaskFunc        func(userID int64, taskID int64, tagID int64) error
+	RemoveTagFromTaskFunc   func(userID int64, taskID int64, tagID int64) error
+	GetAnalyticsSummaryFunc func(userID int64) (map[string]interface{}, error)
+	BulkDeleteFunc          func(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
+	BulkCompleteFunc        func(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
+	ExportToCSVFunc         func(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error)
 }
 
 // Ensure MockTaskService implements TaskServiceInterface
@@ -46,9 +50,9 @@ func createRequest(method, path string, body *bytes.Buffer) *http.Request {
 	return req
 }
 
-func (m *MockTaskService) Create(userID int64, task *models.Task) (*models.Task, error) {
+func (m *MockTaskService) Create(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 	if m.CreateFunc != nil {
-		return m.CreateFunc(userID, task)
+		return m.CreateFunc(userID, task, ipAddress, userAgent)
 	}
 	return nil, nil
 }
@@ -67,16 +71,16 @@ func (m *MockTaskService) GetByID(userID int64, id int64) (*models.Task, error) 
 	return nil, nil
 }
 
-func (m *MockTaskService) Update(userID int64, id int64, task *models.Task) (*models.Task, error) {
+func (m *MockTaskService) Update(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 	if m.UpdateFunc != nil {
-		return m.UpdateFunc(userID, id, task)
+		return m.UpdateFunc(userID, id, task, ipAddress, userAgent)
 	}
 	return nil, nil
 }
 
-func (m *MockTaskService) Delete(userID int64, id int64) error {
+func (m *MockTaskService) Delete(userID int64, id int64, ipAddress string, userAgent string) error {
 	if m.DeleteFunc != nil {
-		return m.DeleteFunc(userID, id)
+		return m.DeleteFunc(userID, id, ipAddress, userAgent)
 	}
 	return nil
 }
@@ -88,16 +92,16 @@ func (m *MockTaskService) Restore(userID int64, id int64) error {
 	return nil
 }
 
-func (m *MockTaskService) MarkAsCompleted(userID int64, id int64) error {
+func (m *MockTaskService) MarkAsCompleted(userID int64, id int64, ipAddress string, userAgent string) error {
 	if m.MarkAsCompletedFunc != nil {
-		return m.MarkAsCompletedFunc(userID, id)
+		return m.MarkAsCompletedFunc(userID, id, ipAddress, userAgent)
 	}
 	return nil
 }
 
-func (m *MockTaskService) MarkAsUncompleted(userID int64, id int64) error {
+func (m *MockTaskService) MarkAsUncompleted(userID int64, id int64, ipAddress string, userAgent string) error {
 	if m.MarkAsUncompletedFunc != nil {
-		return m.MarkAsUncompletedFunc(userID, id)
+		return m.MarkAsUncompletedFunc(userID, id, ipAddress, userAgent)
 	}
 	return nil
 }
@@ -116,9 +120,37 @@ func (m *MockTaskService) RemoveTagFromTask(userID int64, taskID int64, tagID in
 	return nil
 }
 
+func (m *MockTaskService) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
+	if m.GetAnalyticsSummaryFunc != nil {
+		return m.GetAnalyticsSummaryFunc(userID)
+	}
+	return nil, nil
+}
+
+func (m *MockTaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+	if m.BulkDeleteFunc != nil {
+		return m.BulkDeleteFunc(userID, taskIDs, ipAddress, userAgent)
+	}
+	return nil
+}
+
+func (m *MockTaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+	if m.BulkCompleteFunc != nil {
+		return m.BulkCompleteFunc(userID, taskIDs, ipAddress, userAgent)
+	}
+	return nil
+}
+
+func (m *MockTaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+	if m.ExportToCSVFunc != nil {
+		return m.ExportToCSVFunc(userID, completed, search, priority, categoryID)
+	}
+	return nil, nil
+}
+
 func TestCreateTaskHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		CreateFunc: func(userID int64, task *models.Task) (*models.Task, error) {
+		CreateFunc: func(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 			task.ID = 1
 			task.CreatedAt = time.Now()
 			task.UpdatedAt = time.Now()
@@ -167,7 +199,7 @@ func TestCreateTaskHandler_InvalidJSON(t *testing.T) {
 
 func TestCreateTaskHandler_EmptyTitle(t *testing.T) {
 	mockService := &MockTaskService{
-		CreateFunc: func(userID int64, task *models.Task) (*models.Task, error) {
+		CreateFunc: func(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 			// Service layer should validate empty title and return error
 			return nil, errors.New("Title tidak boleh kosong")
 		},
@@ -372,7 +404,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 	}
 
 	mockService := &MockTaskService{
-		UpdateFunc: func(userID int64, id int64, task *models.Task) (*models.Task, error) {
+		UpdateFunc: func(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 			return mockTask, nil
 		},
 	}
@@ -444,7 +476,7 @@ func TestUpdateTaskHandler_InvalidID(t *testing.T) {
 
 func TestUpdateTaskHandler_NotFound(t *testing.T) {
 	mockService := &MockTaskService{
-		UpdateFunc: func(userID int64, id int64, task *models.Task) (*models.Task, error) {
+		UpdateFunc: func(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
 	}
@@ -469,7 +501,7 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 
 func TestDeleteTaskHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		DeleteFunc: func(userID int64, id int64) error {
+		DeleteFunc: func(userID int64, id int64, ipAddress string, userAgent string) error {
 			return nil
 		},
 	}
@@ -517,7 +549,7 @@ func TestDeleteTaskHandler_InvalidID(t *testing.T) {
 
 func TestDeleteTaskHandler_NotFound(t *testing.T) {
 	mockService := &MockTaskService{
-		DeleteFunc: func(userID int64, id int64) error {
+		DeleteFunc: func(userID int64, id int64, ipAddress string, userAgent string) error {
 			return sql.ErrNoRows
 		},
 	}
@@ -540,7 +572,7 @@ func TestDeleteTaskHandler_NotFound(t *testing.T) {
 
 func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		MarkAsCompletedFunc: func(userID int64, id int64) error {
+		MarkAsCompletedFunc: func(userID int64, id int64, ipAddress string, userAgent string) error {
 			return nil
 		},
 	}
@@ -588,7 +620,7 @@ func TestMarkTaskAsCompletedHandler_InvalidID(t *testing.T) {
 
 func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		MarkAsUncompletedFunc: func(userID int64, id int64) error {
+		MarkAsUncompletedFunc: func(userID int64, id int64, ipAddress string, userAgent string) error {
 			return nil
 		},
 	}
@@ -676,6 +708,219 @@ func TestRestoreDeletedTaskHandler_InvalidID(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestGetAnalyticsSummaryHandler_Success(t *testing.T) {
+	mockService := &MockTaskService{
+		GetAnalyticsSummaryFunc: func(userID int64) (map[string]interface{}, error) {
+			return map[string]interface{}{
+				"total_active":          10,
+				"total_completed":       5,
+				"total_overdue":         2,
+				"completion_percentage": 50.0,
+				"priority_distribution": map[string]int{
+					"LOW":    2,
+					"MEDIUM": 4,
+					"HIGH":   3,
+					"URGENT": 1,
+				},
+			}, nil
+		},
+	}
+
+	controller := NewTaskController(mockService)
+
+	req := httptest.NewRequest("GET", "/tasks/analytics/summary", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.GetAnalyticsSummary(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	if response["status"] != "success" {
+		t.Errorf("Expected success status, got %v", response["status"])
+	}
+}
+
+func TestBulkDeleteTasksHandler_Success(t *testing.T) {
+	mockService := &MockTaskService{
+		BulkDeleteFunc: func(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+			return nil
+		},
+	}
+
+	controller := NewTaskController(mockService)
+
+	requestJSON := `{"task_ids": [1, 2, 3]}`
+	req := httptest.NewRequest("POST", "/tasks/bulk-delete", bytes.NewBufferString(requestJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.BulkDeleteTasks(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	if response["status"] != "success" {
+		t.Errorf("Expected success status, got %v", response["status"])
+	}
+}
+
+func TestBulkDeleteTasksHandler_EmptyTaskIDs(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	requestJSON := `{"task_ids": []}`
+	req := httptest.NewRequest("POST", "/tasks/bulk-delete", bytes.NewBufferString(requestJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.BulkDeleteTasks(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestBulkDeleteTasksHandler_TooManyTasks(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	// Create a request with 101 task IDs
+	taskIDs := make([]int64, 101)
+	for i := 0; i < 101; i++ {
+		taskIDs[i] = int64(i + 1)
+	}
+	requestJSON, _ := json.Marshal(map[string]interface{}{"task_ids": taskIDs})
+	req := httptest.NewRequest("POST", "/tasks/bulk-delete", bytes.NewBuffer(requestJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.BulkDeleteTasks(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestBulkCompleteTasksHandler_Success(t *testing.T) {
+	mockService := &MockTaskService{
+		BulkCompleteFunc: func(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
+			return nil
+		},
+	}
+
+	controller := NewTaskController(mockService)
+
+	requestJSON := `{"task_ids": [1, 2, 3]}`
+	req := httptest.NewRequest("POST", "/tasks/bulk-complete", bytes.NewBufferString(requestJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.BulkCompleteTasks(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	if response["status"] != "success" {
+		t.Errorf("Expected success status, got %v", response["status"])
+	}
+}
+
+func TestBulkCompleteTasksHandler_EmptyTaskIDs(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	requestJSON := `{"task_ids": []}`
+	req := httptest.NewRequest("POST", "/tasks/bulk-complete", bytes.NewBufferString(requestJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.BulkCompleteTasks(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestExportTasksToCSVHandler_Success(t *testing.T) {
+	mockService := &MockTaskService{
+		ExportToCSVFunc: func(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+			csvContent := "ID,Title,Completed\n1,Test Task,false\n"
+			return []byte(csvContent), nil
+		},
+	}
+
+	controller := NewTaskController(mockService)
+
+	req := httptest.NewRequest("GET", "/tasks/export/csv", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.ExportTasksToCSV(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	contentType := w.Header().Get("Content-Type")
+	if contentType != "text/csv" {
+		t.Errorf("Expected Content-Type text/csv, got %s", contentType)
+	}
+
+	contentDisposition := w.Header().Get("Content-Disposition")
+	if contentDisposition != "attachment; filename=tasks_export.csv" {
+		t.Errorf("Expected Content-Disposition header, got %s", contentDisposition)
+	}
+}
+
+func TestExportTasksToCSVHandler_InvalidPriority(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	req := httptest.NewRequest("GET", "/tasks/export/csv?priority=INVALID", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.ExportTasksToCSV(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestExportTasksToCSVHandler_InvalidCategoryID(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	req := httptest.NewRequest("GET", "/tasks/export/csv?category_id=invalid", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	w := httptest.NewRecorder()
+
+	controller.ExportTasksToCSV(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
