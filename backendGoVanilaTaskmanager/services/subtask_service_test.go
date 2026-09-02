@@ -19,8 +19,8 @@ type MockSubtaskModel struct {
 	CalculateProgressFunc func(taskID int64) (int, error)
 }
 
-// MockTaskModel is a mock implementation of TaskModelInterface for testing (minimal version for subtask tests)
-type MockTaskModel struct {
+// MockTaskModelMinimal is a minimal mock implementation for subtask tests
+type MockTaskModelMinimal struct {
 	GetByIDFunc             func(userID int64, id int64) (*models.Task, error)
 	UpdateProgressFunc      func(taskID int64) error
 	GetAnalyticsSummaryFunc func(userID int64) (map[string]interface{}, error)
@@ -28,21 +28,21 @@ type MockTaskModel struct {
 	BulkCompleteFunc        func(userID int64, taskIDs []int64) error
 }
 
-func (m *MockTaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
+func (m *MockTaskModelMinimal) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
 	if m.GetAnalyticsSummaryFunc != nil {
 		return m.GetAnalyticsSummaryFunc(userID)
 	}
 	return nil, nil
 }
 
-func (m *MockTaskModel) BulkDelete(userID int64, taskIDs []int64) error {
+func (m *MockTaskModelMinimal) BulkDelete(userID int64, taskIDs []int64) error {
 	if m.BulkDeleteFunc != nil {
 		return m.BulkDeleteFunc(userID, taskIDs)
 	}
 	return nil
 }
 
-func (m *MockTaskModel) BulkComplete(userID int64, taskIDs []int64) error {
+func (m *MockTaskModelMinimal) BulkComplete(userID int64, taskIDs []int64) error {
 	if m.BulkCompleteFunc != nil {
 		return m.BulkCompleteFunc(userID, taskIDs)
 	}
@@ -50,27 +50,27 @@ func (m *MockTaskModel) BulkComplete(userID int64, taskIDs []int64) error {
 }
 
 // Implement remaining required methods for TaskModelInterface
-func (m *MockTaskModel) Create(task *models.Task) (*models.Task, error) { return nil, nil }
-func (m *MockTaskModel) GetAll(userID int64, completed *bool, offset, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, int, error) {
+func (m *MockTaskModelMinimal) Create(task *models.Task) (*models.Task, error) { return nil, nil }
+func (m *MockTaskModelMinimal) GetAll(userID int64, completed *bool, offset, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, int, error) {
 	return nil, 0, nil
 }
-func (m *MockTaskModel) Update(userID int64, task *models.Task) error         { return nil }
-func (m *MockTaskModel) Complete(userID int64, id int64) error                { return nil }
-func (m *MockTaskModel) Delete(userID int64, id int64, softDelete bool) error { return nil }
-func (m *MockTaskModel) RestoreTask(userID int64, id int64) error             { return nil }
-func (m *MockTaskModel) MarkTaskAsCompleted(userID int64, id int64) error     { return nil }
-func (m *MockTaskModel) MarkTaskAsUncompleted(userID int64, id int64) error   { return nil }
-func (m *MockTaskModel) AddTagToTask(taskID int64, tagID int64) error         { return nil }
-func (m *MockTaskModel) RemoveTagFromTask(taskID int64, tagID int64) error    { return nil }
-func (m *MockTaskModel) LoadTags(task *models.Task) error                     { return nil }
-func (m *MockTaskModel) LoadSubtasks(task *models.Task) error                 { return nil }
-func (m *MockTaskModel) UpdateProgress(taskID int64) error {
+func (m *MockTaskModelMinimal) Update(userID int64, task *models.Task) error         { return nil }
+func (m *MockTaskModelMinimal) Complete(userID int64, id int64) error                { return nil }
+func (m *MockTaskModelMinimal) Delete(userID int64, id int64, softDelete bool) error { return nil }
+func (m *MockTaskModelMinimal) RestoreTask(userID int64, id int64) error             { return nil }
+func (m *MockTaskModelMinimal) MarkTaskAsCompleted(userID int64, id int64) error     { return nil }
+func (m *MockTaskModelMinimal) MarkTaskAsUncompleted(userID int64, id int64) error   { return nil }
+func (m *MockTaskModelMinimal) AddTagToTask(taskID int64, tagID int64) error         { return nil }
+func (m *MockTaskModelMinimal) RemoveTagFromTask(taskID int64, tagID int64) error    { return nil }
+func (m *MockTaskModelMinimal) LoadTags(task *models.Task) error                     { return nil }
+func (m *MockTaskModelMinimal) LoadSubtasks(task *models.Task) error                 { return nil }
+func (m *MockTaskModelMinimal) UpdateProgress(taskID int64) error {
 	if m.UpdateProgressFunc != nil {
 		return m.UpdateProgressFunc(taskID)
 	}
 	return nil
 }
-func (m *MockTaskModel) GetByID(userID int64, id int64) (*models.Task, error) {
+func (m *MockTaskModelMinimal) GetByID(userID int64, id int64) (*models.Task, error) {
 	if m.GetByIDFunc != nil {
 		return m.GetByIDFunc(userID, id)
 	}
@@ -243,7 +243,7 @@ func TestGetSubtasksByTaskID_Success(t *testing.T) {
 }
 
 func TestGetSubtasksByTaskID_TaskNotFound(t *testing.T) {
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
@@ -271,7 +271,7 @@ func TestGetSubtaskByID_Success(t *testing.T) {
 		IsCompleted: false,
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return &models.Task{ID: 1, UserID: 1}, nil
 		},
@@ -303,7 +303,7 @@ func TestGetSubtaskByID_AccessDenied(t *testing.T) {
 		Title:  "Test Subtask",
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
@@ -371,7 +371,7 @@ func TestUpdateSubtask_Success(t *testing.T) {
 }
 
 func TestUpdateSubtask_EmptyTitle(t *testing.T) {
-	mockTaskModel := &MockTaskModel{}
+	mockTaskModel := &MockTaskModelMinimal{}
 	mockSubtaskModel := &MockSubtaskModel{}
 	service := NewSubtaskService(mockSubtaskModel, mockTaskModel)
 
@@ -397,7 +397,7 @@ func TestDeleteSubtask_Success(t *testing.T) {
 		Title:  "Test Subtask",
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return &models.Task{ID: 1, UserID: 1}, nil
 		},
@@ -431,7 +431,7 @@ func TestDeleteSubtask_AccessDenied(t *testing.T) {
 		Title:  "Test Subtask",
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
@@ -464,7 +464,7 @@ func TestToggleSubtask_Success(t *testing.T) {
 		IsCompleted: false,
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return &models.Task{ID: 1, UserID: 1}, nil
 		},
@@ -498,7 +498,7 @@ func TestToggleSubtask_AccessDenied(t *testing.T) {
 		Title:  "Test Subtask",
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return nil, sql.ErrNoRows
 		},
@@ -530,7 +530,7 @@ func TestToggleSubtask_ServiceError(t *testing.T) {
 		Title:  "Test Subtask",
 	}
 
-	mockTaskModel := &MockTaskModel{
+	mockTaskModel := &MockTaskModelMinimal{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
 			return &models.Task{ID: 1, UserID: 1}, nil
 		},

@@ -39,7 +39,7 @@ func TestTaskAPIIntegration_CreateAndGet(t *testing.T) {
 	// Setup the application layers
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	taskController := controllers.NewTaskController(taskService)
 
 	// Create a test task
@@ -101,14 +101,14 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 
 	// Create a task first
 	task := &models.Task{
 		Title:       "Test Task for Update",
 		Description: "Initial description",
 	}
-	createdTask, err := taskService.Create(userID, task)
+	createdTask, err := taskService.Create(userID, task, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 		Description: "Updated description",
 		Priority:    models.PriorityMedium,
 	}
-	_, err = taskService.Update(userID, createdTask.ID, updatedTask)
+	_, err = taskService.Update(userID, createdTask.ID, updatedTask, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Errorf("Failed to update task: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestTaskAPIIntegration_UpdateAndDelete(t *testing.T) {
 	}
 
 	// Delete the task using service directly
-	err = taskService.Delete(userID, createdTask.ID)
+	err = taskService.Delete(userID, createdTask.ID, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Errorf("Failed to delete task: %v", err)
 	}
@@ -169,19 +169,19 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 
 	// Create a task
 	task := &models.Task{
 		Title: "Test Task for Completion",
 	}
-	createdTask, err := taskService.Create(userID, task)
+	createdTask, err := taskService.Create(userID, task, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
 
 	// Mark as completed using service directly
-	err = taskService.MarkAsCompleted(userID, createdTask.ID)
+	err = taskService.MarkAsCompleted(userID, createdTask.ID, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Errorf("Failed to mark task as completed: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestTaskAPIIntegration_CompleteAndUncomplete(t *testing.T) {
 	}
 
 	// Mark as uncompleted using service directly
-	err = taskService.MarkAsUncompleted(userID, createdTask.ID)
+	err = taskService.MarkAsUncompleted(userID, createdTask.ID, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Errorf("Failed to mark task as uncompleted: %v", err)
 	}
@@ -245,7 +245,7 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	taskController := controllers.NewTaskController(taskService)
 
 	// Create multiple tasks
@@ -254,7 +254,7 @@ func TestTaskAPIIntegration_ListWithPagination(t *testing.T) {
 			Title:       "Test Task Pagination",
 			Description: "Pagination test task",
 		}
-		_, err := taskService.Create(userID, task)
+		_, err := taskService.Create(userID, task, "127.0.0.1", "test-agent")
 		if err != nil {
 			t.Fatalf("Failed to create test task %d: %v", i, err)
 		}
@@ -312,7 +312,7 @@ func TestTaskAPIIntegration_WithDueDate(t *testing.T) {
 
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	taskController := controllers.NewTaskController(taskService)
 
 	// Create a task with future due date
@@ -376,7 +376,7 @@ func TestSubtaskAPIIntegration_CreateAndGet(t *testing.T) {
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
 	subtaskModel := models.NewSubtaskModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
 	taskController := controllers.NewTaskController(taskService)
 
@@ -458,14 +458,14 @@ func TestSubtaskAPIIntegration_UpdateAndToggle(t *testing.T) {
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
 	subtaskModel := models.NewSubtaskModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
 
 	// Create a task
 	task := &models.Task{
 		Title: "Test Task for Subtask Update",
 	}
-	createdTask, err := taskService.Create(userID, task)
+	createdTask, err := taskService.Create(userID, task, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -548,14 +548,14 @@ func TestSubtaskAPIIntegration_Delete(t *testing.T) {
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
 	subtaskModel := models.NewSubtaskModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
 
 	// Create a task
 	task := &models.Task{
 		Title: "Test Task for Subtask Delete",
 	}
-	createdTask, err := taskService.Create(userID, task)
+	createdTask, err := taskService.Create(userID, task, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -615,14 +615,14 @@ func TestSubtaskAPIIntegration_ProgressCalculation(t *testing.T) {
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
 	subtaskModel := models.NewSubtaskModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
 
 	// Create a task
 	task := &models.Task{
 		Title: "Test Task for Progress Calculation",
 	}
-	createdTask, err := taskService.Create(userID, task)
+	createdTask, err := taskService.Create(userID, task, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
@@ -730,14 +730,14 @@ func TestSubtaskAPIIntegration_AccessControl(t *testing.T) {
 	taskModel := models.NewTaskModel(db)
 	tagModel := models.NewTagModel(db)
 	subtaskModel := models.NewSubtaskModel(db)
-	taskService := services.NewTaskService(taskModel, tagModel)
+	taskService := services.NewTaskService(taskModel, tagModel, nil)
 	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
 
 	// Create a task for user1
 	task := &models.Task{
 		Title: "User1 Task",
 	}
-	createdTask, err := taskService.Create(userID1, task)
+	createdTask, err := taskService.Create(userID1, task, "127.0.0.1", "test-agent")
 	if err != nil {
 		t.Fatalf("Failed to create test task: %v", err)
 	}
