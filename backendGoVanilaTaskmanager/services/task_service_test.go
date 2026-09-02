@@ -518,7 +518,7 @@ func TestUpdate_Success(t *testing.T) {
 		Completed: true,
 	}
 
-	result, err := service.Update(1, 1, updatedTask)
+	result, err := service.Update(1, 1, updatedTask, "127.0.0.1", "test-agent")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -540,7 +540,7 @@ func TestUpdate_PastDueDate(t *testing.T) {
 		DueDate: &pastTime,
 	}
 
-	_, err := service.Update(1, 1, updatedTask)
+	_, err := service.Update(1, 1, updatedTask, "127.0.0.1", "test-agent")
 
 	if err == nil {
 		t.Error("Expected error for past due date, got nil")
@@ -565,7 +565,7 @@ func TestUpdate_NotFound(t *testing.T) {
 		Title: "Updated Task",
 	}
 
-	_, err := service.Update(1, 999, updatedTask)
+	_, err := service.Update(1, 999, updatedTask, "127.0.0.1", "test-agent")
 
 	if err != sql.ErrNoRows {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
@@ -591,7 +591,7 @@ func TestDelete_Success(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	err := service.Delete(1, 1)
+	err := service.Delete(1, 1, "127.0.0.1", "test-agent")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -608,7 +608,7 @@ func TestDelete_NotFound(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	err := service.Delete(1, 999)
+	err := service.Delete(1, 999, "127.0.0.1", "test-agent")
 
 	if err != sql.ErrNoRows {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
@@ -625,7 +625,7 @@ func TestMarkAsCompleted_Success(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	err := service.MarkAsCompleted(1, 1)
+	err := service.MarkAsCompleted(1, 1, "127.0.0.1", "test-agent")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -642,7 +642,7 @@ func TestMarkAsUncompleted_Success(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	err := service.MarkAsUncompleted(1, 1)
+	err := service.MarkAsUncompleted(1, 1, "127.0.0.1", "test-agent")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
