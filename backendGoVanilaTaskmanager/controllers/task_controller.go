@@ -27,6 +27,7 @@ type TaskServiceInterface interface {
 	MarkAsUncompleted(userID int64, id int64, ipAddress string, userAgent string) error
 	AddTagToTask(userID int64, taskID int64, tagID int64) error
 	RemoveTagFromTask(userID int64, taskID int64, tagID int64) error
+	GetAnalyticsSummary(userID int64) (map[string]interface{}, error)
 }
 
 func NewTaskController(service TaskServiceInterface) *TaskController {
@@ -383,4 +384,17 @@ func (c *TaskController) RemoveTagFromTask(w http.ResponseWriter, r *http.Reques
 	}
 
 	utils.SuccessResponse(w, http.StatusOK, "Tag removed from task successfully", nil)
+}
+
+// GET /tasks/analytics/summary
+func (c *TaskController) GetAnalyticsSummary(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	summary, err := c.service.GetAnalyticsSummary(userID)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, "Analytics summary retrieved successfully", summary)
 }

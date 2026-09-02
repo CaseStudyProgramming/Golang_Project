@@ -55,6 +55,7 @@ type TaskModelInterface interface {
 	RemoveTagFromTask(taskID int64, tagID int64) error
 	LoadSubtasks(task *Task) error
 	UpdateProgress(taskID int64) error
+	GetAnalyticsSummary(userID int64) (map[string]interface{}, error)
 }
 
 func NewTaskModel(db *sql.DB) *TaskModel {
@@ -355,4 +356,61 @@ func (m *TaskModel) UpdateProgress(taskID int64) error {
 	query := `UPDATE tasks SET progress_percentage = $1, updated_at = NOW() WHERE id = $2`
 	_, err = m.DB.Exec(query, progress, taskID)
 	return err
+}
+
+func (m *TaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
+	summary := make(map[string]interface{})
+	now := time.Now()
+
+	// Total active tasks
+	var totalActive int
+	err := m.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE user_id = $1 AND deleted_at IS NULL`, userID).Scan(&totalActive)
+	if err != nil {
+		return nil, err
+	}
+	summary["total_active"] = totalActive
+
+	// Total completed tasks
+	var totalCompleted int
+	err = m.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE user_id = $1 AND deleted_at IS NULL AND completed = true`, userID).Scan(&totalCompleted)
+	if err != nil {
+		return nil, err
+	}
+	summary["total_completed"] = totalCompleted
+
+	// Total overdue tasks (not completed and due_date is in the past)
+	var totalOverdue int
+	err = m.DB.QueryRow(`SELECT COUNT(*) FROM tasks WHERE user_id = $1 AND deleted_at IS NULL AND completed = false AND due_date < $2`, userID, now).Scan(&totalOverdue)
+	if err != nil {
+		return nil, err
+	}
+	summary["total_overdue"] = totalOverdue
+
+	// Completion percentage
+	completionPercentage := 0.0
+	if totalActive > 0 {
+		completionPercentage = float64(totalCompleted) / float64(totalActive) * 100
+	}
+	summary["completion_percentage"] = completionPercentage
+
+	// Priority distribution
+	priorityQuery := `SELECT priority, COUNT(*) FROM tasks WHERE user_id = $1 AND deleted_at IS NULL GROUP BY priority`
+	rows, err := m.DB.Query(priorityQuery, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	priorityDistribution := make(map[string]int)
+	for rows.Next() {
+		var priority string
+		var count int
+		if err := rows.Scan(&priority, &count); err != nil {
+			return nil, err
+		}
+		priorityDistribution[priority] = count
+	}
+	summary["priority_distribution"] = priorityDistribution
+
+	return summary, nil
 }

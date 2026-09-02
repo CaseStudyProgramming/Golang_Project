@@ -230,3 +230,7 @@ func (s *TaskService) RemoveTagFromTask(userID int64, taskID int64, tagID int64)
 	}
 	return s.model.RemoveTagFromTask(taskID, tagID)
 }
+
+func (s *TaskService) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
+	return s.model.GetAnalyticsSummary(userID)
+}
