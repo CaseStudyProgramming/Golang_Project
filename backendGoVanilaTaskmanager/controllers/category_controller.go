@@ -43,7 +43,9 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusCreated, "Category created successfully", createdCategory)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Category created successfully", createdCategory, timezone)
 }
 
 // GET /categories
@@ -56,7 +58,9 @@ func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Categories retrieved successfully", categories)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Categories retrieved successfully", categories, timezone)
 }
 
 // GET /categories/{id}
@@ -80,7 +84,9 @@ func (c *CategoryController) GetCategoryByID(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Category found successfully", category)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Category found successfully", category, timezone)
 }
 
 // PUT /categories/{id}
@@ -110,7 +116,9 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Category updated successfully", updatedCategory)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Category updated successfully", updatedCategory, timezone)
 }
 
 // DELETE /categories/{id}

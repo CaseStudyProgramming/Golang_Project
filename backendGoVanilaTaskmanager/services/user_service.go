@@ -78,8 +78,8 @@ func (s *UserService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, err
 	}
 
-	// Generate JWT token
-	token, err := s.JWTManager.GenerateToken(createdUser.ID, createdUser.Email, 24*time.Hour)
+	// Generate JWT token with timezone
+	token, err := s.JWTManager.GenerateToken(createdUser.ID, createdUser.Email, createdUser.Timezone, 24*time.Hour)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +103,8 @@ func (s *UserService) Login(req *LoginRequest) (*AuthResponse, error) {
 		return nil, ErrInvalidCredentials
 	}
 
-	// Generate JWT token
-	token, err := s.JWTManager.GenerateToken(user.ID, user.Email, 24*time.Hour)
+	// Generate JWT token with timezone
+	token, err := s.JWTManager.GenerateToken(user.ID, user.Email, user.Timezone, 24*time.Hour)
 	if err != nil {
 		return nil, err
 	}

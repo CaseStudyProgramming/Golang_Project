@@ -98,3 +98,40 @@ func IsValidTimezone(timezone string) bool {
 	_, err := time.LoadLocation(timezone)
 	return err == nil
 }
+
+// TimezoneAwareTimestamp represents a timestamp that can be formatted in different timezones
+type TimezoneAwareTimestamp struct {
+	EpochMillis int64  `json:"epoch_millis"`
+	ISO8601     string `json:"iso8601,omitempty"`
+	Formatted   string `json:"formatted,omitempty"`
+	Timezone    string `json:"timezone,omitempty"`
+}
+
+// ConvertToTimezoneAware converts epoch milliseconds to a timezone-aware timestamp structure
+func ConvertToTimezoneAware(epochMillis int64, timezone string) (*TimezoneAwareTimestamp, error) {
+	if epochMillis == 0 {
+		return nil, nil // Handle null/zero timestamps
+	}
+
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return nil, err
+	}
+
+	t := time.UnixMilli(epochMillis).In(loc)
+
+	return &TimezoneAwareTimestamp{
+		EpochMillis: epochMillis,
+		ISO8601:     t.Format(time.RFC3339),
+		Formatted:   t.Format("2006-01-02 15:04:05"),
+		Timezone:    timezone,
+	}, nil
+}
+
+// ConvertTimezoneAwarePtr converts a pointer to epoch milliseconds to timezone-aware timestamp
+func ConvertTimezoneAwarePtr(epochMillis *int64, timezone string) (*TimezoneAwareTimestamp, error) {
+	if epochMillis == nil || *epochMillis == 0 {
+		return nil, nil
+	}
+	return ConvertToTimezoneAware(*epochMillis, timezone)
+}

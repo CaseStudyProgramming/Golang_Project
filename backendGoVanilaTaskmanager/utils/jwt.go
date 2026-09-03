@@ -13,8 +13,9 @@ var (
 )
 
 type JWTClaims struct {
-	UserID int64  `json:"user_id"`
-	Email  string `json:"email"`
+	UserID   int64  `json:"user_id"`
+	Email    string `json:"email"`
+	Timezone string `json:"timezone,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -26,10 +27,11 @@ func NewJWTManager(secretKey string) *JWTManager {
 	return &JWTManager{secretKey: secretKey}
 }
 
-func (m *JWTManager) GenerateToken(userID int64, email string, expiration time.Duration) (string, error) {
+func (m *JWTManager) GenerateToken(userID int64, email string, timezone string, expiration time.Duration) (string, error) {
 	claims := JWTClaims{
-		UserID: userID,
-		Email:  email,
+		UserID:   userID,
+		Email:    email,
+		Timezone: timezone,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
