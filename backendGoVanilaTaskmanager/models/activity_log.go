@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"time"
 )
 
 // ActionType represents the type of action performed
@@ -38,7 +37,7 @@ type ActivityLog struct {
 	Details    string     `json:"details,omitempty"`
 	IPAddress  string     `json:"ip_address,omitempty"`
 	UserAgent  string     `json:"user_agent,omitempty"`
-	CreatedAt  time.Time  `json:"created_at"`
+	CreatedAt  int64      `json:"created_at"`
 }
 
 // ActivityLogModel handles database operations for activity logs

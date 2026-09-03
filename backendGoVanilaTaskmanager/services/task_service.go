@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"taskmanager/models"
-	"time"
+	"taskmanager/utils"
 )
 
 type TaskService struct {
@@ -30,7 +30,7 @@ func (s *TaskService) Create(userID int64, task *models.Task, ipAddress string, 
 		return nil, errors.New("Title tidak boleh kosong")
 	}
 
-	if task.DueDate != nil && task.DueDate.Before(time.Now()) {
+	if task.DueDate != nil && *task.DueDate < utils.CurrentEpochMillis() {
 		return nil, errors.New("Due date must be equal or greater than current date")
 	}
 
@@ -113,7 +113,7 @@ func (s *TaskService) GetByID(userID int64, id int64) (*models.Task, error) {
 func (s *TaskService) Update(userID int64, id int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 	task.ID = id
 	task.UserID = userID
-	if task.DueDate != nil && task.DueDate.Before(time.Now()) {
+	if task.DueDate != nil && *task.DueDate < utils.CurrentEpochMillis() {
 		return nil, errors.New("Due date must be equal or greater than current date")
 	}
 

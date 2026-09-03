@@ -2,18 +2,18 @@ package models
 
 import (
 	"database/sql"
-	"time"
+	"taskmanager/utils"
 )
 
 // User entity
 type User struct {
-	ID           int64     `json:"id"`
-	Name         string    `json:"name"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"`
-	Timezone     string    `json:"timezone"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"-"`
+	Timezone     string `json:"timezone"`
+	CreatedAt    int64  `json:"created_at"`
+	UpdatedAt    int64  `json:"updated_at"`
 }
 
 type UserModel struct {
@@ -84,18 +84,20 @@ func (m *UserModel) GetByID(id int64) (*User, error) {
 }
 
 func (m *UserModel) Update(user *User) error {
+	currentTime := utils.CurrentEpochMillis()
 	query := `UPDATE users 
-	          SET name = $1, email = $2, timezone = $3, updated_at = NOW() 
-	          WHERE id = $4 
+	          SET name = $1, email = $2, timezone = $3, updated_at = $4 
+	          WHERE id = $5 
 	          RETURNING updated_at`
-	err := m.DB.QueryRow(query, user.Name, user.Email, user.Timezone, user.ID).Scan(&user.UpdatedAt)
+	err := m.DB.QueryRow(query, user.Name, user.Email, user.Timezone, currentTime, user.ID).Scan(&user.UpdatedAt)
 	return err
 }
 
 func (m *UserModel) UpdateTimezone(userID int64, timezone string) error {
+	currentTime := utils.CurrentEpochMillis()
 	query := `UPDATE users 
-	          SET timezone = $1, updated_at = NOW() 
-	          WHERE id = $2`
-	_, err := m.DB.Exec(query, timezone, userID)
+	          SET timezone = $1, updated_at = $2 
+	          WHERE id = $3`
+	_, err := m.DB.Exec(query, timezone, currentTime, userID)
 	return err
 }

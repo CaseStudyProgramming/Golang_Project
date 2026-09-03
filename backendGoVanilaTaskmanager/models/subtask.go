@@ -2,17 +2,17 @@ package models
 
 import (
 	"database/sql"
-	"time"
+	"taskmanager/utils"
 )
 
 // Subtask entity
 type Subtask struct {
-	ID          int64     `json:"id"`
-	TaskID      int64     `json:"task_id"`
-	Title       string    `json:"title"`
-	IsCompleted bool      `json:"is_completed"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64  `json:"id"`
+	TaskID      int64  `json:"task_id"`
+	Title       string `json:"title"`
+	IsCompleted bool   `json:"is_completed"`
+	CreatedAt   int64  `json:"created_at"`
+	UpdatedAt   int64  `json:"updated_at"`
 }
 
 type SubtaskModel struct {
@@ -100,11 +100,12 @@ func (m *SubtaskModel) GetByID(id int64) (*Subtask, error) {
 }
 
 func (m *SubtaskModel) Update(subtask *Subtask) error {
+	currentTime := utils.CurrentEpochMillis()
 	query := `UPDATE subtasks 
-	          SET title = $1, is_completed = $2, updated_at = NOW() 
-	          WHERE id = $3
+	          SET title = $1, is_completed = $2, updated_at = $3 
+	          WHERE id = $4
 	          RETURNING updated_at`
-	err := m.DB.QueryRow(query, subtask.Title, subtask.IsCompleted, subtask.ID).Scan(&subtask.UpdatedAt)
+	err := m.DB.QueryRow(query, subtask.Title, subtask.IsCompleted, currentTime, subtask.ID).Scan(&subtask.UpdatedAt)
 	return err
 }
 
@@ -115,11 +116,12 @@ func (m *SubtaskModel) Delete(id int64) error {
 }
 
 func (m *SubtaskModel) Toggle(id int64) error {
+	currentTime := utils.CurrentEpochMillis()
 	query := `UPDATE subtasks 
-	          SET is_completed = NOT is_completed, updated_at = NOW() 
-	          WHERE id = $1
+	          SET is_completed = NOT is_completed, updated_at = $1 
+	          WHERE id = $2
 	          RETURNING is_completed, updated_at`
-	_, err := m.DB.Exec(query, id)
+	_, err := m.DB.Exec(query, currentTime, id)
 	return err
 }
 

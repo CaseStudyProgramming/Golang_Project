@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"taskmanager/models"
+	"taskmanager/utils"
 	"testing"
-	"time"
 )
 
 // MockSubtaskModel is a mock implementation of SubtaskModelInterface for testing
@@ -139,8 +139,8 @@ func TestCreateSubtask_Success(t *testing.T) {
 	mockSubtaskModel := &MockSubtaskModel{
 		CreateFunc: func(subtask *models.Subtask) (*models.Subtask, error) {
 			subtask.ID = 1
-			subtask.CreatedAt = time.Now()
-			subtask.UpdatedAt = time.Now()
+			subtask.CreatedAt = utils.CurrentEpochMillis()
+			subtask.UpdatedAt = utils.CurrentEpochMillis()
 			return subtask, nil
 		},
 	}
