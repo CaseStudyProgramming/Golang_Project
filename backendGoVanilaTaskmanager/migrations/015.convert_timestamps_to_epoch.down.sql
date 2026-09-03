@@ -56,3 +56,11 @@ ALTER COLUMN created_at TYPE TIMESTAMP USING to_timestamp(created_at / 1000.0);
 -- Revert default values for activity_logs table
 ALTER TABLE activity_logs 
 ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
+
+-- Revert task_tags junction table timestamps
+ALTER TABLE task_tags 
+ALTER COLUMN created_at TYPE TIMESTAMP USING to_timestamp(created_at / 1000.0);
+
+-- Revert default values for task_tags table
+ALTER TABLE task_tags 
+ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
