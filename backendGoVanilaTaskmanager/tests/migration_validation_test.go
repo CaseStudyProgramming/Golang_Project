@@ -154,6 +154,20 @@ func TestMigrationValidation_ExistingDataStructure(t *testing.T) {
 		t.Errorf("Expected activity_logs.created_at to be bigint, got %s", activityLogsCreatedAtType)
 	}
 
+	// Validate task_tags junction table structure
+	var taskTagsCreatedAtType string
+	err = db.QueryRow(`
+		SELECT data_type FROM information_schema.columns 
+		WHERE table_name = 'task_tags' AND column_name = 'created_at'
+	`).Scan(&taskTagsCreatedAtType)
+	if err != nil {
+		t.Fatalf("Failed to check task_tags.created_at column type: %v", err)
+	}
+
+	if taskTagsCreatedAtType != "bigint" {
+		t.Errorf("Expected task_tags.created_at to be bigint, got %s", taskTagsCreatedAtType)
+	}
+
 	t.Log("✅ All timestamp columns validated as bigint (epoch milliseconds)")
 }
 

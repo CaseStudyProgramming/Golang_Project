@@ -56,3 +56,11 @@ ALTER COLUMN created_at TYPE BIGINT USING (EXTRACT(EPOCH FROM created_at) * 1000
 -- Update default values for activity_logs table
 ALTER TABLE activity_logs 
 ALTER COLUMN created_at SET DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT;
+
+-- Convert task_tags junction table timestamps
+ALTER TABLE task_tags 
+ALTER COLUMN created_at TYPE BIGINT USING (EXTRACT(EPOCH FROM created_at) * 1000)::BIGINT;
+
+-- Update default values for task_tags table
+ALTER TABLE task_tags 
+ALTER COLUMN created_at SET DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT;
