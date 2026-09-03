@@ -1,7 +1,17 @@
 openapi: 3.0.0
 info:
   title: Go Vanilla Task Manager API
-  description: RESTful API for task management built with vanilla Go
+  description: |
+    RESTful API for task management built with vanilla Go.
+    
+    ## Timezone Support
+    All timestamps are stored and returned as epoch milliseconds (Unix time in milliseconds).
+    The API includes timezone information in responses based on user preferences.
+    
+    - All timestamp fields use `int64` format (epoch milliseconds)
+    - Responses include `timezone` field indicating the user's timezone preference
+    - Users can set their timezone preference via `PUT /auth/timezone`
+    - Default timezone is UTC if not specified
   version: 1.0.0
   contact:
     name: API Support
@@ -50,6 +60,10 @@ paths:
                   type: string
                   format: password
                   example: password123
+                timezone:
+                  type: string
+                  example: UTC
+                  description: User timezone (defaults to UTC if not provided)
       responses:
         '201':
           description: User registered successfully
@@ -127,6 +141,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/timezone:
+    put:
+      summary: Update user timezone
+      description: Update the timezone preference for the authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - timezone
+              properties:
+                timezone:
+                  type: string
+                  example: America/New_York
+                  description: Valid IANA timezone identifier
+      responses:
+        '200':
+          description: Timezone updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Invalid timezone
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized
           content:
@@ -1120,6 +1173,10 @@ components:
         data:
           type: object
           nullable: true
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     ErrorResponse:
       type: object
@@ -1151,6 +1208,10 @@ components:
               example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
             user:
               $ref: '#/components/schemas/User'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     UserResponse:
       type: object
@@ -1163,6 +1224,10 @@ components:
           example: User retrieved successfully
         data:
           $ref: '#/components/schemas/User'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     User:
       type: object
@@ -1177,14 +1242,20 @@ components:
           type: string
           format: email
           example: john@example.com
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone preference
         created_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
         updated_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
 
     Task:
       type: object
@@ -1214,26 +1285,30 @@ components:
           type: boolean
           example: false
         due_date:
-          type: string
-          format: date-time
+          type: integer
+          format: int64
           nullable: true
-          example: 2026-09-15T18:00:00Z
+          description: Epoch milliseconds
+          example: 1757937600000
         priority:
           type: string
           enum: [LOW, MEDIUM, HIGH, URGENT]
           example: MEDIUM
         created_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
         updated_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
         deleted_at:
-          type: string
-          format: date-time
+          type: integer
+          format: int64
           nullable: true
+          description: Epoch milliseconds
           example: null
         progress_percentage:
           type: integer
@@ -1264,10 +1339,11 @@ components:
           nullable: true
           example: Write comprehensive documentation
         due_date:
-          type: string
-          format: date-time
+          type: integer
+          format: int64
           nullable: true
-          example: 2026-09-15T18:00:00Z
+          description: Epoch milliseconds
+          example: 1757937600000
         priority:
           type: string
           enum: [LOW, MEDIUM, HIGH, URGENT]
@@ -1293,10 +1369,11 @@ components:
           nullable: true
           example: Write comprehensive documentation
         due_date:
-          type: string
-          format: date-time
+          type: integer
+          format: int64
           nullable: true
-          example: 2026-09-15T18:00:00Z
+          description: Epoch milliseconds
+          example: 1757937600000
         priority:
           type: string
           enum: [LOW, MEDIUM, HIGH, URGENT]
@@ -1320,6 +1397,10 @@ components:
           example: Task retrieved successfully
         data:
           $ref: '#/components/schemas/Task'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     TasksListResponse:
       type: object
@@ -1358,6 +1439,10 @@ components:
                 has_prev:
                   type: boolean
                   example: false
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     AnalyticsResponse:
       type: object
@@ -1393,6 +1478,10 @@ components:
                 MEDIUM: 5
                 HIGH: 2
                 URGENT: 1
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     Category:
       type: object
@@ -1410,9 +1499,10 @@ components:
           type: string
           example: #3B82F6
         created_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
 
     CategoryCreate:
       type: object
@@ -1448,6 +1538,10 @@ components:
           example: Category retrieved successfully
         data:
           $ref: '#/components/schemas/Category'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     CategoriesResponse:
       type: object
@@ -1462,6 +1556,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Category'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     Tag:
       type: object
@@ -1479,9 +1577,10 @@ components:
           type: string
           example: #EF4444
         created_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
 
     TagCreate:
       type: object
@@ -1517,6 +1616,10 @@ components:
           example: Tag retrieved successfully
         data:
           $ref: '#/components/schemas/Tag'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     TagsResponse:
       type: object
@@ -1531,6 +1634,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Tag'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     Subtask:
       type: object
@@ -1548,13 +1655,15 @@ components:
           type: boolean
           example: false
         created_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
         updated_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
 
     SubtaskCreate:
       type: object
@@ -1586,6 +1695,10 @@ components:
           example: Subtask retrieved successfully
         data:
           $ref: '#/components/schemas/Subtask'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     SubtasksResponse:
       type: object
@@ -1600,6 +1713,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Subtask'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     ActivityLog:
       type: object
@@ -1634,9 +1751,10 @@ components:
           type: string
           example: Mozilla/5.0...
         created_at:
-          type: string
-          format: date-time
-          example: 2026-09-01T12:00:00Z
+          type: integer
+          format: int64
+          description: Epoch milliseconds
+          example: 1725234000000
 
     ActivityLogResponse:
       type: object
@@ -1649,6 +1767,10 @@ components:
           example: Activity log retrieved successfully
         data:
           $ref: '#/components/schemas/ActivityLog'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting
 
     ActivityLogsResponse:
       type: object
@@ -1663,3 +1785,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ActivityLog'
+        timezone:
+          type: string
+          example: UTC
+          description: User timezone used for response formatting

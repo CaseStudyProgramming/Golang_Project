@@ -41,3 +41,97 @@ func EpochMillisPtrToTime(epochMillis *int64) *time.Time {
 	t := time.UnixMilli(*epochMillis)
 	return &t
 }
+
+// ConvertToTimezone converts epoch milliseconds to a specific timezone
+func ConvertToTimezone(epochMillis int64, timezone string) (time.Time, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.UnixMilli(epochMillis).In(loc), nil
+}
+
+// ConvertFromTimezone converts a time from a specific timezone to UTC epoch milliseconds
+func ConvertFromTimezone(t time.Time, timezone string) (int64, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return 0, err
+	}
+	// Parse the time as if it's in the specified timezone
+	timeInLoc := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+	return timeInLoc.UnixMilli(), nil
+}
+
+// FormatEpochMillis formats epoch milliseconds to a human-readable string in the specified timezone
+func FormatEpochMillis(epochMillis int64, timezone string, format string) (string, error) {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return "", err
+	}
+	if format == "" {
+		format = "2006-01-02 15:04:05"
+	}
+	return time.UnixMilli(epochMillis).In(loc).Format(format), nil
+}
+
+// GetAvailableTimezones returns a list of common timezones
+func GetAvailableTimezones() []string {
+	return []string{
+		"UTC",
+		"America/New_York",
+		"America/Chicago",
+		"America/Denver",
+		"America/Los_Angeles",
+		"Europe/London",
+		"Europe/Paris",
+		"Europe/Berlin",
+		"Asia/Tokyo",
+		"Asia/Shanghai",
+		"Asia/Singapore",
+		"Australia/Sydney",
+		"Pacific/Auckland",
+	}
+}
+
+// IsValidTimezone checks if a timezone string is valid
+func IsValidTimezone(timezone string) bool {
+	_, err := time.LoadLocation(timezone)
+	return err == nil
+}
+
+// TimezoneAwareTimestamp represents a timestamp that can be formatted in different timezones
+type TimezoneAwareTimestamp struct {
+	EpochMillis int64  `json:"epoch_millis"`
+	ISO8601     string `json:"iso8601,omitempty"`
+	Formatted   string `json:"formatted,omitempty"`
+	Timezone    string `json:"timezone,omitempty"`
+}
+
+// ConvertToTimezoneAware converts epoch milliseconds to a timezone-aware timestamp structure
+func ConvertToTimezoneAware(epochMillis int64, timezone string) (*TimezoneAwareTimestamp, error) {
+	if epochMillis == 0 {
+		return nil, nil // Handle null/zero timestamps
+	}
+
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return nil, err
+	}
+
+	t := time.UnixMilli(epochMillis).In(loc)
+
+	return &TimezoneAwareTimestamp{
+		EpochMillis: epochMillis,
+		ISO8601:     t.Format(time.RFC3339),
+		Formatted:   t.Format("2006-01-02 15:04:05"),
+		Timezone:    timezone,
+	}, nil
+}
+
+// ConvertTimezoneAwarePtr converts a pointer to epoch milliseconds to timezone-aware timestamp
+func ConvertTimezoneAwarePtr(epochMillis *int64, timezone string) (*TimezoneAwareTimestamp, error) {
+	if epochMillis == nil || *epochMillis == 0 {
+		return nil, nil
+	}
+	return ConvertToTimezoneAware(*epochMillis, timezone)
+}

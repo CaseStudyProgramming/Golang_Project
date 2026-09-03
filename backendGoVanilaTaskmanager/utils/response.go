@@ -11,6 +11,12 @@ type APIResponse struct {
 	Data    interface{} `json:"data"`
 }
 
+// TimezoneAwareResponse adds timezone information to the response
+type TimezoneAwareResponse struct {
+	APIResponse
+	Timezone string `json:"timezone,omitempty"`
+}
+
 // universal status code
 const (
 	StatusCodeOK                  = http.StatusOK
@@ -19,6 +25,7 @@ const (
 	StatusCodeBadRequest          = http.StatusBadRequest
 	StatusCodeUnauthorized        = http.StatusUnauthorized
 	StatusCodeNotFound            = http.StatusNotFound
+	StatusCodeConflict            = http.StatusConflict
 	StatusCodeInternalServerError = http.StatusInternalServerError
 )
 
@@ -27,6 +34,17 @@ func SuccessResponse(w http.ResponseWriter, statusCode int, message string, data
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(APIResponse{Status: "success", Message: message, Data: data})
+}
+
+// success response with timezone support
+func SuccessResponseWithTimezone(w http.ResponseWriter, statusCode int, message string, data interface{}, timezone string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	response := TimezoneAwareResponse{
+		APIResponse: APIResponse{Status: "success", Message: message, Data: data},
+		Timezone:    timezone,
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 // error response for universal status code

@@ -40,10 +40,17 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Add user ID to context
+		// Add user ID and timezone to context
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, "user_id", claims.UserID)
 		ctx = context.WithValue(ctx, "user_email", claims.Email)
+
+		// Set timezone from claims, default to UTC if not provided
+		timezone := claims.Timezone
+		if timezone == "" {
+			timezone = "UTC"
+		}
+		ctx = context.WithValue(ctx, "timezone", timezone)
 
 		// Call next handler with updated context
 		next(w, r.WithContext(ctx))

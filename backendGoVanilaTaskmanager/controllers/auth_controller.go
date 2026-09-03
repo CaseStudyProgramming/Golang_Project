@@ -49,6 +49,12 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate timezone if provided
+	if req.Timezone != "" && !utils.IsValidTimezone(req.Timezone) {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid timezone")
+		return
+	}
+
 	response, err := c.userService.Register(&req)
 	if err != nil {
 		if err == services.ErrUserAlreadyExists {
@@ -59,7 +65,12 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusCreated, "User registered successfully", response)
+	// Get timezone from response user data
+	timezone := response.User.Timezone
+	if timezone == "" {
+		timezone = "UTC"
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "User registered successfully", response, timezone)
 }
 
 // POST /auth/login
@@ -90,7 +101,12 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Login successful", response)
+	// Get timezone from response user data
+	timezone := response.User.Timezone
+	if timezone == "" {
+		timezone = "UTC"
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Login successful", response, timezone)
 }
 
 // GET /auth/me
@@ -103,7 +119,12 @@ func (c *AuthController) GetCurrentUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "User retrieved successfully", user)
+	// Get timezone from user data
+	timezone := user.Timezone
+	if timezone == "" {
+		timezone = "UTC"
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "User retrieved successfully", user, timezone)
 }
 
 // POST /auth/logout
@@ -129,11 +150,22 @@ func (c *AuthController) UpdateTimezone(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Validate timezone
+	if !utils.IsValidTimezone(req.Timezone) {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid timezone")
+		return
+	}
+
 	user, err := c.userService.UpdateTimezone(userID, &req)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Timezone updated successfully", user)
+	// Get timezone from updated user data
+	timezone := user.Timezone
+	if timezone == "" {
+		timezone = "UTC"
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Timezone updated successfully", user, timezone)
 }

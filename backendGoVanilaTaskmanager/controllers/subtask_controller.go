@@ -50,7 +50,9 @@ func (c *SubtaskController) CreateSubtask(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusCreated, "Subtask created successfully", createdSubtask)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Subtask created successfully", createdSubtask, timezone)
 }
 
 // GET /tasks/{id}/subtasks
@@ -70,7 +72,9 @@ func (c *SubtaskController) GetSubtasksByTaskID(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Subtasks retrieved successfully", subtasks)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtasks retrieved successfully", subtasks, timezone)
 }
 
 // GET /subtasks/{id}
@@ -90,7 +94,9 @@ func (c *SubtaskController) GetSubtaskByID(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Subtask found successfully", subtask)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtask found successfully", subtask, timezone)
 }
 
 // PUT /subtasks/{id}
@@ -116,7 +122,9 @@ func (c *SubtaskController) UpdateSubtask(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Subtask updated successfully", updatedSubtask)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtask updated successfully", updatedSubtask, timezone)
 }
 
 // DELETE /subtasks/{id}

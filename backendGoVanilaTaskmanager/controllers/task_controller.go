@@ -56,7 +56,9 @@ func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusCreated, "Task created successfully", createdTask)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Task created successfully", createdTask, timezone)
 }
 
 // GET /tasks
@@ -152,10 +154,12 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "success", map[string]interface{}{
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "success", map[string]interface{}{
 		"data": tasks,
 		"meta": meta,
-	})
+	}, timezone)
 }
 
 // GET /tasks/{id}
@@ -179,7 +183,9 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Task found successfully", task)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task found successfully", task, timezone)
 }
 
 // PUT /tasks/{id}
@@ -212,7 +218,9 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Task updated successfully", updatedTask)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task updated successfully", updatedTask, timezone)
 }
 
 // DELETE /tasks/{id}
@@ -399,7 +407,9 @@ func (c *TaskController) GetAnalyticsSummary(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Analytics summary retrieved successfully", summary)
+	// Get timezone from context
+	timezone := r.Context().Value("timezone").(string)
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Analytics summary retrieved successfully", summary, timezone)
 }
 
 // POST /tasks/bulk-delete
