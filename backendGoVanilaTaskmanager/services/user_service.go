@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrUserAlreadyExists = errors.New("user with this email already exists")
+	ErrUserAlreadyExists  = errors.New("user with this email already exists")
 	ErrInvalidCredentials = errors.New("invalid email or password")
 )
 
@@ -23,11 +23,16 @@ type RegisterRequest struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Timezone string `json:"timezone"`
 }
 
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type UpdateTimezoneRequest struct {
+	Timezone string `json:"timezone"`
 }
 
 type AuthResponse struct {
@@ -60,6 +65,12 @@ func (s *UserService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		Name:         req.Name,
 		Email:        req.Email,
 		PasswordHash: string(hashedPassword),
+		Timezone:     req.Timezone,
+	}
+
+	// Set default timezone if not provided
+	if user.Timezone == "" {
+		user.Timezone = "UTC"
 	}
 
 	createdUser, err := s.UserModel.Create(user)
@@ -105,5 +116,14 @@ func (s *UserService) Login(req *LoginRequest) (*AuthResponse, error) {
 }
 
 func (s *UserService) GetUserByID(userID int64) (*models.User, error) {
+	return s.UserModel.GetByID(userID)
+}
+
+func (s *UserService) UpdateTimezone(userID int64, req *UpdateTimezoneRequest) (*models.User, error) {
+	err := s.UserModel.UpdateTimezone(userID, req.Timezone)
+	if err != nil {
+		return nil, err
+	}
+
 	return s.UserModel.GetByID(userID)
 }

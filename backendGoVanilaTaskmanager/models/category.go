@@ -2,16 +2,15 @@ package models
 
 import (
 	"database/sql"
-	"time"
 )
 
 // Category entity
 type Category struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"user_id"`
-	Name      string    `json:"name"`
-	ColorHex  string    `json:"color_hex"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64  `json:"id"`
+	UserID    int64  `json:"user_id"`
+	Name      string `json:"name"`
+	ColorHex  string `json:"color_hex"`
+	CreatedAt int64  `json:"created_at"`
 }
 
 type CategoryModel struct {

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"taskmanager/models"
+	"taskmanager/utils"
 	"testing"
-	"time"
 )
 
 // MockTaskModel is a mock implementation of TaskModelInterface for testing
@@ -231,8 +231,8 @@ func TestCreateTask_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
 		CreateFunc: func(task *models.Task) (*models.Task, error) {
 			task.ID = 1
-			task.CreatedAt = time.Now()
-			task.UpdatedAt = time.Now()
+			task.CreatedAt = utils.CurrentEpochMillis()
+			task.UpdatedAt = utils.CurrentEpochMillis()
 			return task, nil
 		},
 	}
@@ -285,7 +285,7 @@ func TestCreateTask_PastDueDate(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	pastTime := time.Now().Add(-24 * time.Hour)
+	pastTime := utils.CurrentEpochMillis() - (24 * 60 * 60 * 1000) // 24 hours ago in milliseconds
 	task := &models.Task{
 		Title:   "Test Task",
 		DueDate: &pastTime,
@@ -306,8 +306,8 @@ func TestCreateTask_FutureDueDate(t *testing.T) {
 	mockModel := &MockTaskModel{
 		CreateFunc: func(task *models.Task) (*models.Task, error) {
 			task.ID = 1
-			task.CreatedAt = time.Now()
-			task.UpdatedAt = time.Now()
+			task.CreatedAt = utils.CurrentEpochMillis()
+			task.UpdatedAt = utils.CurrentEpochMillis()
 			return task, nil
 		},
 	}
@@ -315,7 +315,7 @@ func TestCreateTask_FutureDueDate(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	futureTime := time.Now().Add(24 * time.Hour)
+	futureTime := utils.CurrentEpochMillis() + (24 * 60 * 60 * 1000) // 24 hours in the future in milliseconds
 	task := &models.Task{
 		Title:   "Test Task",
 		DueDate: &futureTime,
@@ -534,7 +534,7 @@ func TestUpdate_PastDueDate(t *testing.T) {
 	mockTagModel := &MockTagModel{}
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
-	pastTime := time.Now().Add(-24 * time.Hour)
+	pastTime := utils.CurrentEpochMillis() - (24 * 60 * 60 * 1000) // 24 hours ago in milliseconds
 	updatedTask := &models.Task{
 		Title:   "Updated Task",
 		DueDate: &pastTime,

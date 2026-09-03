@@ -16,6 +16,7 @@ type UserServiceInterface interface {
 	Register(req *services.RegisterRequest) (*services.AuthResponse, error)
 	Login(req *services.LoginRequest) (*services.AuthResponse, error)
 	GetUserByID(userID int64) (*models.User, error)
+	UpdateTimezone(userID int64, req *services.UpdateTimezoneRequest) (*models.User, error)
 }
 
 func NewAuthController(userService *services.UserService) *AuthController {
@@ -110,4 +111,29 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	// Since we're using stateless JWT tokens, logout is handled client-side
 	// by removing the token. This endpoint is mainly for consistency.
 	utils.SuccessResponse(w, http.StatusOK, "Logout successful", nil)
+}
+
+// PUT /auth/timezone
+func (c *AuthController) UpdateTimezone(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int64)
+
+	var req services.UpdateTimezoneRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate input
+	if req.Timezone == "" {
+		utils.ErrorResponse(w, http.StatusBadRequest, "Timezone is required")
+		return
+	}
+
+	user, err := c.userService.UpdateTimezone(userID, &req)
+	if err != nil {
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(w, http.StatusOK, "Timezone updated successfully", user)
 }

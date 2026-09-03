@@ -25,6 +25,7 @@ func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskControll
 	mux.HandleFunc("POST /auth/login", authController.Login)
 	mux.HandleFunc("POST /auth/logout", authController.Logout)
 	mux.HandleFunc("GET /auth/me", authMiddleware.Authenticate(authController.GetCurrentUser))
+	mux.HandleFunc("PUT /auth/timezone", authMiddleware.Authenticate(authController.UpdateTimezone))
 
 	// categories endpoints (protected)
 	mux.HandleFunc("GET /categories", authMiddleware.Authenticate(categoryController.GetAllCategories))

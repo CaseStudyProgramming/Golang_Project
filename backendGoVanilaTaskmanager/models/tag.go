@@ -2,23 +2,22 @@ package models
 
 import (
 	"database/sql"
-	"time"
 )
 
 // Tag entity
 type Tag struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"user_id"`
-	Name      string    `json:"name"`
-	ColorHex  string    `json:"color_hex"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64  `json:"id"`
+	UserID    int64  `json:"user_id"`
+	Name      string `json:"name"`
+	ColorHex  string `json:"color_hex"`
+	CreatedAt int64  `json:"created_at"`
 }
 
 // TaskTag represents the junction table for many-to-many relationship
 type TaskTag struct {
-	TaskID    int64     `json:"task_id"`
-	TagID     int64     `json:"tag_id"`
-	CreatedAt time.Time `json:"created_at"`
+	TaskID    int64 `json:"task_id"`
+	TagID     int64 `json:"tag_id"`
+	CreatedAt int64 `json:"created_at"`
 }
 
 type TagModel struct {

@@ -3,7 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"time"
+	"taskmanager/utils"
 )
 
 // Priority represents task priority levels
@@ -18,21 +18,21 @@ const (
 
 // Task entity
 type Task struct {
-	ID                 int64      `json:"id"`
-	UserID             int64      `json:"user_id"`
-	CategoryID         *int64     `json:"category_id,omitempty"`
-	Title              string     `json:"title"`
-	SubTitle           string     `json:"sub_title,omitempty"`
-	Description        string     `json:"description,omitempty"`
-	Completed          bool       `json:"completed"`
-	DueDate            *time.Time `json:"due_date,omitempty"`
-	Priority           Priority   `json:"priority"`
-	CreatedAt          time.Time  `json:"created_at"`
-	UpdatedAt          time.Time  `json:"updated_at"`
-	DeletedAt          *time.Time `json:"deleted_at"`
-	Tags               []Tag      `json:"tags,omitempty"`
-	ProgressPercentage int        `json:"progress_percentage"`
-	Subtasks           []Subtask  `json:"subtasks,omitempty"`
+	ID                 int64     `json:"id"`
+	UserID             int64     `json:"user_id"`
+	CategoryID         *int64    `json:"category_id,omitempty"`
+	Title              string    `json:"title"`
+	SubTitle           string    `json:"sub_title,omitempty"`
+	Description        string    `json:"description,omitempty"`
+	Completed          bool      `json:"completed"`
+	DueDate            *int64    `json:"due_date,omitempty"`
+	Priority           Priority  `json:"priority"`
+	CreatedAt          int64     `json:"created_at"`
+	UpdatedAt          int64     `json:"updated_at"`
+	DeletedAt          *int64    `json:"deleted_at"`
+	Tags               []Tag     `json:"tags,omitempty"`
+	ProgressPercentage int       `json:"progress_percentage"`
+	Subtasks           []Subtask `json:"subtasks,omitempty"`
 }
 
 type TaskModel struct {
@@ -220,24 +220,27 @@ func (m *TaskModel) GetByID(userID int64, id int64) (*Task, error) {
 }
 
 func (m *TaskModel) Update(userID int64, task *Task) error {
+	currentTime := utils.CurrentEpochMillis()
 	query := `UPDATE tasks 
-	          SET category_id = $1, title = $2, sub_title = $3, description = $4, completed = $5, due_date = $6, priority = $7, updated_at = NOW() 
-	          WHERE id = $8 AND user_id = $9
+	          SET category_id = $1, title = $2, sub_title = $3, description = $4, completed = $5, due_date = $6, priority = $7, updated_at = $8 
+	          WHERE id = $9 AND user_id = $10
 	          RETURNING updated_at`
-	err := m.DB.QueryRow(query, task.CategoryID, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.Priority, task.ID, userID).Scan(&task.UpdatedAt)
+	err := m.DB.QueryRow(query, task.CategoryID, task.Title, task.SubTitle, task.Description, task.Completed, task.DueDate, task.Priority, currentTime, task.ID, userID).Scan(&task.UpdatedAt)
 	return err
 }
 
 func (m *TaskModel) Complete(userID int64, id int64) error {
-	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1 AND user_id = $2`
-	_, err := m.DB.Exec(query, id, userID)
+	currentTime := utils.CurrentEpochMillis()
+	query := `UPDATE tasks SET completed = true, updated_at = $1 WHERE id = $2 AND user_id = $3`
+	_, err := m.DB.Exec(query, currentTime, id, userID)
 	return err
 }
 
 func (m *TaskModel) Delete(userID int64, id int64, softDelete bool) error {
 	if softDelete {
-		query := `UPDATE tasks SET deleted_at = NOW() WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
-		_, err := m.DB.Exec(query, id, userID)
+		currentTime := utils.CurrentEpochMillis()
+		query := `UPDATE tasks SET deleted_at = $1 WHERE id = $2 AND user_id = $3 AND deleted_at IS NULL`
+		_, err := m.DB.Exec(query, currentTime, id, userID)
 		return err
 	} else {
 		query := `DELETE FROM tasks WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`
@@ -247,20 +250,23 @@ func (m *TaskModel) Delete(userID int64, id int64, softDelete bool) error {
 }
 
 func (m *TaskModel) RestoreTask(userID int64, id int64) error {
-	query := `UPDATE tasks SET deleted_at = NULL, updated_at = NOW() WHERE id = $1 AND user_id = $2 AND deleted_at IS NOT NULL`
-	_, err := m.DB.Exec(query, id, userID)
+	currentTime := utils.CurrentEpochMillis()
+	query := `UPDATE tasks SET deleted_at = NULL, updated_at = $1 WHERE id = $2 AND user_id = $3 AND deleted_at IS NOT NULL`
+	_, err := m.DB.Exec(query, currentTime, id, userID)
 	return err
 }
 
 func (m *TaskModel) MarkTaskAsCompleted(userID int64, id int64) error {
-	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE id = $1 AND user_id = $2`
-	_, err := m.DB.Exec(query, id, userID)
+	currentTime := utils.CurrentEpochMillis()
+	query := `UPDATE tasks SET completed = true, updated_at = $1 WHERE id = $2 AND user_id = $3`
+	_, err := m.DB.Exec(query, currentTime, id, userID)
 	return err
 }
 
 func (m *TaskModel) MarkTaskAsUncompleted(userID int64, id int64) error {
-	query := `UPDATE tasks SET completed = false, updated_at = NOW() WHERE id = $1 AND user_id = $2`
-	_, err := m.DB.Exec(query, id, userID)
+	currentTime := utils.CurrentEpochMillis()
+	query := `UPDATE tasks SET completed = false, updated_at = $1 WHERE id = $2 AND user_id = $3`
+	_, err := m.DB.Exec(query, currentTime, id, userID)
 	return err
 }
 
@@ -355,14 +361,15 @@ func (m *TaskModel) UpdateProgress(taskID int64) error {
 		return err
 	}
 
-	query := `UPDATE tasks SET progress_percentage = $1, updated_at = NOW() WHERE id = $2`
-	_, err = m.DB.Exec(query, progress, taskID)
+	currentTime := utils.CurrentEpochMillis()
+	query := `UPDATE tasks SET progress_percentage = $1, updated_at = $2 WHERE id = $3`
+	_, err = m.DB.Exec(query, progress, currentTime, taskID)
 	return err
 }
 
 func (m *TaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
 	summary := make(map[string]interface{})
-	now := time.Now()
+	now := utils.CurrentEpochMillis()
 
 	// Total active tasks
 	var totalActive int
@@ -422,9 +429,10 @@ func (m *TaskModel) BulkDelete(userID int64, taskIDs []int64) error {
 		return nil
 	}
 
+	currentTime := utils.CurrentEpochMillis()
 	// Build the query with IN clause
-	query := `UPDATE tasks SET deleted_at = NOW() WHERE user_id = $1 AND id = ANY($2) AND deleted_at IS NULL`
-	_, err := m.DB.Exec(query, userID, taskIDs)
+	query := `UPDATE tasks SET deleted_at = $1 WHERE user_id = $2 AND id = ANY($3) AND deleted_at IS NULL`
+	_, err := m.DB.Exec(query, currentTime, userID, taskIDs)
 	return err
 }
 
@@ -433,8 +441,9 @@ func (m *TaskModel) BulkComplete(userID int64, taskIDs []int64) error {
 		return nil
 	}
 
+	currentTime := utils.CurrentEpochMillis()
 	// Build the query with IN clause
-	query := `UPDATE tasks SET completed = true, updated_at = NOW() WHERE user_id = $1 AND id = ANY($2) AND deleted_at IS NULL`
-	_, err := m.DB.Exec(query, userID, taskIDs)
+	query := `UPDATE tasks SET completed = true, updated_at = $1 WHERE user_id = $2 AND id = ANY($3) AND deleted_at IS NULL`
+	_, err := m.DB.Exec(query, currentTime, userID, taskIDs)
 	return err
 }
