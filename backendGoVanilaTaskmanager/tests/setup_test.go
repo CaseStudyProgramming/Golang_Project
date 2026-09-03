@@ -62,7 +62,7 @@ func SetupTestDB(t *testing.T) *sql.DB {
 // RunTestMigrations runs the database migrations for testing
 func RunTestMigrations(db *sql.DB, t *testing.T) {
 	// Drop existing tables to ensure clean state
-	tables := []string{"task_tags", "tasks", "tags", "categories", "users"}
+	tables := []string{"activity_logs", "subtasks", "task_tags", "tasks", "tags", "categories", "users"}
 	for _, table := range tables {
 		_, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table))
 		if err != nil {
@@ -71,32 +71,33 @@ func RunTestMigrations(db *sql.DB, t *testing.T) {
 	}
 
 	migrations := []string{
-		// Users table
+		// Users table with timezone column and epoch timestamps
 		`CREATE TABLE users (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(100) NOT NULL,
 			email VARCHAR(150) UNIQUE NOT NULL,
 			password_hash VARCHAR(255) NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			timezone VARCHAR(50) DEFAULT 'UTC',
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+			updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
 		)`,
-		// Categories table
+		// Categories table with epoch timestamps
 		`CREATE TABLE categories (
 			id SERIAL PRIMARY KEY,
 			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			name VARCHAR(100) NOT NULL,
 			color_hex VARCHAR(7) DEFAULT '#3B82F6',
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
 		)`,
-		// Tags table
+		// Tags table with epoch timestamps
 		`CREATE TABLE tags (
 			id SERIAL PRIMARY KEY,
 			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			name VARCHAR(100) NOT NULL,
 			color_hex VARCHAR(7) DEFAULT '#3B82F6',
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
 		)`,
-		// Tasks table with all required columns
+		// Tasks table with epoch timestamps
 		`CREATE TABLE tasks (
 			id SERIAL PRIMARY KEY,
 			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -105,18 +106,41 @@ func RunTestMigrations(db *sql.DB, t *testing.T) {
 			sub_title VARCHAR(255) NULL,
 			description TEXT NULL,
 			completed BOOLEAN DEFAULT false,
-			due_date TIMESTAMP NULL,
+			due_date BIGINT NULL,
 			priority VARCHAR(20) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')),
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			deleted_at TIMESTAMP NULL
+			progress_percentage INT DEFAULT 0,
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+			updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+			deleted_at BIGINT NULL
 		)`,
-		// Task-tags junction table
+		// Task-tags junction table with epoch timestamps
 		`CREATE TABLE task_tags (
 			task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
 			tag_id INT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
 			PRIMARY KEY (task_id, tag_id)
+		)`,
+		// Subtasks table with epoch timestamps
+		`CREATE TABLE subtasks (
+			id SERIAL PRIMARY KEY,
+			task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+			title VARCHAR(255) NOT NULL,
+			is_completed BOOLEAN DEFAULT false,
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+			updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
+		)`,
+		// Activity logs table with epoch timestamps
+		`CREATE TABLE activity_logs (
+			id SERIAL PRIMARY KEY,
+			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			task_id INT NULL REFERENCES tasks(id) ON DELETE SET NULL,
+			action VARCHAR(20) NOT NULL,
+			entity_type VARCHAR(20) NOT NULL,
+			entity_id INT NULL,
+			details TEXT NULL,
+			ip_address VARCHAR(45) NULL,
+			user_agent TEXT NULL,
+			created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
 		)`,
 	}
 
@@ -152,11 +176,11 @@ func CleanupTestData(db *sql.DB, t *testing.T) {
 	if err != nil {
 		t.Logf("Warning: Failed to cleanup test categories: %v", err)
 	}
-	_, err = db.Exec("DELETE FROM tasks WHERE title LIKE 'Test%'")
+	_, err = db.Exec("DELETE FROM tasks WHERE title LIKE 'Test%' OR title LIKE 'Epoch%' OR title LIKE 'Batch%' OR title LIKE 'Compare%' OR title LIKE 'Performance%'")
 	if err != nil {
 		t.Logf("Warning: Failed to cleanup test tasks: %v", err)
 	}
-	_, err = db.Exec("DELETE FROM users WHERE name LIKE 'testuser%'")
+	_, err = db.Exec("DELETE FROM users WHERE name LIKE 'testuser%' OR name LIKE 'timezoneuser%' OR name LIKE 'tzupdateuser%' OR name LIKE 'invalidtzuser%' OR name LIKE 'eastuser' OR name LIKE 'westuser' OR name LIKE 'subtestuser%' OR name LIKE 'user%' OR name LIKE 'perftest' OR name LIKE 'defaulttest' OR name LIKE 'integritytest' OR name LIKE 'nulltest' OR name LIKE 'tzvalidation%' OR name LIKE 'comparetest'")
 	if err != nil {
 		t.Logf("Warning: Failed to cleanup test users: %v", err)
 	}

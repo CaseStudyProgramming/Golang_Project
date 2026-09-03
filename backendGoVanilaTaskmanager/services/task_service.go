@@ -296,12 +296,27 @@ func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, 
 	for _, task := range tasks {
 		dueDate := ""
 		if task.DueDate != nil {
-			dueDate = task.DueDate.Format("2006-01-02 15:04:05")
+			formatted, err := utils.FormatEpochMillis(*task.DueDate, "UTC", "2006-01-02 15:04:05")
+			if err == nil {
+				dueDate = formatted
+			}
 		}
 
 		categoryIDVal := ""
 		if task.CategoryID != nil {
 			categoryIDVal = fmt.Sprintf("%d", *task.CategoryID)
+		}
+
+		createdAt := ""
+		formatted, err := utils.FormatEpochMillis(task.CreatedAt, "UTC", "2006-01-02 15:04:05")
+		if err == nil {
+			createdAt = formatted
+		}
+
+		updatedAt := ""
+		formatted, err = utils.FormatEpochMillis(task.UpdatedAt, "UTC", "2006-01-02 15:04:05")
+		if err == nil {
+			updatedAt = formatted
 		}
 
 		record := []string{
@@ -313,8 +328,8 @@ func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, 
 			dueDate,
 			string(task.Priority),
 			categoryIDVal,
-			task.CreatedAt.Format("2006-01-02 15:04:05"),
-			task.UpdatedAt.Format("2006-01-02 15:04:05"),
+			createdAt,
+			updatedAt,
 		}
 
 		if err := writer.Write(record); err != nil {
