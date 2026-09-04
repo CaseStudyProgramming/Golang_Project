@@ -119,8 +119,7 @@ func (m *SubtaskModel) Toggle(id int64) error {
 	currentTime := utils.CurrentEpochMillis()
 	query := `UPDATE subtasks 
 	          SET is_completed = NOT is_completed, updated_at = $1 
-	          WHERE id = $2
-	          RETURNING is_completed, updated_at`
+	          WHERE id = $2`
 	_, err := m.DB.Exec(query, currentTime, id)
 	return err
 }
@@ -128,7 +127,7 @@ func (m *SubtaskModel) Toggle(id int64) error {
 func (m *SubtaskModel) CalculateProgress(taskID int64) (int, error) {
 	query := `SELECT 
 	          COUNT(*) as total,
-	          SUM(CASE WHEN is_completed = true THEN 1 ELSE 0 END) as completed
+	          COALESCE(SUM(CASE WHEN is_completed = true THEN 1 ELSE 0 END), 0) as completed
 	          FROM subtasks 
 	          WHERE task_id = $1`
 
