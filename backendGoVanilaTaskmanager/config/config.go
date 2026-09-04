@@ -10,6 +10,7 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	JWT      JWTConfig      `yaml:"jwt"`
+	CORS     CORSConfig     `yaml:"cors"`
 }
 
 type ServerConfig struct {
@@ -27,6 +28,10 @@ type DatabaseConfig struct {
 
 type JWTConfig struct {
 	Secret string `yaml:"secret"`
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string `yaml:"allowed_origins"`
 }
 
 // LoadConfig loads configuration from yaml file
@@ -51,6 +56,11 @@ func LoadConfig(filePath string) (*Config, error) {
 	// Default JWT secret for development (should be changed in production)
 	if cfg.JWT.Secret == "" {
 		cfg.JWT.Secret = "dev-secret-key-change-in-production"
+	}
+
+	// Default CORS origins for development (should be restricted in production)
+	if len(cfg.CORS.AllowedOrigins) == 0 {
+		cfg.CORS.AllowedOrigins = []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"}
 	}
 
 	return &cfg, nil

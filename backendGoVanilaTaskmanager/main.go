@@ -80,7 +80,7 @@ func main() {
 	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, swaggerController, authMiddleware)
 
 	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
-	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(mux)))
+	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(cfg.CORS.AllowedOrigins)(mux)))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
