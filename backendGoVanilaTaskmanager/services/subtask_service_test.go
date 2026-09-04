@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"taskmanager/models"
 	"taskmanager/utils"
 	"testing"
@@ -206,7 +207,7 @@ func TestCreateSubtask_TaskNotFound(t *testing.T) {
 		t.Error("Expected error for task not found, got nil")
 	}
 
-	if err.Error() != "Task not found or access denied" {
+	if !strings.Contains(err.Error(), "Task not found or access denied") {
 		t.Errorf("Expected 'Task not found or access denied' error, got %v", err)
 	}
 }
@@ -258,7 +259,7 @@ func TestGetSubtasksByTaskID_TaskNotFound(t *testing.T) {
 		t.Error("Expected error for task not found, got nil")
 	}
 
-	if err.Error() != "Task not found or access denied" {
+	if !strings.Contains(err.Error(), "Task not found or access denied") {
 		t.Errorf("Expected 'Task not found or access denied' error, got %v", err)
 	}
 }
@@ -323,7 +324,7 @@ func TestGetSubtaskByID_AccessDenied(t *testing.T) {
 		t.Error("Expected error for access denied, got nil")
 	}
 
-	if err.Error() != "Access denied to subtask" {
+	if !strings.Contains(err.Error(), "Access denied to subtask") {
 		t.Errorf("Expected 'Access denied to subtask' error, got %v", err)
 	}
 }
@@ -451,7 +452,7 @@ func TestDeleteSubtask_AccessDenied(t *testing.T) {
 		t.Error("Expected error for access denied, got nil")
 	}
 
-	if err.Error() != "Access denied to subtask" {
+	if !strings.Contains(err.Error(), "Access denied to subtask") {
 		t.Errorf("Expected 'Access denied to subtask' error, got %v", err)
 	}
 }
@@ -518,7 +519,7 @@ func TestToggleSubtask_AccessDenied(t *testing.T) {
 		t.Error("Expected error for access denied, got nil")
 	}
 
-	if err.Error() != "Access denied to subtask" {
+	if !strings.Contains(err.Error(), "Access denied to subtask") {
 		t.Errorf("Expected 'Access denied to subtask' error, got %v", err)
 	}
 }

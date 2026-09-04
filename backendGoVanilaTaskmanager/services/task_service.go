@@ -44,7 +44,7 @@ func (s *TaskService) Create(userID int64, task *models.Task, ipAddress string, 
 	task.Completed = false
 	createdTask, err := s.model.Create(task)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create task: %w", err)
 	}
 
 	// Log activity
@@ -87,7 +87,7 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 			if err := s.model.LoadTags(&tasks[idx]); err != nil {
 				mu.Lock()
 				if loadErr == nil {
-					loadErr = err
+					loadErr = fmt.Errorf("failed to load tags for task %d: %w", tasks[idx].ID, err)
 				}
 				mu.Unlock()
 			}
@@ -99,7 +99,7 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 			if err := s.model.LoadSubtasks(&tasks[idx]); err != nil {
 				mu.Lock()
 				if loadErr == nil {
-					loadErr = err
+					loadErr = fmt.Errorf("failed to load subtasks for task %d: %w", tasks[idx].ID, err)
 				}
 				mu.Unlock()
 			}
@@ -129,15 +129,15 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 func (s *TaskService) GetByID(userID int64, id int64) (*models.Task, error) {
 	task, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get task by ID %d: %w", id, err)
 	}
 	// Load tags for the task
 	if err := s.model.LoadTags(task); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load tags for task %d: %w", id, err)
 	}
 	// Load subtasks for the task
 	if err := s.model.LoadSubtasks(task); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load subtasks for task %d: %w", id, err)
 	}
 	return task, nil
 }
@@ -152,11 +152,11 @@ func (s *TaskService) Update(userID int64, id int64, task *models.Task, ipAddres
 	// Check if task exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get task %d for update: %w", id, err)
 	}
 
 	if err := s.model.Update(userID, task); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update task %d: %w", id, err)
 	}
 
 	// Log activity
@@ -176,11 +176,11 @@ func (s *TaskService) Delete(userID int64, id int64, ipAddress string, userAgent
 	// Check if task exists
 	task, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get task %d for deletion: %w", id, err)
 	}
 
 	if err := s.model.Delete(userID, id, true); err != nil {
-		return err
+		return fmt.Errorf("failed to delete task %d: %w", id, err)
 	}
 
 	// Log activity
@@ -205,11 +205,11 @@ func (s *TaskService) MarkAsCompleted(userID int64, id int64, ipAddress string, 
 	// Get task for logging
 	task, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get task %d for completion: %w", id, err)
 	}
 
 	if err := s.model.MarkTaskAsCompleted(userID, id); err != nil {
-		return err
+		return fmt.Errorf("failed to mark task %d as completed: %w", id, err)
 	}
 
 	// Log activity
@@ -225,11 +225,11 @@ func (s *TaskService) MarkAsUncompleted(userID int64, id int64, ipAddress string
 	// Get task for logging
 	task, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get task %d for uncompletion: %w", id, err)
 	}
 
 	if err := s.model.MarkTaskAsUncompleted(userID, id); err != nil {
-		return err
+		return fmt.Errorf("failed to mark task %d as uncompleted: %w", id, err)
 	}
 
 	// Log activity
@@ -291,7 +291,10 @@ func (s *TaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string
 		wg.Wait()
 	}
 
-	return s.model.BulkDelete(userID, taskIDs)
+	if err := s.model.BulkDelete(userID, taskIDs); err != nil {
+		return fmt.Errorf("failed to bulk delete tasks: %w", err)
+	}
+	return nil
 }
 
 func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
@@ -316,7 +319,10 @@ func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress stri
 		wg.Wait()
 	}
 
-	return s.model.BulkComplete(userID, taskIDs)
+	if err := s.model.BulkComplete(userID, taskIDs); err != nil {
+		return fmt.Errorf("failed to bulk complete tasks: %w", err)
+	}
+	return nil
 }
 
 func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64, timezone string) ([]byte, error) {

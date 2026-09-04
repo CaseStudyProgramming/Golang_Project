@@ -489,7 +489,7 @@ func TestGetByID_NotFound(t *testing.T) {
 
 	_, err := service.GetByID(1, 999)
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
 	}
 }
@@ -567,7 +567,7 @@ func TestUpdate_NotFound(t *testing.T) {
 
 	_, err := service.Update(1, 999, updatedTask, "127.0.0.1", "test-agent")
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
 	}
 }
@@ -610,7 +610,7 @@ func TestDelete_NotFound(t *testing.T) {
 
 	err := service.Delete(1, 999, "127.0.0.1", "test-agent")
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
 	}
 }

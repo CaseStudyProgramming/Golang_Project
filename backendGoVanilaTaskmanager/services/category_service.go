@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"taskmanager/models"
 )
 
@@ -42,7 +43,7 @@ func (s *CategoryService) Update(userID int64, id int64, category *models.Catego
 	// Check if category exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get category %d for update: %w", id, err)
 	}
 
 	if category.Name == "" {
@@ -50,7 +51,7 @@ func (s *CategoryService) Update(userID int64, id int64, category *models.Catego
 	}
 
 	if err := s.model.Update(userID, category); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update category %d: %w", id, err)
 	}
 	return category, nil
 }
@@ -59,7 +60,7 @@ func (s *CategoryService) Delete(userID int64, id int64) error {
 	// Check if category exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get category %d for deletion: %w", id, err)
 	}
 	return s.model.Delete(userID, id)
 }

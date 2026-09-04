@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"taskmanager/models"
 )
 
@@ -42,7 +43,7 @@ func (s *TagService) Update(userID int64, id int64, tag *models.Tag) (*models.Ta
 	// Check if tag exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get tag %d for update: %w", id, err)
 	}
 
 	if tag.Name == "" {
@@ -50,7 +51,7 @@ func (s *TagService) Update(userID int64, id int64, tag *models.Tag) (*models.Ta
 	}
 
 	if err := s.model.Update(userID, tag); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update tag %d: %w", id, err)
 	}
 	return tag, nil
 }
@@ -59,7 +60,7 @@ func (s *TagService) Delete(userID int64, id int64) error {
 	// Check if tag exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get tag %d for deletion: %w", id, err)
 	}
 	return s.model.Delete(userID, id)
 }

@@ -28,7 +28,10 @@ func (s *ActivityLogService) LogActivity(userID int64, taskID *int64, action str
 	}
 
 	_, err := s.model.Create(log)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to create activity log: %w", err)
+	}
+	return nil
 }
 
 // GetUserActivityLogs retrieves activity logs for a specific user with pagination
@@ -43,7 +46,7 @@ func (s *ActivityLogService) GetUserActivityLogs(userID int64, page int, limit i
 	offset := (page - 1) * limit
 	logs, total, err := s.model.GetByUserID(userID, offset, limit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get user activity logs: %w", err)
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -75,7 +78,7 @@ func (s *ActivityLogService) GetTaskActivityLogs(taskID int64, page int, limit i
 	offset := (page - 1) * limit
 	logs, total, err := s.model.GetByTaskID(taskID, offset, limit)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get task activity logs: %w", err)
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -99,7 +102,7 @@ func (s *ActivityLogService) GetTaskActivityLogs(taskID int64, page int, limit i
 func (s *ActivityLogService) GetActivityLogByID(id int64) (*models.ActivityLog, error) {
 	log, err := s.model.GetByID(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get activity log %d: %w", id, err)
 	}
 	return log, nil
 }
