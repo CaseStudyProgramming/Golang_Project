@@ -44,7 +44,10 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Category created successfully", createdCategory, timezone)
 }
 
@@ -59,7 +62,10 @@ func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Req
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Categories retrieved successfully", categories, timezone)
 }
 
@@ -85,7 +91,10 @@ func (c *CategoryController) GetCategoryByID(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Category found successfully", category, timezone)
 }
 
@@ -117,7 +126,10 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Category updated successfully", updatedCategory, timezone)
 }
 
@@ -142,5 +154,10 @@ func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusAccepted, "Category deleted successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusAccepted, "Category deleted successfully", nil, timezone)
 }

@@ -275,7 +275,7 @@ func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress stri
 	return s.model.BulkComplete(userID, taskIDs)
 }
 
-func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64, timezone string) ([]byte, error) {
 	// Get all tasks without pagination for export
 	tasks, _, err := s.model.GetAll(userID, completed, 0, 0, search, priority, categoryID, "", "")
 	if err != nil {
@@ -296,7 +296,7 @@ func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, 
 	for _, task := range tasks {
 		dueDate := ""
 		if task.DueDate != nil {
-			formatted, err := utils.FormatEpochMillis(*task.DueDate, "UTC", "2006-01-02 15:04:05")
+			formatted, err := utils.FormatEpochMillis(*task.DueDate, timezone, "2006-01-02 15:04:05")
 			if err == nil {
 				dueDate = formatted
 			}
@@ -308,13 +308,13 @@ func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, 
 		}
 
 		createdAt := ""
-		formatted, err := utils.FormatEpochMillis(task.CreatedAt, "UTC", "2006-01-02 15:04:05")
+		formatted, err := utils.FormatEpochMillis(task.CreatedAt, timezone, "2006-01-02 15:04:05")
 		if err == nil {
 			createdAt = formatted
 		}
 
 		updatedAt := ""
-		formatted, err = utils.FormatEpochMillis(task.UpdatedAt, "UTC", "2006-01-02 15:04:05")
+		formatted, err = utils.FormatEpochMillis(task.UpdatedAt, timezone, "2006-01-02 15:04:05")
 		if err == nil {
 			updatedAt = formatted
 		}

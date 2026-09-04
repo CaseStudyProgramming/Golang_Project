@@ -46,7 +46,10 @@ func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Tag created successfully", createdTag, timezone)
 }
 
@@ -61,7 +64,10 @@ func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tags retrieved successfully", tags, timezone)
 }
 
@@ -87,7 +93,10 @@ func (c *TagController) GetTagByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tag found successfully", tag, timezone)
 }
 
@@ -119,7 +128,10 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tag updated successfully", updatedTag, timezone)
 }
 
@@ -144,7 +156,12 @@ func (c *TagController) DeleteTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusAccepted, "Tag deleted successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusAccepted, "Tag deleted successfully", nil, timezone)
 }
 
 // GET /tasks/{id}/tags
@@ -162,7 +179,12 @@ func (c *TagController) GetTagsByTaskID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Tags retrieved successfully", tags)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tags retrieved successfully", tags, timezone)
 }
 
 // GET /tags/{id}/tasks
@@ -180,5 +202,10 @@ func (c *TagController) GetTasksByTagID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Tasks retrieved successfully", tasks)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tasks retrieved successfully", tasks, timezone)
 }

@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"taskmanager/models"
+	"taskmanager/utils"
 	"testing"
-	"time"
 )
 
 // MockTaskService is a mock implementation of TaskServiceInterface for testing
@@ -29,7 +29,7 @@ type MockTaskService struct {
 	GetAnalyticsSummaryFunc func(userID int64) (map[string]interface{}, error)
 	BulkDeleteFunc          func(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
 	BulkCompleteFunc        func(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
-	ExportToCSVFunc         func(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error)
+	ExportToCSVFunc         func(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64, timezone string) ([]byte, error)
 }
 
 // Ensure MockTaskService implements TaskServiceInterface
@@ -47,6 +47,8 @@ func createRequest(method, path string, body *bytes.Buffer) *http.Request {
 	}
 	// Add user_id to context for authentication
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	// Add timezone to context for timezone-aware responses
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	return req
 }
 
@@ -141,9 +143,9 @@ func (m *MockTaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress 
 	return nil
 }
 
-func (m *MockTaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+func (m *MockTaskService) ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64, timezone string) ([]byte, error) {
 	if m.ExportToCSVFunc != nil {
-		return m.ExportToCSVFunc(userID, completed, search, priority, categoryID)
+		return m.ExportToCSVFunc(userID, completed, search, priority, categoryID, timezone)
 	}
 	return nil, nil
 }
@@ -152,8 +154,8 @@ func TestCreateTaskHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
 		CreateFunc: func(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 			task.ID = 1
-			task.CreatedAt = time.Now()
-			task.UpdatedAt = time.Now()
+			task.CreatedAt = utils.CurrentEpochMillis()
+			task.UpdatedAt = utils.CurrentEpochMillis()
 			return task, nil
 		},
 	}
@@ -164,6 +166,7 @@ func TestCreateTaskHandler_Success(t *testing.T) {
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.CreateTask(w, req)
@@ -188,6 +191,7 @@ func TestCreateTaskHandler_InvalidJSON(t *testing.T) {
 	req := httptest.NewRequest("POST", "/tasks", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.CreateTask(w, req)
@@ -243,6 +247,7 @@ func TestGetAllTasksHandler_Success(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks?page=1&limit=10", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -265,6 +270,7 @@ func TestGetAllTasksHandler_InvalidPage(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks?page=0", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -280,6 +286,7 @@ func TestGetAllTasksHandler_InvalidLimit(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks?limit=0", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -295,6 +302,7 @@ func TestGetAllTasksHandler_InvalidCompleted(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks?completed=invalid", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -310,6 +318,7 @@ func TestGetAllTasksHandler_EmptySearch(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks?search=", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.GetAllTasks(w, req)
@@ -339,6 +348,7 @@ func TestGetTaskByIDHandler_Success(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks/1", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -364,6 +374,7 @@ func TestGetTaskByIDHandler_InvalidID(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks/invalid", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -387,6 +398,7 @@ func TestGetTaskByIDHandler_NotFound(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks/999", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -418,6 +430,7 @@ func TestUpdateTaskHandler_Success(t *testing.T) {
 	req := httptest.NewRequest("PUT", "/tasks/1", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -445,6 +458,7 @@ func TestUpdateTaskHandler_InvalidJSON(t *testing.T) {
 	req := httptest.NewRequest("PUT", "/tasks/1", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -465,6 +479,7 @@ func TestUpdateTaskHandler_InvalidID(t *testing.T) {
 	req := httptest.NewRequest("PUT", "/tasks/invalid", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -490,6 +505,7 @@ func TestUpdateTaskHandler_NotFound(t *testing.T) {
 	req := httptest.NewRequest("PUT", "/tasks/999", bytes.NewBufferString(taskJSON))
 	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -513,6 +529,7 @@ func TestDeleteTaskHandler_Success(t *testing.T) {
 
 	req := httptest.NewRequest("DELETE", "/tasks/1", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -538,6 +555,7 @@ func TestDeleteTaskHandler_InvalidID(t *testing.T) {
 
 	req := httptest.NewRequest("DELETE", "/tasks/invalid", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -561,6 +579,7 @@ func TestDeleteTaskHandler_NotFound(t *testing.T) {
 
 	req := httptest.NewRequest("DELETE", "/tasks/999", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -584,6 +603,7 @@ func TestMarkTaskAsCompletedHandler_Success(t *testing.T) {
 
 	req := httptest.NewRequest("PATCH", "/tasks/1/complete", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -609,6 +629,7 @@ func TestMarkTaskAsCompletedHandler_InvalidID(t *testing.T) {
 
 	req := httptest.NewRequest("PATCH", "/tasks/invalid/complete", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -632,6 +653,7 @@ func TestMarkTaskAsUncompletedHandler_Success(t *testing.T) {
 
 	req := httptest.NewRequest("PATCH", "/tasks/1/uncomplete", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -657,6 +679,7 @@ func TestMarkTaskAsUncompletedHandler_InvalidID(t *testing.T) {
 
 	req := httptest.NewRequest("PATCH", "/tasks/invalid/uncomplete", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	mux.ServeHTTP(w, req)
@@ -868,7 +891,7 @@ func TestBulkCompleteTasksHandler_EmptyTaskIDs(t *testing.T) {
 
 func TestExportTasksToCSVHandler_Success(t *testing.T) {
 	mockService := &MockTaskService{
-		ExportToCSVFunc: func(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error) {
+		ExportToCSVFunc: func(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64, timezone string) ([]byte, error) {
 			csvContent := "ID,Title,Completed\n1,Test Task,false\n"
 			return []byte(csvContent), nil
 		},
@@ -878,6 +901,7 @@ func TestExportTasksToCSVHandler_Success(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks/export/csv", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.ExportTasksToCSV(w, req)
@@ -903,6 +927,7 @@ func TestExportTasksToCSVHandler_InvalidPriority(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks/export/csv?priority=INVALID", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.ExportTasksToCSV(w, req)
@@ -918,6 +943,7 @@ func TestExportTasksToCSVHandler_InvalidCategoryID(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/tasks/export/csv?category_id=invalid", nil)
 	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
 
 	controller.ExportTasksToCSV(w, req)

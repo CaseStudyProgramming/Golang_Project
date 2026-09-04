@@ -30,7 +30,7 @@ type TaskServiceInterface interface {
 	GetAnalyticsSummary(userID int64) (map[string]interface{}, error)
 	BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
 	BulkComplete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error
-	ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64) ([]byte, error)
+	ExportToCSV(userID int64, completed *bool, search string, priority *models.Priority, categoryID *int64, timezone string) ([]byte, error)
 }
 
 func NewTaskController(service TaskServiceInterface) *TaskController {
@@ -57,7 +57,10 @@ func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Task created successfully", createdTask, timezone)
 }
 
@@ -155,7 +158,10 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "success", map[string]interface{}{
 		"data": tasks,
 		"meta": meta,
@@ -184,7 +190,10 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task found successfully", task, timezone)
 }
 
@@ -219,7 +228,10 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task updated successfully", updatedTask, timezone)
 }
 
@@ -247,7 +259,12 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusAccepted, "Task deleted successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusAccepted, "Task deleted successfully", nil, timezone)
 }
 
 // PATCH /tasks/{id}/restore
@@ -288,7 +305,12 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Task restored successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task restored successfully", nil, timezone)
 }
 
 // PATCH /tasks/{id}/complete
@@ -311,7 +333,12 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Task completed successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task completed successfully", nil, timezone)
 }
 
 // PATCH /tasks/{id}/uncomplete
@@ -334,7 +361,12 @@ func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Task uncompleted successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Task uncompleted successfully", nil, timezone)
 }
 
 // POST /tasks/{id}/tags
@@ -367,7 +399,12 @@ func (c *TaskController) AddTagToTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Tag added to task successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tag added to task successfully", nil, timezone)
 }
 
 // DELETE /tasks/{id}/tags/{tagId}
@@ -394,7 +431,12 @@ func (c *TaskController) RemoveTagFromTask(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Tag removed from task successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Tag removed from task successfully", nil, timezone)
 }
 
 // GET /tasks/analytics/summary
@@ -408,7 +450,10 @@ func (c *TaskController) GetAnalyticsSummary(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Analytics summary retrieved successfully", summary, timezone)
 }
 
@@ -443,7 +488,12 @@ func (c *TaskController) BulkDeleteTasks(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, fmt.Sprintf("Successfully deleted %d tasks", len(request.TaskIDs)), nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, fmt.Sprintf("Successfully deleted %d tasks", len(request.TaskIDs)), nil, timezone)
 }
 
 // POST /tasks/bulk-complete
@@ -477,7 +527,12 @@ func (c *TaskController) BulkCompleteTasks(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, fmt.Sprintf("Successfully completed %d tasks", len(request.TaskIDs)), nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, fmt.Sprintf("Successfully completed %d tasks", len(request.TaskIDs)), nil, timezone)
 }
 
 // GET /tasks/export/csv
@@ -528,7 +583,13 @@ func (c *TaskController) ExportTasksToCSV(w http.ResponseWriter, r *http.Request
 		categoryID = &catID
 	}
 
-	csvData, err := c.service.ExportToCSV(userID, completed, search, priority, categoryID)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+
+	csvData, err := c.service.ExportToCSV(userID, completed, search, priority, categoryID, timezone)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
