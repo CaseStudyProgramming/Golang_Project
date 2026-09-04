@@ -61,7 +61,7 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 	offset := (page - 1) * limit
 	tasks, total, err := s.model.GetAll(userID, completed, offset, limit, search, priority, categoryID, sortBy, sortOrder)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to get tasks: %w", err)
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -237,7 +237,10 @@ func (s *TaskService) Restore(userID int64, id int64) error {
 	// if err != nil && err != sql.ErrNoRows { ... }
 	// if task == nil || task.ID == 0 { ... }
 	// We'll mimic this or handle it nicely in the controller.
-	return s.model.RestoreTask(userID, id)
+	if err := s.model.RestoreTask(userID, id); err != nil {
+		return fmt.Errorf("failed to restore task %d: %w", id, err)
+	}
+	return nil
 }
 
 func (s *TaskService) MarkAsCompleted(userID int64, id int64, ipAddress string, userAgent string) error {
@@ -285,12 +288,12 @@ func (s *TaskService) AddTagToTask(userID int64, taskID int64, tagID int64) erro
 	// Check if task exists and belongs to user
 	_, err := s.model.GetByID(userID, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get task %d for tag addition: %w", taskID, err)
 	}
 	// Check if tag exists and belongs to user
 	_, err = s.tagModel.GetByID(userID, tagID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get tag %d for tag addition: %w", tagID, err)
 	}
 	return s.model.AddTagToTask(taskID, tagID)
 }
@@ -299,13 +302,17 @@ func (s *TaskService) RemoveTagFromTask(userID int64, taskID int64, tagID int64)
 	// Check if task exists and belongs to user
 	_, err := s.model.GetByID(userID, taskID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get task %d for tag removal: %w", taskID, err)
 	}
 	return s.model.RemoveTagFromTask(taskID, tagID)
 }
 
 func (s *TaskService) GetAnalyticsSummary(userID int64) (map[string]interface{}, error) {
-	return s.model.GetAnalyticsSummary(userID)
+	summary, err := s.model.GetAnalyticsSummary(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get analytics summary: %w", err)
+	}
+	return summary, nil
 }
 
 func (s *TaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string, userAgent string) error {
@@ -396,7 +403,7 @@ func (s *TaskService) ExportToCSV(userID int64, completed *bool, search string, 
 	// Get all tasks without pagination for export
 	tasks, _, err := s.model.GetAll(userID, completed, 0, 0, search, priority, categoryID, "", "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get tasks for export: %w", err)
 	}
 
 	// Create CSV buffer

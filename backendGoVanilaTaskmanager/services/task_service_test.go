@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"taskmanager/models"
 	"taskmanager/utils"
 	"testing"
@@ -682,7 +683,8 @@ func TestRestore_Error(t *testing.T) {
 		t.Error("Expected error, got nil")
 	}
 
-	if err.Error() != "restore failed" {
-		t.Errorf("Expected 'restore failed' error, got %v", err)
+	// Check if error contains the expected message (accounting for error wrapping)
+	if !strings.Contains(err.Error(), "restore failed") {
+		t.Errorf("Expected error to contain 'restore failed', got %v", err)
 	}
 }
