@@ -51,7 +51,10 @@ func (c *SubtaskController) CreateSubtask(w http.ResponseWriter, r *http.Request
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusCreated, "Subtask created successfully", createdSubtask, timezone)
 }
 
@@ -73,7 +76,10 @@ func (c *SubtaskController) GetSubtasksByTaskID(w http.ResponseWriter, r *http.R
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtasks retrieved successfully", subtasks, timezone)
 }
 
@@ -95,7 +101,10 @@ func (c *SubtaskController) GetSubtaskByID(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtask found successfully", subtask, timezone)
 }
 
@@ -123,7 +132,10 @@ func (c *SubtaskController) UpdateSubtask(w http.ResponseWriter, r *http.Request
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtask updated successfully", updatedSubtask, timezone)
 }
 
@@ -144,7 +156,12 @@ func (c *SubtaskController) DeleteSubtask(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Subtask deleted successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtask deleted successfully", nil, timezone)
 }
 
 // PATCH /subtasks/{id}/toggle
@@ -164,5 +181,10 @@ func (c *SubtaskController) ToggleSubtask(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.SuccessResponse(w, http.StatusOK, "Subtask toggled successfully", nil)
+	// Get timezone from context
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
+	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Subtask toggled successfully", nil, timezone)
 }

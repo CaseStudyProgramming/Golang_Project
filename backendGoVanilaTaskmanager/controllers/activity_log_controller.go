@@ -63,7 +63,10 @@ func (c *ActivityLogController) GetUserActivityLogs(w http.ResponseWriter, r *ht
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "success", map[string]interface{}{
 		"data": logs,
 		"meta": meta,
@@ -116,7 +119,10 @@ func (c *ActivityLogController) GetTaskActivityLogs(w http.ResponseWriter, r *ht
 	// This requires injecting TaskService or adding a method to check task ownership
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "success", map[string]interface{}{
 		"data": logs,
 		"meta": meta,
@@ -151,6 +157,9 @@ func (c *ActivityLogController) GetActivityLogByID(w http.ResponseWriter, r *htt
 	}
 
 	// Get timezone from context
-	timezone := r.Context().Value("timezone").(string)
+	timezone := "UTC"
+	if tz, ok := r.Context().Value("timezone").(string); ok {
+		timezone = tz
+	}
 	utils.SuccessResponseWithTimezone(w, http.StatusOK, "Activity log found successfully", log, timezone)
 }
