@@ -54,8 +54,8 @@ func (s *UserService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, ErrUserAlreadyExists
 	}
 
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	// Hash password with explicit cost factor for security
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
 	if err != nil {
 		return nil, err
 	}
