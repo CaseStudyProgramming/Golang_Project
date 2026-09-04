@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"taskmanager/models"
 	"taskmanager/utils"
 )
@@ -72,14 +73,45 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 		return nil, nil, errors.New("no tasks found")
 	}
 
-	// Load tags and subtasks for each task
+	// Load tags and subtasks for each task concurrently
+	var wg sync.WaitGroup
+	var loadErr error
+	var mu sync.Mutex
+
 	for i := range tasks {
-		if err := s.model.LoadTags(&tasks[i]); err != nil {
-			return nil, nil, err
-		}
-		if err := s.model.LoadSubtasks(&tasks[i]); err != nil {
-			return nil, nil, err
-		}
+		wg.Add(2) // One for tags, one for subtasks
+
+		// Load tags concurrently
+		go func(idx int) {
+			defer wg.Done()
+			if err := s.model.LoadTags(&tasks[idx]); err != nil {
+				mu.Lock()
+				if loadErr == nil {
+					loadErr = err
+				}
+				mu.Unlock()
+			}
+		}(i)
+
+		// Load subtasks concurrently
+		go func(idx int) {
+			defer wg.Done()
+			if err := s.model.LoadSubtasks(&tasks[idx]); err != nil {
+				mu.Lock()
+				if loadErr == nil {
+					loadErr = err
+				}
+				mu.Unlock()
+			}
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Check for any errors
+	if loadErr != nil {
+		return nil, nil, loadErr
 	}
 
 	meta := map[string]interface{}{
@@ -242,15 +274,21 @@ func (s *TaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string
 		return nil
 	}
 
-	// Log activity for each task
+	// Log activity for each task concurrently using goroutines
 	if s.activityService != nil {
+		var wg sync.WaitGroup
 		for _, taskID := range taskIDs {
-			task, err := s.model.GetByID(userID, taskID)
-			if err == nil {
-				details := fmt.Sprintf("Bulk deleted task: %s", task.Title)
-				_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionDelete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
-			}
+			wg.Add(1)
+			go func(tid int64) {
+				defer wg.Done()
+				task, err := s.model.GetByID(userID, tid)
+				if err == nil {
+					details := fmt.Sprintf("Bulk deleted task: %s", task.Title)
+					_ = s.activityService.LogActivity(userID, &tid, string(models.ActionDelete), string(models.EntityTask), &tid, details, ipAddress, userAgent)
+				}
+			}(taskID)
 		}
+		wg.Wait()
 	}
 
 	return s.model.BulkDelete(userID, taskIDs)
@@ -261,15 +299,21 @@ func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress stri
 		return nil
 	}
 
-	// Log activity for each task
+	// Log activity for each task concurrently using goroutines
 	if s.activityService != nil {
+		var wg sync.WaitGroup
 		for _, taskID := range taskIDs {
-			task, err := s.model.GetByID(userID, taskID)
-			if err == nil {
-				details := fmt.Sprintf("Bulk completed task: %s", task.Title)
-				_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionComplete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
-			}
+			wg.Add(1)
+			go func(tid int64) {
+				defer wg.Done()
+				task, err := s.model.GetByID(userID, tid)
+				if err == nil {
+					details := fmt.Sprintf("Bulk completed task: %s", task.Title)
+					_ = s.activityService.LogActivity(userID, &tid, string(models.ActionComplete), string(models.EntityTask), &tid, details, ipAddress, userAgent)
+				}
+			}(taskID)
 		}
+		wg.Wait()
 	}
 
 	return s.model.BulkComplete(userID, taskIDs)
