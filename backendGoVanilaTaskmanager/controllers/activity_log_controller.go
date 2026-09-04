@@ -58,7 +58,7 @@ func (c *ActivityLogController) GetUserActivityLogs(w http.ResponseWriter, r *ht
 
 	logs, meta, err := c.service.GetUserActivityLogs(userID, page, limit)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (c *ActivityLogController) GetTaskActivityLogs(w http.ResponseWriter, r *ht
 	idStr := r.PathValue("id")
 	taskID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid task ID")
 		return
 	}
 
@@ -111,7 +111,7 @@ func (c *ActivityLogController) GetTaskActivityLogs(w http.ResponseWriter, r *ht
 
 	logs, meta, err := c.service.GetTaskActivityLogs(taskID, page, limit)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func (c *ActivityLogController) GetActivityLogByID(w http.ResponseWriter, r *htt
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorResponse(w, http.StatusBadRequest, "Invalid activity log ID")
 		return
 	}
 
@@ -146,7 +146,7 @@ func (c *ActivityLogController) GetActivityLogByID(w http.ResponseWriter, r *htt
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Activity log with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 

@@ -58,10 +58,10 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	response, err := c.userService.Register(&req)
 	if err != nil {
 		if err == services.ErrUserAlreadyExists {
-			utils.ErrorResponse(w, http.StatusConflict, err.Error())
+			utils.ErrorResponse(w, http.StatusConflict, utils.GetUserMessage(err))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -94,10 +94,10 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	response, err := c.userService.Login(&req)
 	if err != nil {
 		if err == services.ErrInvalidCredentials {
-			utils.ErrorResponse(w, http.StatusUnauthorized, err.Error())
+			utils.ErrorResponse(w, http.StatusUnauthorized, utils.GetUserMessage(err))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -158,7 +158,7 @@ func (c *AuthController) UpdateTimezone(w http.ResponseWriter, r *http.Request) 
 
 	user, err := c.userService.UpdateTimezone(userID, &req)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 

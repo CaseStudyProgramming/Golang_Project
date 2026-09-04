@@ -35,13 +35,13 @@ func (c *TagController) CreateTag(w http.ResponseWriter, r *http.Request) {
 
 	var tag models.Tag
 	if err := json.NewDecoder(r.Body).Decode(&tag); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	createdTag, err := c.service.Create(userID, &tag)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (c *TagController) GetAllTags(w http.ResponseWriter, r *http.Request) {
 
 	tags, err := c.service.GetAll(userID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (c *TagController) GetTagByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (c *TagController) GetTagByID(w http.ResponseWriter, r *http.Request) {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Tag with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -107,13 +107,13 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	var tag models.Tag
 	if err := json.NewDecoder(r.Body).Decode(&tag); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -123,7 +123,7 @@ func (c *TagController) UpdateTag(w http.ResponseWriter, r *http.Request) {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Tag with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -142,7 +142,7 @@ func (c *TagController) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (c *TagController) DeleteTag(w http.ResponseWriter, r *http.Request) {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Tag with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -169,13 +169,13 @@ func (c *TagController) GetTagsByTaskID(w http.ResponseWriter, r *http.Request) 
 	idStr := r.PathValue("id")
 	taskID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	tags, err := c.service.GetTagsByTaskID(taskID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -192,13 +192,13 @@ func (c *TagController) GetTasksByTagID(w http.ResponseWriter, r *http.Request) 
 	idStr := r.PathValue("id")
 	tagID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	tasks, err := c.service.GetTasksByTagID(tagID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
