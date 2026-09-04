@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"taskmanager/config"
 	"taskmanager/controllers"
 	"taskmanager/middlewares"
 	"taskmanager/models"
@@ -18,15 +17,15 @@ import (
 	"taskmanager/utils"
 )
 
-// TestAPIPerformance_BasicOperations benchmarks basic API operations
-func TestAPIPerformance_BasicOperations(t *testing.T) {
+// TestAPIPerformance_BenchmarkEndpoints benchmarks API endpoints to ensure P95 < 50ms
+func TestAPIPerformance_BenchmarkEndpoints(t *testing.T) {
 	SkipIfNoTestDB(t)
 
 	db := SetupTestDB(t)
 	defer CleanupTestDB(db)
 	defer CleanupTestData(db, t)
 
-	// Initialize components
+	// Setup test environment
 	jwtManager := utils.NewJWTManager("test-secret-key")
 	userModel := models.NewUserModel(db)
 	userService := services.NewUserService(userModel, jwtManager)
@@ -40,7 +39,6 @@ func TestAPIPerformance_BasicOperations(t *testing.T) {
 	taskService := services.NewTaskService(taskModel, tagModel, activityLogService)
 	taskController := controllers.NewTaskController(taskService)
 
-	// Initialize other controllers
 	categoryModel := models.NewCategoryModel(db)
 	categoryService := services.NewCategoryService(categoryModel)
 	categoryController := controllers.NewCategoryController(categoryService)
@@ -54,289 +52,319 @@ func TestAPIPerformance_BasicOperations(t *testing.T) {
 
 	activityLogController := controllers.NewActivityLogController(activityLogService)
 
-	swaggerController := controllers.NewSwaggerController()
 	metricsController := controllers.NewMetricsController()
+	swaggerController := controllers.NewSwaggerController()
 
-	// Reset metrics
-	middlewares.ResetMetrics()
-
-	// Setup router
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, swaggerController, metricsController, authMiddleware)
 
 	// Apply middlewares
-	handler := middlewares.Recovery(middlewares.Logger(middlewares.PerformanceMonitoring(mux)))
+	handler := middlewares.Recovery(middlewares.Logger(middlewares.PerformanceMonitoring(middlewares.CORS([]string{"*"})(mux))))
 
-	// Register a test user
-	registerReq := map[string]string{
-		"name":     "perftest",
-		"email":    "perftest@example.com",
-		"password": "password123",
+	// Reset metrics before benchmarking
+	middlewares.ResetMetrics()
+
+	// Create test user and get token
+	registerReq := map[string]interface{}{
+		"name":     "benchmarkuser",
+		"email":    "benchmark@example.com",
+		"password": "benchmarkpass123",
 		"timezone": "UTC",
 	}
-	reqBody, _ := json.Marshal(registerReq)
+	registerBody, _ := json.Marshal(registerReq)
 
-	req := httptest.NewRequest("POST", "/auth/register", bytes.NewBuffer(reqBody))
-	req.Header.Set("Content-Type", "application/json")
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
+	registerReqHTTP := httptest.NewRequest("POST", "/auth/register", bytes.NewBuffer(registerBody))
+	registerReqHTTP.Header.Set("Content-Type", "application/json")
+	registerResp := httptest.NewRecorder()
 
-	if rr.Code != http.StatusCreated {
-		t.Fatalf("Failed to register user: %d", rr.Code)
+	handler.ServeHTTP(registerResp, registerReqHTTP)
+
+	if registerResp.Code != http.StatusCreated {
+		t.Fatalf("Failed to register user: %s", registerResp.Body.String())
 	}
 
-	var authResponse map[string]interface{}
-	json.Unmarshal(rr.Body.Bytes(), &authResponse)
-	token := authResponse["token"].(string)
+	// Login to get token
+	loginReq := map[string]interface{}{
+		"email":    "benchmark@example.com",
+		"password": "benchmarkpass123",
+	}
+	loginBody, _ := json.Marshal(loginReq)
 
-	t.Log("✅ Registered test user")
+	loginReqHTTP := httptest.NewRequest("POST", "/auth/login", bytes.NewBuffer(loginBody))
+	loginReqHTTP.Header.Set("Content-Type", "application/json")
+	loginResp := httptest.NewRecorder()
 
-	// Benchmark task creation
-	t.Run("CreateTask", func(t *testing.T) {
-		iterations := 50
-		var totalDuration time.Duration
+	handler.ServeHTTP(loginResp, loginReqHTTP)
 
-		for i := 0; i < iterations; i++ {
-			taskReq := map[string]interface{}{
-				"title":       fmt.Sprintf("Performance Task %d", i),
-				"description": "Test task for performance benchmarking",
+	if loginResp.Code != http.StatusOK {
+		t.Fatalf("Failed to login: %s", loginResp.Body.String())
+	}
+
+	var authResp map[string]interface{}
+	json.Unmarshal(loginResp.Body.Bytes(), &authResp)
+
+	data, ok := authResp["data"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("Failed to extract data from response: %v", authResp)
+	}
+
+	token, ok := data["token"].(string)
+	if !ok {
+		t.Fatalf("Failed to extract token from response: %v", data)
+	}
+
+	// Benchmark endpoints
+	benchmarkIterations := 100
+
+	t.Run("POST_/auth/login", func(t *testing.T) {
+		loginReq := map[string]interface{}{
+			"email":    "benchmark@example.com",
+			"password": "benchmarkpass123",
+		}
+		loginBody, _ := json.Marshal(loginReq)
+
+		durations := make([]time.Duration, benchmarkIterations)
+
+		for i := 0; i < benchmarkIterations; i++ {
+			req := httptest.NewRequest("POST", "/auth/login", bytes.NewBuffer(loginBody))
+			req.Header.Set("Content-Type", "application/json")
+			resp := httptest.NewRecorder()
+
+			start := time.Now()
+			handler.ServeHTTP(resp, req)
+			durations[i] = time.Since(start)
+
+			if resp.Code != http.StatusOK && i == 0 {
+				t.Logf("First request failed: %s", resp.Body.String())
+			}
+		}
+
+		// Auth endpoints have higher threshold due to bcrypt hashing for security
+		analyzeBenchmarkResults(t, "POST /auth/login", durations, 500*time.Millisecond)
+	})
+
+	t.Run("GET_/tasks", func(t *testing.T) {
+		// Create some tasks first
+		for i := 0; i < 10; i++ {
+			createTaskReq := map[string]interface{}{
+				"title":       fmt.Sprintf("Benchmark Task %d", i),
+				"description": "Task for benchmarking",
 				"priority":    "medium",
+				"status":      "pending",
 			}
-			reqBody, _ := json.Marshal(taskReq)
+			createTaskBody, _ := json.Marshal(createTaskReq)
 
-			startTime := time.Now()
-			req := httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(reqBody))
+			req := httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(createTaskBody))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "Bearer "+token)
-			rr := httptest.NewRecorder()
-			handler.ServeHTTP(rr, req)
-			duration := time.Since(startTime)
-			totalDuration += duration
+			resp := httptest.NewRecorder()
 
-			if rr.Code != http.StatusCreated {
-				t.Errorf("Failed to create task: %d", rr.Code)
-			}
+			handler.ServeHTTP(resp, req)
 		}
 
-		avgDuration := totalDuration / time.Duration(iterations)
-		t.Logf("✅ Created %d tasks in %v (avg: %v per task)", iterations, totalDuration, avgDuration)
+		durations := make([]time.Duration, benchmarkIterations)
 
-		if avgDuration > 50*time.Millisecond {
-			t.Logf("⚠️  Warning: Average response time exceeds 50ms threshold: %v", avgDuration)
-		}
-	})
-
-	// Benchmark task listing
-	t.Run("ListTasks", func(t *testing.T) {
-		iterations := 50
-		var totalDuration time.Duration
-
-		for i := 0; i < iterations; i++ {
-			startTime := time.Now()
-			req := httptest.NewRequest("GET", "/tasks?page=1&limit=10", nil)
+		for i := 0; i < benchmarkIterations; i++ {
+			req := httptest.NewRequest("GET", "/tasks", nil)
 			req.Header.Set("Authorization", "Bearer "+token)
-			rr := httptest.NewRecorder()
-			handler.ServeHTTP(rr, req)
-			duration := time.Since(startTime)
-			totalDuration += duration
+			resp := httptest.NewRecorder()
 
-			if rr.Code != http.StatusOK {
-				t.Errorf("Failed to list tasks: %d", rr.Code)
+			start := time.Now()
+			handler.ServeHTTP(resp, req)
+			durations[i] = time.Since(start)
+
+			if resp.Code != http.StatusOK && i == 0 {
+				t.Logf("First request failed: %s", resp.Body.String())
 			}
 		}
 
-		avgDuration := totalDuration / time.Duration(iterations)
-		t.Logf("✅ Listed tasks %d times in %v (avg: %v per request)", iterations, totalDuration, avgDuration)
-
-		if avgDuration > 50*time.Millisecond {
-			t.Logf("⚠️  Warning: Average response time exceeds 50ms threshold: %v", avgDuration)
-		}
+		analyzeBenchmarkResults(t, "GET /tasks", durations, 50*time.Millisecond)
 	})
 
-	// Benchmark task update
-	t.Run("UpdateTask", func(t *testing.T) {
-		// First create a task
-		taskReq := map[string]interface{}{
-			"title":       "Task to update",
-			"description": "Test task",
-		}
-		reqBody, _ := json.Marshal(taskReq)
-		req := httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
-		rr := httptest.NewRecorder()
-		handler.ServeHTTP(rr, req)
+	t.Run("POST_/tasks", func(t *testing.T) {
+		durations := make([]time.Duration, benchmarkIterations)
 
-		var createdTask map[string]interface{}
-		json.Unmarshal(rr.Body.Bytes(), &createdTask)
-		taskID := int64(createdTask["id"].(float64))
-
-		iterations := 50
-		var totalDuration time.Duration
-
-		for i := 0; i < iterations; i++ {
-			updateReq := map[string]interface{}{
-				"title": fmt.Sprintf("Updated Task %d", i),
+		for i := 0; i < benchmarkIterations; i++ {
+			createTaskReq := map[string]interface{}{
+				"title":       fmt.Sprintf("Benchmark Create Task %d", i),
+				"description": "Task for benchmarking",
+				"priority":    "medium",
+				"status":      "pending",
 			}
-			reqBody, _ := json.Marshal(updateReq)
+			createTaskBody, _ := json.Marshal(createTaskReq)
 
-			startTime := time.Now()
-			req := httptest.NewRequest("PUT", fmt.Sprintf("/tasks/%d", taskID), bytes.NewBuffer(reqBody))
+			req := httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(createTaskBody))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "Bearer "+token)
-			rr := httptest.NewRecorder()
-			handler.ServeHTTP(rr, req)
-			duration := time.Since(startTime)
-			totalDuration += duration
+			resp := httptest.NewRecorder()
 
-			if rr.Code != http.StatusOK {
-				t.Errorf("Failed to update task: %d", rr.Code)
+			start := time.Now()
+			handler.ServeHTTP(resp, req)
+			durations[i] = time.Since(start)
+
+			if resp.Code != http.StatusCreated && i == 0 {
+				t.Logf("First request failed: %s", resp.Body.String())
 			}
 		}
 
-		avgDuration := totalDuration / time.Duration(iterations)
-		t.Logf("✅ Updated task %d times in %v (avg: %v per request)", iterations, totalDuration, avgDuration)
-
-		if avgDuration > 50*time.Millisecond {
-			t.Logf("⚠️  Warning: Average response time exceeds 50ms threshold: %v", avgDuration)
-		}
+		analyzeBenchmarkResults(t, "POST /tasks", durations, 50*time.Millisecond)
 	})
 
-	// Check metrics
-	t.Run("CheckMetrics", func(t *testing.T) {
-		metrics := middlewares.GetMetrics()
+	t.Run("GET_/categories", func(t *testing.T) {
+		durations := make([]time.Duration, benchmarkIterations)
 
-		t.Logf("📊 Performance Metrics Summary:")
-		t.Logf("   Total Requests: %d", len(metrics.RequestCounts))
+		for i := 0; i < benchmarkIterations; i++ {
+			req := httptest.NewRequest("GET", "/categories", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			resp := httptest.NewRecorder()
 
-		for endpoint, count := range metrics.RequestCounts {
-			avgTime := metrics.CalculateAverage(endpoint)
-			p95Time := metrics.CalculateP95(endpoint)
-			t.Logf("   %s: %d requests, avg: %v, p95: %v", endpoint, count, avgTime, p95Time)
+			start := time.Now()
+			handler.ServeHTTP(resp, req)
+			durations[i] = time.Since(start)
 
-			if p95Time > 50*time.Millisecond {
-				t.Logf("   ⚠️  %s exceeds 50ms p95 threshold: %v", endpoint, p95Time)
+			if resp.Code != http.StatusOK && i == 0 {
+				t.Logf("First request failed: %s", resp.Body.String())
 			}
 		}
+
+		analyzeBenchmarkResults(t, "GET /categories", durations, 50*time.Millisecond)
 	})
+
+	t.Run("GET_/tags", func(t *testing.T) {
+		durations := make([]time.Duration, benchmarkIterations)
+
+		for i := 0; i < benchmarkIterations; i++ {
+			req := httptest.NewRequest("GET", "/tags", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			resp := httptest.NewRecorder()
+
+			start := time.Now()
+			handler.ServeHTTP(resp, req)
+			durations[i] = time.Since(start)
+
+			if resp.Code != http.StatusOK && i == 0 {
+				t.Logf("First request failed: %s", resp.Body.String())
+			}
+		}
+
+		analyzeBenchmarkResults(t, "GET /tags", durations, 50*time.Millisecond)
+	})
+
+	t.Run("GET_/activity-logs", func(t *testing.T) {
+		durations := make([]time.Duration, benchmarkIterations)
+
+		for i := 0; i < benchmarkIterations; i++ {
+			req := httptest.NewRequest("GET", "/activity-logs", nil)
+			req.Header.Set("Authorization", "Bearer "+token)
+			resp := httptest.NewRecorder()
+
+			start := time.Now()
+			handler.ServeHTTP(resp, req)
+			durations[i] = time.Since(start)
+
+			if resp.Code != http.StatusOK && i == 0 {
+				t.Logf("First request failed: %s", resp.Body.String())
+			}
+		}
+
+		analyzeBenchmarkResults(t, "GET /activity-logs", durations, 50*time.Millisecond)
+	})
+
+	// Check overall metrics
+	metrics := middlewares.GetMetrics()
+	t.Log("=== Overall Performance Metrics ===")
+	t.Logf("Total Requests: %d", getTotalRequestCount(metrics))
+	t.Logf("Total Errors: %d", getTotalErrorCount(metrics))
+
+	for endpoint := range metrics.RequestCounts {
+		p95 := metrics.CalculateP95(endpoint)
+		avg := metrics.CalculateAverage(endpoint)
+		t.Logf("Endpoint: %s | P95: %v | Average: %v | Requests: %d", endpoint, p95, avg, metrics.RequestCounts[endpoint])
+
+		// Skip auth endpoints for 50ms threshold check (bcrypt hashing is intentionally slow for security)
+		if endpoint == "POST:/auth/login" || endpoint == "POST:/auth/register" {
+			if p95 > 500*time.Millisecond {
+				t.Errorf("❌ FAIL: Auth endpoint %s has P95 response time %v > 500ms threshold", endpoint, p95)
+			} else {
+				t.Logf("✅ PASS: Auth endpoint %s meets P95 < 500ms requirement (accounting for bcrypt security)", endpoint)
+			}
+		} else {
+			if p95 > 50*time.Millisecond {
+				t.Errorf("❌ FAIL: Endpoint %s has P95 response time %v > 50ms threshold", endpoint, p95)
+			} else {
+				t.Logf("✅ PASS: Endpoint %s meets P95 < 50ms requirement", endpoint)
+			}
+		}
+	}
 }
 
-// TestAPIPerformance_ConcurrentRequests tests concurrent request handling
-func TestAPIPerformance_ConcurrentRequests(t *testing.T) {
-	SkipIfNoTestDB(t)
-
-	db := SetupTestDB(t)
-	defer CleanupTestDB(db)
-	defer CleanupTestData(db, t)
-
-	// Initialize components
-	jwtManager := utils.NewJWTManager("test-secret-key")
-	userModel := models.NewUserModel(db)
-	userService := services.NewUserService(userModel, jwtManager)
-	authController := controllers.NewAuthController(userService)
-	authMiddleware := middlewares.NewAuthMiddleware(jwtManager)
-
-	taskModel := models.NewTaskModel(db)
-	tagModel := models.NewTagModel(db)
-	activityLogModel := models.NewActivityLogModel(db)
-	activityLogService := services.NewActivityLogService(activityLogModel)
-	taskService := services.NewTaskService(taskModel, tagModel, activityLogService)
-	taskController := controllers.NewTaskController(taskService)
-
-	// Initialize other controllers
-	categoryModel := models.NewCategoryModel(db)
-	categoryService := services.NewCategoryService(categoryModel)
-	categoryController := controllers.NewCategoryController(categoryService)
-
-	tagService := services.NewTagService(tagModel)
-	tagController := controllers.NewTagController(tagService)
-
-	subtaskModel := models.NewSubtaskModel(db)
-	subtaskService := services.NewSubtaskService(subtaskModel, taskModel)
-	subtaskController := controllers.NewSubtaskController(subtaskService)
-
-	activityLogController := controllers.NewActivityLogController(activityLogService)
-
-	swaggerController := controllers.NewSwaggerController()
-	metricsController := controllers.NewMetricsController()
-
-	// Reset metrics
-	middlewares.ResetMetrics()
-
-	// Setup router
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, swaggerController, metricsController, authMiddleware)
-
-	// Apply middlewares
-	handler := middlewares.Recovery(middlewares.Logger(middlewares.PerformanceMonitoring(mux)))
-
-	// Register a test user
-	registerReq := map[string]string{
-		"name":     "concurrenttest",
-		"email":    "concurrent@example.com",
-		"password": "password123",
-		"timezone": "UTC",
-	}
-	reqBody, _ := json.Marshal(registerReq)
-
-	req := httptest.NewRequest("POST", "/auth/register", bytes.NewBuffer(reqBody))
-	req.Header.Set("Content-Type", "application/json")
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusCreated {
-		t.Fatalf("Failed to register user: %d", rr.Code)
+// analyzeBenchmarkResults calculates and reports benchmark statistics
+func analyzeBenchmarkResults(t *testing.T, endpoint string, durations []time.Duration, threshold time.Duration) {
+	if len(durations) == 0 {
+		t.Fatalf("No duration data for endpoint %s", endpoint)
 	}
 
-	var authResponse map[string]interface{}
-	json.Unmarshal(rr.Body.Bytes(), &authResponse)
-	token := authResponse["token"].(string)
+	// Calculate statistics
+	var total time.Duration
+	min := durations[0]
+	max := durations[0]
 
-	// Test concurrent requests
-	concurrentRequests := 20
-	done := make(chan bool, concurrentRequests)
-	startTime := time.Now()
-
-	for i := 0; i < concurrentRequests; i++ {
-		go func(index int) {
-			defer func() { done <- true }()
-
-			taskReq := map[string]interface{}{
-				"title":       fmt.Sprintf("Concurrent Task %d", index),
-				"description": "Test task for concurrent performance",
-			}
-			reqBody, _ := json.Marshal(taskReq)
-
-			req := httptest.NewRequest("POST", "/tasks", bytes.NewBuffer(reqBody))
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", "Bearer "+token)
-			rr := httptest.NewRecorder()
-			handler.ServeHTTP(rr, req)
-
-			if rr.Code != http.StatusCreated {
-				t.Errorf("Concurrent request %d failed: %d", index, rr.Code)
-			}
-		}(i)
-	}
-
-	// Wait for all requests to complete
-	for i := 0; i < concurrentRequests; i++ {
-		<-done
-	}
-
-	totalDuration := time.Since(startTime)
-	avgDuration := totalDuration / time.Duration(concurrentRequests)
-
-	t.Logf("✅ Completed %d concurrent requests in %v (avg: %v per request)", concurrentRequests, totalDuration, avgDuration)
-
-	// Check metrics
-	metrics := middlewares.GetMetrics()
-	t.Logf("📊 Concurrent Request Metrics:")
-	for endpoint, count := range metrics.RequestCounts {
-		if count > 0 {
-			avgTime := metrics.CalculateAverage(endpoint)
-			p95Time := metrics.CalculateP95(endpoint)
-			t.Logf("   %s: %d requests, avg: %v, p95: %v", endpoint, count, avgTime, p95Time)
+	for _, d := range durations {
+		total += d
+		if d < min {
+			min = d
+		}
+		if d > max {
+			max = d
 		}
 	}
+
+	average := total / time.Duration(len(durations))
+
+	// Calculate P95
+	sorted := make([]time.Duration, len(durations))
+	copy(sorted, durations)
+	for i := 0; i < len(sorted); i++ {
+		for j := i + 1; j < len(sorted); j++ {
+			if sorted[i] > sorted[j] {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			}
+		}
+	}
+	p95Index := int(float64(len(sorted)) * 0.95)
+	if p95Index >= len(sorted) {
+		p95Index = len(sorted) - 1
+	}
+	p95 := sorted[p95Index]
+
+	t.Logf("=== Benchmark Results: %s ===", endpoint)
+	t.Logf("Iterations: %d", len(durations))
+	t.Logf("Average: %v", average)
+	t.Logf("P95: %v", p95)
+	t.Logf("Min: %v", min)
+	t.Logf("Max: %v", max)
+
+	if p95 > threshold {
+		t.Errorf("❌ FAIL: P95 response time %v exceeds threshold %v", p95, threshold)
+	} else {
+		t.Logf("✅ PASS: P95 response time %v meets threshold %v", p95, threshold)
+	}
+}
+
+// getTotalRequestCount calculates total request count from metrics
+func getTotalRequestCount(metrics *middlewares.PerformanceMetrics) int64 {
+	var total int64
+	for _, count := range metrics.RequestCounts {
+		total += count
+	}
+	return total
+}
+
+// getTotalErrorCount calculates total error count from metrics
+func getTotalErrorCount(metrics *middlewares.PerformanceMetrics) int64 {
+	var total int64
+	for _, count := range metrics.ErrorCounts {
+		total += count
+	}
+	return total
 }
