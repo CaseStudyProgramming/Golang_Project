@@ -73,40 +73,47 @@ func (s *TaskService) GetAll(userID int64, completed *bool, page, limit int, sea
 		return nil, nil, errors.New("no tasks found")
 	}
 
-	// Load tags and subtasks for each task concurrently
+	// Load tags and subtasks for each task concurrently using worker pool pattern
+	const maxWorkers = 20 // Limit concurrent goroutines for better resource management
+	taskChan := make(chan int, len(tasks))
 	var wg sync.WaitGroup
 	var loadErr error
 	var mu sync.Mutex
 
-	for i := range tasks {
-		wg.Add(2) // One for tags, one for subtasks
-
-		// Load tags concurrently
-		go func(idx int) {
+	// Start worker goroutines - each worker handles both tags and subtasks for a task
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func() {
 			defer wg.Done()
-			if err := s.model.LoadTags(&tasks[idx]); err != nil {
-				mu.Lock()
-				if loadErr == nil {
-					loadErr = fmt.Errorf("failed to load tags for task %d: %w", tasks[idx].ID, err)
+			for idx := range taskChan {
+				// Load tags
+				if err := s.model.LoadTags(&tasks[idx]); err != nil {
+					mu.Lock()
+					if loadErr == nil {
+						loadErr = fmt.Errorf("failed to load tags for task %d: %w", tasks[idx].ID, err)
+					}
+					mu.Unlock()
 				}
-				mu.Unlock()
-			}
-		}(i)
 
-		// Load subtasks concurrently
-		go func(idx int) {
-			defer wg.Done()
-			if err := s.model.LoadSubtasks(&tasks[idx]); err != nil {
-				mu.Lock()
-				if loadErr == nil {
-					loadErr = fmt.Errorf("failed to load subtasks for task %d: %w", tasks[idx].ID, err)
+				// Load subtasks
+				if err := s.model.LoadSubtasks(&tasks[idx]); err != nil {
+					mu.Lock()
+					if loadErr == nil {
+						loadErr = fmt.Errorf("failed to load subtasks for task %d: %w", tasks[idx].ID, err)
+					}
+					mu.Unlock()
 				}
-				mu.Unlock()
 			}
-		}(i)
+		}()
 	}
 
-	// Wait for all goroutines to complete
+	// Send task indices to workers
+	for i := range tasks {
+		taskChan <- i
+	}
+	close(taskChan)
+
+	// Wait for all workers to complete
 	wg.Wait()
 
 	// Check for any errors
@@ -131,14 +138,46 @@ func (s *TaskService) GetByID(userID int64, id int64) (*models.Task, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get task by ID %d: %w", id, err)
 	}
-	// Load tags for the task
-	if err := s.model.LoadTags(task); err != nil {
-		return nil, fmt.Errorf("failed to load tags for task %d: %w", id, err)
+
+	// Load tags and subtasks concurrently using goroutines
+	var wg sync.WaitGroup
+	var loadErr error
+	var mu sync.Mutex
+
+	wg.Add(2) // One for tags, one for subtasks
+
+	// Load tags concurrently
+	go func() {
+		defer wg.Done()
+		if err := s.model.LoadTags(task); err != nil {
+			mu.Lock()
+			if loadErr == nil {
+				loadErr = fmt.Errorf("failed to load tags for task %d: %w", id, err)
+			}
+			mu.Unlock()
+		}
+	}()
+
+	// Load subtasks concurrently
+	go func() {
+		defer wg.Done()
+		if err := s.model.LoadSubtasks(task); err != nil {
+			mu.Lock()
+			if loadErr == nil {
+				loadErr = fmt.Errorf("failed to load subtasks for task %d: %w", id, err)
+			}
+			mu.Unlock()
+		}
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Check for any errors
+	if loadErr != nil {
+		return nil, loadErr
 	}
-	// Load subtasks for the task
-	if err := s.model.LoadSubtasks(task); err != nil {
-		return nil, fmt.Errorf("failed to load subtasks for task %d: %w", id, err)
-	}
+
 	return task, nil
 }
 
@@ -274,20 +313,34 @@ func (s *TaskService) BulkDelete(userID int64, taskIDs []int64, ipAddress string
 		return nil
 	}
 
-	// Log activity for each task concurrently using goroutines
+	// Use worker pool for concurrent activity logging with controlled concurrency
 	if s.activityService != nil {
+		const maxWorkers = 10 // Limit concurrent goroutines
+		taskChan := make(chan int64, len(taskIDs))
 		var wg sync.WaitGroup
-		for _, taskID := range taskIDs {
+
+		// Start worker goroutines
+		for i := 0; i < maxWorkers; i++ {
 			wg.Add(1)
-			go func(tid int64) {
+			go func() {
 				defer wg.Done()
-				task, err := s.model.GetByID(userID, tid)
-				if err == nil {
-					details := fmt.Sprintf("Bulk deleted task: %s", task.Title)
-					_ = s.activityService.LogActivity(userID, &tid, string(models.ActionDelete), string(models.EntityTask), &tid, details, ipAddress, userAgent)
+				for taskID := range taskChan {
+					task, err := s.model.GetByID(userID, taskID)
+					if err == nil {
+						details := fmt.Sprintf("Bulk deleted task: %s", task.Title)
+						_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionDelete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+					}
 				}
-			}(taskID)
+			}()
 		}
+
+		// Send tasks to workers
+		for _, taskID := range taskIDs {
+			taskChan <- taskID
+		}
+		close(taskChan)
+
+		// Wait for all workers to complete
 		wg.Wait()
 	}
 
@@ -302,20 +355,34 @@ func (s *TaskService) BulkComplete(userID int64, taskIDs []int64, ipAddress stri
 		return nil
 	}
 
-	// Log activity for each task concurrently using goroutines
+	// Use worker pool for concurrent activity logging with controlled concurrency
 	if s.activityService != nil {
+		const maxWorkers = 10 // Limit concurrent goroutines
+		taskChan := make(chan int64, len(taskIDs))
 		var wg sync.WaitGroup
-		for _, taskID := range taskIDs {
+
+		// Start worker goroutines
+		for i := 0; i < maxWorkers; i++ {
 			wg.Add(1)
-			go func(tid int64) {
+			go func() {
 				defer wg.Done()
-				task, err := s.model.GetByID(userID, tid)
-				if err == nil {
-					details := fmt.Sprintf("Bulk completed task: %s", task.Title)
-					_ = s.activityService.LogActivity(userID, &tid, string(models.ActionComplete), string(models.EntityTask), &tid, details, ipAddress, userAgent)
+				for taskID := range taskChan {
+					task, err := s.model.GetByID(userID, taskID)
+					if err == nil {
+						details := fmt.Sprintf("Bulk completed task: %s", task.Title)
+						_ = s.activityService.LogActivity(userID, &taskID, string(models.ActionComplete), string(models.EntityTask), &taskID, details, ipAddress, userAgent)
+					}
 				}
-			}(taskID)
+			}()
 		}
+
+		// Send tasks to workers
+		for _, taskID := range taskIDs {
+			taskChan <- taskID
+		}
+		close(taskChan)
+
+		// Wait for all workers to complete
 		wg.Wait()
 	}
 
