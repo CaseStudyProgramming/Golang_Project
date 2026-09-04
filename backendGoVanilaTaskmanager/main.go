@@ -76,11 +76,14 @@ func main() {
 	// Initialize swagger controller
 	swaggerController := controllers.NewSwaggerController()
 
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, swaggerController, authMiddleware)
+	// Initialize metrics controller
+	metricsController := controllers.NewMetricsController()
 
-	// Apply middlewares in order: Recovery -> Logger -> CORS -> Routes
-	handler := middlewares.Recovery(middlewares.Logger(middlewares.CORS(cfg.CORS.AllowedOrigins)(mux)))
+	mux := http.NewServeMux()
+	routes.RegisterRoutes(mux, taskController, authController, categoryController, tagController, subtaskController, activityLogController, swaggerController, metricsController, authMiddleware)
+
+	// Apply middlewares in order: Recovery -> Logger -> Performance -> CORS -> Routes
+	handler := middlewares.Recovery(middlewares.Logger(middlewares.PerformanceMonitoring(middlewares.CORS(cfg.CORS.AllowedOrigins)(mux))))
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
