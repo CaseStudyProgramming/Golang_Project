@@ -53,3 +53,9 @@ func ErrorResponse(w http.ResponseWriter, statusCode int, message string) {
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: message, Data: nil})
 }
+
+// ErrorWithSanitization handles errors with automatic sanitization and logging
+func ErrorWithSanitization(w http.ResponseWriter, err error) {
+	statusCode, userMessage := HandleAPIError(err)
+	ErrorResponse(w, statusCode, userMessage)
+}

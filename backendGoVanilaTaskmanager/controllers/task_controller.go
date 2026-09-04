@@ -43,7 +43,7 @@ func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	var task models.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (c *TaskController) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	createdTask, err := c.service.Create(userID, &task, ipAddress, userAgent)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -145,15 +145,16 @@ func (c *TaskController) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 
 	tasks, meta, err := c.service.GetAll(userID, completed, page, limit, search, priority, categoryID, sortBy, sortOrder)
 	if err != nil {
-		if err.Error() == "no tasks found" {
-			utils.ErrorResponse(w, http.StatusNotFound, err.Error())
+		sanitizedMsg := utils.GetUserMessage(err)
+		if sanitizedMsg == "no tasks found" {
+			utils.ErrorResponse(w, http.StatusNotFound, sanitizedMsg)
 			return
 		}
-		if strings.Contains(err.Error(), "page must be less than or equal to") {
-			utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		if strings.Contains(sanitizedMsg, "page must be less than or equal to") {
+			utils.ErrorResponse(w, http.StatusBadRequest, sanitizedMsg)
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -175,7 +176,7 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -185,7 +186,7 @@ func (c *TaskController) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -204,13 +205,13 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	var task models.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -223,7 +224,7 @@ func (c *TaskController) UpdateTask(w http.ResponseWriter, r *http.Request) {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -242,7 +243,7 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -255,7 +256,7 @@ func (c *TaskController) DeleteTask(w http.ResponseWriter, r *http.Request) {
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Task with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -274,7 +275,7 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -282,7 +283,7 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 	// Soft deleted task in GetByID will return ErrNoRows, which is what we check
 	_, err = c.service.GetByID(userID, id)
 	if err != nil && err != sql.ErrNoRows {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -301,7 +302,7 @@ func (c *TaskController) RestoreDeletedTask(w http.ResponseWriter, r *http.Reque
 	// We'll restore the task. Let's check:
 	err = c.service.Restore(userID, id)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -320,7 +321,7 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -329,7 +330,7 @@ func (c *TaskController) MarkTaskAsCompleted(w http.ResponseWriter, r *http.Requ
 
 	err = c.service.MarkAsCompleted(userID, id, ipAddress, userAgent)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -348,7 +349,7 @@ func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Re
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -357,7 +358,7 @@ func (c *TaskController) MarkTaskAsUncompleted(w http.ResponseWriter, r *http.Re
 
 	err = c.service.MarkAsUncompleted(userID, id, ipAddress, userAgent)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -376,7 +377,7 @@ func (c *TaskController) AddTagToTask(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	taskID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -384,7 +385,7 @@ func (c *TaskController) AddTagToTask(w http.ResponseWriter, r *http.Request) {
 		TagID int64 `json:"tag_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -395,7 +396,7 @@ func (c *TaskController) AddTagToTask(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.AddTagToTask(userID, taskID, request.TagID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -414,20 +415,20 @@ func (c *TaskController) RemoveTagFromTask(w http.ResponseWriter, r *http.Reques
 	idStr := r.PathValue("id")
 	taskID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	tagIdStr := r.PathValue("tagId")
 	tagID, err := strconv.ParseInt(tagIdStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	err = c.service.RemoveTagFromTask(userID, taskID, tagID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -445,7 +446,7 @@ func (c *TaskController) GetAnalyticsSummary(w http.ResponseWriter, r *http.Requ
 
 	summary, err := c.service.GetAnalyticsSummary(userID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -484,7 +485,7 @@ func (c *TaskController) BulkDeleteTasks(w http.ResponseWriter, r *http.Request)
 
 	err := c.service.BulkDelete(userID, request.TaskIDs, ipAddress, userAgent)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -523,7 +524,7 @@ func (c *TaskController) BulkCompleteTasks(w http.ResponseWriter, r *http.Reques
 
 	err := c.service.BulkComplete(userID, request.TaskIDs, ipAddress, userAgent)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -591,7 +592,7 @@ func (c *TaskController) ExportTasksToCSV(w http.ResponseWriter, r *http.Request
 
 	csvData, err := c.service.ExportToCSV(userID, completed, search, priority, categoryID, timezone)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 

@@ -33,13 +33,13 @@ func (c *CategoryController) CreateCategory(w http.ResponseWriter, r *http.Reque
 
 	var category models.Category
 	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	createdCategory, err := c.service.Create(userID, &category)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (c *CategoryController) GetAllCategories(w http.ResponseWriter, r *http.Req
 
 	categories, err := c.service.GetAll(userID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (c *CategoryController) GetCategoryByID(w http.ResponseWriter, r *http.Requ
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (c *CategoryController) GetCategoryByID(w http.ResponseWriter, r *http.Requ
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Category with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -105,13 +105,13 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	var category models.Category
 	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (c *CategoryController) UpdateCategory(w http.ResponseWriter, r *http.Reque
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Category with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Reque
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (c *CategoryController) DeleteCategory(w http.ResponseWriter, r *http.Reque
 			utils.ErrorResponse(w, http.StatusNotFound, fmt.Sprintf("Category with ID %d not found", id))
 			return
 		}
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 

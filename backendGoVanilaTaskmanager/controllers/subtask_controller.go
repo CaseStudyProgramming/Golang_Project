@@ -34,19 +34,19 @@ func (c *SubtaskController) CreateSubtask(w http.ResponseWriter, r *http.Request
 	idStr := r.PathValue("id")
 	taskID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	var subtask models.Subtask
 	if err := json.NewDecoder(r.Body).Decode(&subtask); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	createdSubtask, err := c.service.Create(userID, taskID, &subtask)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -65,13 +65,13 @@ func (c *SubtaskController) GetSubtasksByTaskID(w http.ResponseWriter, r *http.R
 	idStr := r.PathValue("id")
 	taskID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	subtasks, err := c.service.GetByTaskID(userID, taskID)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (c *SubtaskController) GetSubtaskByID(w http.ResponseWriter, r *http.Reques
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -115,19 +115,19 @@ func (c *SubtaskController) UpdateSubtask(w http.ResponseWriter, r *http.Request
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	var subtask models.Subtask
 	if err := json.NewDecoder(r.Body).Decode(&subtask); err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	updatedSubtask, err := c.service.Update(userID, id, &subtask)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -146,13 +146,13 @@ func (c *SubtaskController) DeleteSubtask(w http.ResponseWriter, r *http.Request
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	err = c.service.Delete(userID, id)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
@@ -171,13 +171,13 @@ func (c *SubtaskController) ToggleSubtask(w http.ResponseWriter, r *http.Request
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
 	err = c.service.Toggle(userID, id)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.ErrorWithSanitization(w, err)
 		return
 	}
 
