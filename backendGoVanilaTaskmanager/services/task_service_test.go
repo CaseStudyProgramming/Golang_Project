@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"taskmanager/models"
 	"taskmanager/utils"
 	"testing"
@@ -489,7 +490,7 @@ func TestGetByID_NotFound(t *testing.T) {
 
 	_, err := service.GetByID(1, 999)
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
 	}
 }
@@ -567,7 +568,7 @@ func TestUpdate_NotFound(t *testing.T) {
 
 	_, err := service.Update(1, 999, updatedTask, "127.0.0.1", "test-agent")
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
 	}
 }
@@ -610,7 +611,7 @@ func TestDelete_NotFound(t *testing.T) {
 
 	err := service.Delete(1, 999, "127.0.0.1", "test-agent")
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		t.Errorf("Expected sql.ErrNoRows, got %v", err)
 	}
 }
@@ -682,7 +683,8 @@ func TestRestore_Error(t *testing.T) {
 		t.Error("Expected error, got nil")
 	}
 
-	if err.Error() != "restore failed" {
-		t.Errorf("Expected 'restore failed' error, got %v", err)
+	// Check if error contains the expected message (accounting for error wrapping)
+	if !strings.Contains(err.Error(), "restore failed") {
+		t.Errorf("Expected error to contain 'restore failed', got %v", err)
 	}
 }

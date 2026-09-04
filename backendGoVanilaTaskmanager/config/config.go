@@ -10,10 +10,12 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	JWT      JWTConfig      `yaml:"jwt"`
+	CORS     CORSConfig     `yaml:"cors"`
 }
 
 type ServerConfig struct {
 	Port string `yaml:"port"`
+	Env  string `yaml:"env"` // "development" or "production"
 }
 
 type DatabaseConfig struct {
@@ -27,6 +29,10 @@ type DatabaseConfig struct {
 
 type JWTConfig struct {
 	Secret string `yaml:"secret"`
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string `yaml:"allowed_origins"`
 }
 
 // LoadConfig loads configuration from yaml file
@@ -51,6 +57,24 @@ func LoadConfig(filePath string) (*Config, error) {
 	// Default JWT secret for development (should be changed in production)
 	if cfg.JWT.Secret == "" {
 		cfg.JWT.Secret = "dev-secret-key-change-in-production"
+	}
+
+	// Default CORS origins for development (should be restricted in production)
+	if len(cfg.CORS.AllowedOrigins) == 0 {
+		// Check for environment variable
+		if corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS"); corsOrigins != "" {
+			cfg.CORS.AllowedOrigins = []string{corsOrigins}
+		} else {
+			cfg.CORS.AllowedOrigins = []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"}
+		}
+	}
+
+	// Default environment to development
+	if cfg.Server.Env == "" {
+		cfg.Server.Env = os.Getenv("APP_ENV")
+		if cfg.Server.Env == "" {
+			cfg.Server.Env = "development"
+		}
 	}
 
 	return &cfg, nil

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"taskmanager/models"
 	"taskmanager/utils"
 	"time"
@@ -54,10 +55,10 @@ func (s *UserService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, ErrUserAlreadyExists
 	}
 
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	// Hash password with explicit cost factor for security
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	// Create user
@@ -75,13 +76,13 @@ func (s *UserService) Register(req *RegisterRequest) (*AuthResponse, error) {
 
 	createdUser, err := s.UserModel.Create(user)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
 	// Generate JWT token with timezone
 	token, err := s.JWTManager.GenerateToken(createdUser.ID, createdUser.Email, createdUser.Timezone, 24*time.Hour)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate JWT token: %w", err)
 	}
 
 	return &AuthResponse{
@@ -106,7 +107,7 @@ func (s *UserService) Login(req *LoginRequest) (*AuthResponse, error) {
 	// Generate JWT token with timezone
 	token, err := s.JWTManager.GenerateToken(user.ID, user.Email, user.Timezone, 24*time.Hour)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate JWT token: %w", err)
 	}
 
 	return &AuthResponse{

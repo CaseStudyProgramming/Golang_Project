@@ -7,11 +7,15 @@ import (
 	"taskmanager/middlewares"
 )
 
-func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, swaggerController *controllers.SwaggerController, authMiddleware *middlewares.AuthMiddleware) {
+func RegisterRoutes(mux *http.ServeMux, taskController *controllers.TaskController, authController *controllers.AuthController, categoryController *controllers.CategoryController, tagController *controllers.TagController, subtaskController *controllers.SubtaskController, activityLogController *controllers.ActivityLogController, swaggerController *controllers.SwaggerController, metricsController *controllers.MetricsController, authMiddleware *middlewares.AuthMiddleware) {
 	// health check endpoint
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API is runningggg 🚀")
 	})
+
+	// metrics endpoints (protected - admin only in production)
+	mux.HandleFunc("GET /metrics", metricsController.GetMetricsHandler)
+	mux.HandleFunc("DELETE /metrics", metricsController.ResetMetricsHandler)
 
 	// swagger documentation endpoints (public)
 	mux.HandleFunc("GET /swagger/index.html", swaggerController.ServeSwaggerUI)

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"taskmanager/models"
 )
 
@@ -24,15 +25,27 @@ func (s *CategoryService) Create(userID int64, category *models.Category) (*mode
 	}
 
 	category.UserID = userID
-	return s.model.Create(category)
+	category, err := s.model.Create(category)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create category: %w", err)
+	}
+	return category, nil
 }
 
 func (s *CategoryService) GetAll(userID int64) ([]models.Category, error) {
-	return s.model.GetAll(userID)
+	categories, err := s.model.GetAll(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get categories: %w", err)
+	}
+	return categories, nil
 }
 
 func (s *CategoryService) GetByID(userID int64, id int64) (*models.Category, error) {
-	return s.model.GetByID(userID, id)
+	category, err := s.model.GetByID(userID, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get category %d: %w", id, err)
+	}
+	return category, nil
 }
 
 func (s *CategoryService) Update(userID int64, id int64, category *models.Category) (*models.Category, error) {
@@ -42,7 +55,7 @@ func (s *CategoryService) Update(userID int64, id int64, category *models.Catego
 	// Check if category exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get category %d for update: %w", id, err)
 	}
 
 	if category.Name == "" {
@@ -50,7 +63,7 @@ func (s *CategoryService) Update(userID int64, id int64, category *models.Catego
 	}
 
 	if err := s.model.Update(userID, category); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update category %d: %w", id, err)
 	}
 	return category, nil
 }
@@ -59,7 +72,10 @@ func (s *CategoryService) Delete(userID int64, id int64) error {
 	// Check if category exists
 	_, err := s.model.GetByID(userID, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get category %d for deletion: %w", id, err)
 	}
-	return s.model.Delete(userID, id)
+	if err := s.model.Delete(userID, id); err != nil {
+		return fmt.Errorf("failed to delete category %d: %w", id, err)
+	}
+	return nil
 }

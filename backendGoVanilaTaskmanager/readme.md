@@ -345,6 +345,20 @@ Run tests with coverage:
 go test -cover ./...
 ```
 
+Run tests with race detection:
+```bash
+go test -race ./...
+```
+
+Or use the provided scripts:
+```bash
+# On Linux/Mac
+./test_with_race.sh
+
+# On Windows
+test_with_race.bat
+```
+
 Run specific package tests:
 ```bash
 go test ./controllers
@@ -410,6 +424,24 @@ go build -o server.exe
 ### Run with live reload (using Air)
 ```bash
 air
+```
+
+### Code Formatting
+Check if code is properly formatted:
+```bash
+# On Linux/Mac
+./check_format.sh
+
+# On Windows
+check_format.bat
+
+# Or manually
+gofmt -l .
+```
+
+Format all Go files:
+```bash
+gofmt -w .
 ```
 
 ### Environment Variables
