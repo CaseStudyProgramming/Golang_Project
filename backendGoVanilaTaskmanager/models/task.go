@@ -419,6 +419,11 @@ func (m *TaskModel) GetAnalyticsSummary(userID int64) (map[string]interface{}, e
 		}
 		priorityDistribution[priority] = count
 	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
 	summary["priority_distribution"] = priorityDistribution
 
 	return summary, nil
