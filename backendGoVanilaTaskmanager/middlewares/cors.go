@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"net/http"
+	"os"
 )
 
 // CORS middleware to handle Cross-Origin Resource Sharing
@@ -9,10 +10,18 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
+			env := os.Getenv("APP_ENV")
+			if env == "" {
+				env = "development"
+			}
 
 			// Check if the origin is in the allowed list
 			allowed := false
 			for _, allowedOrigin := range allowedOrigins {
+				// In production, reject wildcard "*" origins for security
+				if env == "production" && allowedOrigin == "*" {
+					continue
+				}
 				if allowedOrigin == "*" || allowedOrigin == origin {
 					allowed = true
 					break
@@ -33,7 +42,12 @@ func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
 					if len(allowedOrigins) > 0 {
 						w.Header().Set("Access-Control-Allow-Origin", allowedOrigins[0])
 					} else {
-						w.Header().Set("Access-Control-Allow-Origin", "*")
+						// Only use wildcard in development, not in production
+						if env == "production" {
+							w.Header().Set("Access-Control-Allow-Origin", "")
+						} else {
+							w.Header().Set("Access-Control-Allow-Origin", "*")
+						}
 					}
 				}
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")

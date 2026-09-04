@@ -15,6 +15,7 @@ type Config struct {
 
 type ServerConfig struct {
 	Port string `yaml:"port"`
+	Env  string `yaml:"env"` // "development" or "production"
 }
 
 type DatabaseConfig struct {
@@ -60,7 +61,20 @@ func LoadConfig(filePath string) (*Config, error) {
 
 	// Default CORS origins for development (should be restricted in production)
 	if len(cfg.CORS.AllowedOrigins) == 0 {
-		cfg.CORS.AllowedOrigins = []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"}
+		// Check for environment variable
+		if corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS"); corsOrigins != "" {
+			cfg.CORS.AllowedOrigins = []string{corsOrigins}
+		} else {
+			cfg.CORS.AllowedOrigins = []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"}
+		}
+	}
+
+	// Default environment to development
+	if cfg.Server.Env == "" {
+		cfg.Server.Env = os.Getenv("APP_ENV")
+		if cfg.Server.Env == "" {
+			cfg.Server.Env = "development"
+		}
 	}
 
 	return &cfg, nil
