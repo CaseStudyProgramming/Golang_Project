@@ -11,4 +11,4 @@ const config = {
 	}
 };
 
-export default config;1
+export default config;
