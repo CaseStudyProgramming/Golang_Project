@@ -12,7 +12,7 @@ class TaskAPI {
   private baseURL: string;
 
   constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = baseURL;1
+    this.baseURL = baseURL;
   }
 
   private async request<T>(
