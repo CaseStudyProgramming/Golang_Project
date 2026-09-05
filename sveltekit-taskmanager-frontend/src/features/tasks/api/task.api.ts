@@ -5,46 +5,9 @@ import type {
   TaskListAPIResponse,
   APIResponse,
 } from "../types/task.types";
-
-const API_BASE_URL = import.meta.env.DEV ? "/api" : "http://localhost:8080";
+import { apiUtils } from "../../../shared/utils/api.utils";
 
 class TaskAPI {
-  private baseURL: string;
-
-  constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = baseURL;
-  }
-
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(options.headers as Record<string, string>),
-    };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "An error occurred" }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Task API request failed:", error);
-      throw error;
-    }
-  }
 
   async getTasks(params?: TaskQueryParams): Promise<TaskListAPIResponse> {
     const queryParams = new URLSearchParams();
@@ -62,47 +25,47 @@ class TaskAPI {
     const queryString = queryParams.toString();
     const endpoint = `/tasks${queryString ? `?${queryString}` : ""}`;
 
-    return this.request<TaskListAPIResponse>(endpoint);
+    return apiUtils.request<TaskListAPIResponse>(endpoint);
   }
 
   async getTask(id: number): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>(`/tasks/${id}`);
+    return apiUtils.request<APIResponse<Task>>(`/tasks/${id}`);
   }
 
   async createTask(data: TaskFormData): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>("/tasks", {
+    return apiUtils.request<APIResponse<Task>>("/tasks", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async updateTask(id: number, data: Partial<TaskFormData>): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>(`/tasks/${id}`, {
+    return apiUtils.request<APIResponse<Task>>(`/tasks/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
   async deleteTask(id: number): Promise<APIResponse<void>> {
-    return this.request<APIResponse<void>>(`/tasks/${id}`, {
+    return apiUtils.request<APIResponse<void>>(`/tasks/${id}`, {
       method: "DELETE",
     });
   }
 
   async completeTask(id: number): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>(`/tasks/${id}/complete`, {
+    return apiUtils.request<APIResponse<Task>>(`/tasks/${id}/complete`, {
       method: "PATCH",
     });
   }
 
   async uncompleteTask(id: number): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>(`/tasks/${id}/uncomplete`, {
+    return apiUtils.request<APIResponse<Task>>(`/tasks/${id}/uncomplete`, {
       method: "PATCH",
     });
   }
 
   async restoreTask(id: number): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>(`/tasks/${id}/restore`, {
+    return apiUtils.request<APIResponse<Task>>(`/tasks/${id}/restore`, {
       method: "PATCH",
     });
   }

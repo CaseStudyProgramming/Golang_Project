@@ -68,6 +68,23 @@
   - Features can depend on shared utilities
   - Features should not depend on other features (unless well-defined interfaces)
   - Shared utilities should not depend on features
+- **Cross-Slice Communication**:
+  - Use well-defined TypeScript interfaces for inter-slice dependencies
+  - Avoid direct imports between feature slices - use shared interfaces/types
+  - For shared state, consider using SvelteKit stores in `src/lib/stores/` or dedicated state management
+  - Events/pub-sub patterns should be documented in slice interfaces
+- **Slice Boundaries**:
+  - A slice should contain 1-3 related business concepts
+  - If a slice exceeds 10 files in subdirectories, consider splitting
+  - If slices share >30% of code, consider merging or extracting to shared
+- **Error Handling**:
+  - Each slice should handle its own domain-specific errors
+  - Shared error types go in `src/shared/types/errors.ts`
+  - Use SvelteKit error boundaries for critical failures
+- **Testing Strategy**:
+  - Test each slice independently using mocked shared dependencies
+  - Integration tests should test slice interactions through interfaces
+  - Aim for >80% coverage per slice for business logic
 
 ## Svelte & SvelteKit
 
