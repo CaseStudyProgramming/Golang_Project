@@ -4,12 +4,11 @@ import type {
   TaskQueryParams, 
   TaskListAPIResponse, 
   APIResponse 
-} from '$lib/types';
+} from '../types/task.types';
 
-// Use proxy during development, direct URL in production
 const API_BASE_URL = import.meta.env.DEV ? '/api' : 'http://localhost:8080';
 
-class APIService {
+class TaskAPI {
   private baseURL: string;
 
   constructor(baseURL: string = API_BASE_URL) {
@@ -23,9 +22,9 @@ class APIService {
     const url = `${this.baseURL}${endpoint}`;
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (token) {
@@ -45,12 +44,11 @@ class APIService {
 
       return await response.json();
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error('Task API request failed:', error);
       throw error;
     }
   }
 
-  // Task operations
   async getTasks(params?: TaskQueryParams): Promise<TaskListAPIResponse> {
     const queryParams = new URLSearchParams();
     
@@ -110,11 +108,6 @@ class APIService {
       method: 'PATCH',
     });
   }
-
-  // Health check
-  async healthCheck(): Promise<{ status: string }> {
-    return this.request<{ status: string }>('/health');
-  }
 }
 
-export const apiService = new APIService();
+export const taskAPI = new TaskAPI();

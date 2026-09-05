@@ -1,1 +1,6 @@
-// place files you want to import through the `$lib` alias in this folder.
+// Feature exports
+export * from '../features/tasks';
+
+// Shared exports
+export * from '../shared/types';
+export * from '../shared/utils';
