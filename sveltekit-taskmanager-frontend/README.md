@@ -1,42 +1,100 @@
-# sv
+# Task Manager Frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A production-ready SvelteKit task manager application with TypeScript, Tailwind CSS, and comprehensive testing setup.
 
-## Creating a project
+## Prerequisites
 
-If you're seeing this, you've probably already done this step. Congrats!
+- [Bun](https://bun.sh/) - JavaScript runtime and package manager
+- Node.js >= 18 (optional, as Bun is the primary runtime)
 
-```sh
-# create a new project
-npx sv create my-app
+## Installation
+
+```bash
+# Install dependencies
+bun install
+
+# Copy environment variables
+cp .env.example .env
 ```
 
-To recreate this project with the same configuration:
+## Development
 
-```sh
-# recreate this project
-bun x sv@0.17.0 create --template minimal --types ts --add tailwindcss="plugins:none" --install bun svelte-taskmanager-frontend
+```bash
+# Start development server
+bun run dev
+
+# The app will be available at http://localhost:5173
 ```
 
-## Developing
+## Available Scripts
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+```bash
+# Development
+bun run dev          # Start development server
+bun run build        # Build for production
+bun run preview      # Preview production build
 
-```sh
-npm run dev
+# Code Quality
+bun run check        # Run TypeScript type checking
+bun run lint         # Run ESLint
+bun run format       # Format code with Prettier
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# Testing
+bun test             # Run unit tests
+bun test:ui          # Run tests with UI
 ```
 
-## Building
+## Project Structure
 
-To create a production version of your app:
-
-```sh
-npm run build
+```
+src/
+├── features/        # Feature-based modules
+│   └── tasks/       # Task management feature
+│       ├── api/     # API client functions
+│       ├── components/  # UI components
+│       ├── stores/  # Svelte stores
+│       └── types/   # TypeScript types
+├── lib/             # Shared libraries
+│   ├── client/      # Client-side utilities
+│   └── server/      # Server-side utilities
+├── routes/          # SvelteKit routes
+├── shared/          # Shared utilities and types
+│   ├── types/       # Shared TypeScript types
+│   └── utils/       # Shared utility functions
+└── static/          # Static assets
 ```
 
-You can preview the production build with `npm run preview`.
+## Environment Variables
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Copy `.env.example` to `.env` and configure:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_APP_NAME=Task Manager
+VITE_APP_VERSION=1.0.0
+```
+
+## Technology Stack
+
+- **Framework**: SvelteKit with Svelte 5 (Runes)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: Svelte 5 Runes
+- **HTTP Client**: Native fetch API
+- **Testing**: Vitest + Testing Library
+- **Code Quality**: ESLint + Prettier
+- **Build Tool**: Vite
+- **Package Manager**: Bun
+
+## Development Guidelines
+
+- Follow the coding standards defined in `AGENTS.md`
+- Use Svelte 5 runes (`$state`, `$derived`, `$props`) instead of legacy reactive statements
+- Implement OWASP security best practices
+- Write unit tests for new features
+- Run `bun run lint` and `bun run check` before committing
+- Use conventional commits for commit messages
+
+## License
+
+MIT
