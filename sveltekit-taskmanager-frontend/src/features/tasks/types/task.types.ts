@@ -8,7 +8,7 @@ export interface Task {
   sub_title?: string;
   description?: string;
   due_date?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   category_id?: number;
 }
 
@@ -17,7 +17,7 @@ export interface TaskFormData {
   sub_title?: string;
   description?: string;
   due_date?: string;
-  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   category_id?: number;
 }
 
@@ -29,7 +29,7 @@ export interface TaskQueryParams {
   priority?: string;
   category_id?: number;
   sort_by?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 export interface PaginationMeta {
@@ -47,13 +47,13 @@ export interface TaskListResponse {
 }
 
 export interface APIResponse<T> {
-  status: 'success' | 'error';
+  status: "success" | "error";
   message: string;
   data: T;
 }
 
 export interface TaskListAPIResponse {
-  status: 'success' | 'error';
+  status: "success" | "error";
   message: string;
   data: TaskListResponse;
 }

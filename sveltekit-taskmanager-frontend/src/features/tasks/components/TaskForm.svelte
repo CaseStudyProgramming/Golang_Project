@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { TaskFormData, Task } from '../types/task.types';
 
-  let { 
+  const { 
     show, 
     editingTask, 
     formData, 

@@ -1,12 +1,12 @@
-import type { 
-  Task, 
-  TaskFormData, 
-  TaskQueryParams, 
-  TaskListAPIResponse, 
-  APIResponse 
-} from '../types/task.types';
+import type {
+  Task,
+  TaskFormData,
+  TaskQueryParams,
+  TaskListAPIResponse,
+  APIResponse,
+} from "../types/task.types";
 
-const API_BASE_URL = import.meta.env.DEV ? '/api' : 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.DEV ? "/api" : "http://localhost:8080";
 
 class TaskAPI {
   private baseURL: string;
@@ -15,20 +15,17 @@ class TaskAPI {
     this.baseURL = baseURL;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     try {
@@ -38,32 +35,33 @@ class TaskAPI {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An error occurred' }));
+        const errorData = await response.json().catch(() => ({ message: "An error occurred" }));
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Task API request failed:', error);
+      console.error("Task API request failed:", error);
       throw error;
     }
   }
 
   async getTasks(params?: TaskQueryParams): Promise<TaskListAPIResponse> {
     const queryParams = new URLSearchParams();
-    
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.completed !== undefined) queryParams.append('completed', params.completed.toString());
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.priority) queryParams.append('priority', params.priority);
-    if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
-    if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
-    if (params?.order) queryParams.append('order', params.order);
+
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.completed !== undefined)
+      queryParams.append("completed", params.completed.toString());
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.priority) queryParams.append("priority", params.priority);
+    if (params?.category_id) queryParams.append("category_id", params.category_id.toString());
+    if (params?.sort_by) queryParams.append("sort_by", params.sort_by);
+    if (params?.order) queryParams.append("order", params.order);
 
     const queryString = queryParams.toString();
-    const endpoint = `/tasks${queryString ? `?${queryString}` : ''}`;
-    
+    const endpoint = `/tasks${queryString ? `?${queryString}` : ""}`;
+
     return this.request<TaskListAPIResponse>(endpoint);
   }
 
@@ -72,40 +70,40 @@ class TaskAPI {
   }
 
   async createTask(data: TaskFormData): Promise<APIResponse<Task>> {
-    return this.request<APIResponse<Task>>('/tasks', {
-      method: 'POST',
+    return this.request<APIResponse<Task>>("/tasks", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async updateTask(id: number, data: Partial<TaskFormData>): Promise<APIResponse<Task>> {
     return this.request<APIResponse<Task>>(`/tasks/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
   async deleteTask(id: number): Promise<APIResponse<void>> {
     return this.request<APIResponse<void>>(`/tasks/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async completeTask(id: number): Promise<APIResponse<Task>> {
     return this.request<APIResponse<Task>>(`/tasks/${id}/complete`, {
-      method: 'PATCH',
+      method: "PATCH",
     });
   }
 
   async uncompleteTask(id: number): Promise<APIResponse<Task>> {
     return this.request<APIResponse<Task>>(`/tasks/${id}/uncomplete`, {
-      method: 'PATCH',
+      method: "PATCH",
     });
   }
 
   async restoreTask(id: number): Promise<APIResponse<Task>> {
     return this.request<APIResponse<Task>>(`/tasks/${id}/restore`, {
-      method: 'PATCH',
+      method: "PATCH",
     });
   }
 }

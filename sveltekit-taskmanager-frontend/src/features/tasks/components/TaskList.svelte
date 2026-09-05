@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Task } from '../types/task.types';
 
-  let { 
+  const { 
     tasks, 
     loading, 
     onToggleComplete, 

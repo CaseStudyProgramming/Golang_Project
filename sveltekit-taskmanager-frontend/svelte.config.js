@@ -1,14 +1,14 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from "@sveltejs/adapter-auto";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		adapter: adapter(),
-		alias: {
-			'$features': './src/features',
-			'$shared': './src/shared'
-		}
-	}
+  kit: {
+    adapter: adapter(),
+    alias: {
+      $features: "./src/features",
+      $shared: "./src/shared",
+    },
+  },
 };
 
 export default config;
