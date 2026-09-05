@@ -80,6 +80,7 @@ VITE_APP_VERSION=1.0.0
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **State Management**: Svelte 5 Runes
+- **HTTP Client**: Native fetch API
 - **Testing**: Vitest + Testing Library
 - **Code Quality**: ESLint + Prettier
 - **Build Tool**: Vite
