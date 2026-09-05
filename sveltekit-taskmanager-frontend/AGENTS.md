@@ -52,6 +52,23 @@
 - Mobile-first and fully responsive layout design.
 - Avoid redundant, unused, or conflicting utility classes.
 
+## Architecture & Vertical Slices
+
+- **Vertical Slice Architecture**:
+  - Organize code by business features (`src/features/`) rather than technical layers
+  - Each feature slice should be independent and self-contained
+  - Shared infrastructure (HTTP clients, utilities) goes in `src/shared/` or `src/lib/`
+  - Business logic stays within feature slices, infrastructure can be shared
+  - Avoid duplicating infrastructure code across slices - compose/extend shared utilities instead
+  - Feature structure: `src/features/{feature}/{api,components,stores,types,index.ts}`
+- **Shared vs Feature-Specific**:
+  - Shared: HTTP wrappers, authentication, error handling, validation schemas, date utilities
+  - Feature-specific: Business logic, feature-specific types, UI components, feature stores
+- **Dependency Direction**:
+  - Features can depend on shared utilities
+  - Features should not depend on other features (unless well-defined interfaces)
+  - Shared utilities should not depend on features
+
 ## Svelte & SvelteKit
 
 - **Svelte 5 or latest Runes & Reactive State**:
