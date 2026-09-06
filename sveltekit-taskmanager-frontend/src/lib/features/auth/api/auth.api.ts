@@ -12,6 +12,8 @@ import type { User } from '../types/auth.types';
 interface LoginResponse {
 	user: User;
 	token: string;
+	refreshToken?: string;
+	expiresIn?: number;
 }
 
 /**
@@ -20,6 +22,8 @@ interface LoginResponse {
 interface RegisterResponse {
 	user: User;
 	token: string;
+	refreshToken?: string;
+	expiresIn?: number;
 }
 
 /**
@@ -67,8 +71,8 @@ export const authApi = {
 	/**
 	 * Refresh JWT token
 	 */
-	async refreshToken(): Promise<{ token: string }> {
-		return httpClient.post<{ token: string }>('/auth/refresh');
+	async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken?: string; expiresIn?: number }> {
+		return httpClient.post<{ token: string; refreshToken?: string; expiresIn?: number }>('/auth/refresh', { refreshToken });
 	},
 
 	/**

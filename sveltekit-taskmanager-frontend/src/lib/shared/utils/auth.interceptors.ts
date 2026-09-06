@@ -2,22 +2,59 @@
  * Authentication interceptors for HTTP client
  */
 
+const TOKEN_KEY = 'auth_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
+const TOKEN_EXPIRY_KEY = 'token_expiry';
+
 /**
  * Get authentication token from localStorage
  */
 export function getAuthToken(): string | null {
 	if (typeof window === 'undefined') return null;
-	return localStorage.getItem('auth_token');
+	const token = localStorage.getItem(TOKEN_KEY);
+	
+	// Check if token is expired
+	const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+	if (expiry && token) {
+		const expiryTime = parseInt(expiry, 10);
+		if (Date.now() > expiryTime) {
+			removeAuthToken();
+			return null;
+		}
+	}
+	
+	return token;
+}
+
+/**
+ * Get refresh token from localStorage
+ */
+export function getRefreshToken(): string | null {
+	if (typeof window === 'undefined') return null;
+	return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 /**
  * Set authentication token in localStorage
  */
-export function setAuthToken(token: string): void {
+export function setAuthToken(token: string, expiresIn: number = 3600): void {
 	if (typeof window === 'undefined') return;
-	localStorage.setItem('auth_token', token);
-	// Also set as cookie for server-side access
-	document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Strict`;
+	localStorage.setItem(TOKEN_KEY, token);
+	
+	// Set token expiry (default 1 hour)
+	const expiryTime = Date.now() + expiresIn * 1000;
+	localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
+	
+	// Also set as cookie for server-side access (httpOnly for security would be better)
+	document.cookie = `auth_token=${token}; path=/; max-age=${expiresIn}; SameSite=Strict`;
+}
+
+/**
+ * Set refresh token in localStorage
+ */
+export function setRefreshToken(token: string): void {
+	if (typeof window === 'undefined') return;
+	localStorage.setItem(REFRESH_TOKEN_KEY, token);
 }
 
 /**
@@ -25,9 +62,23 @@ export function setAuthToken(token: string): void {
  */
 export function removeAuthToken(): void {
 	if (typeof window === 'undefined') return;
-	localStorage.removeItem('auth_token');
+	localStorage.removeItem(TOKEN_KEY);
+	localStorage.removeItem(REFRESH_TOKEN_KEY);
+	localStorage.removeItem(TOKEN_EXPIRY_KEY);
+	
 	// Also remove cookie
 	document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Strict';
+}
+
+/**
+ * Check if token is expired
+ */
+export function isTokenExpired(): boolean {
+	const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+	if (!expiry) return true;
+	
+	const expiryTime = parseInt(expiry, 10);
+	return Date.now() > expiryTime;
 }
 
 /**
@@ -56,7 +107,7 @@ export async function authResponseInterceptor(response: Response): Promise<Respo
 		removeAuthToken();
 		// Redirect to login page if on client
 		if (typeof window !== 'undefined') {
-			window.location.href = '/login';
+			window.location.href = '/auth/login';
 		}
 	}
 

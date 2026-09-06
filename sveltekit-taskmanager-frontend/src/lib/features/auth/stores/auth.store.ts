@@ -3,7 +3,7 @@
  * Manages user session, JWT token, and authentication state
  */
 
-import { setAuthToken, removeAuthToken, getAuthToken } from '$lib/shared/utils/auth.interceptors';
+import { setAuthToken, removeAuthToken, getAuthToken, setRefreshToken, getRefreshToken, isTokenExpired } from '$lib/shared/utils/auth.interceptors';
 import { AuthenticationError, withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
 import { loginSchema, registerSchema } from '../schemas/auth.schemas';
 import { authApi } from '../api/auth.api';
@@ -52,7 +52,10 @@ function createAuthStore() {
 				state.token = response.token;
 				state.isAuthenticated = true;
 
-				setAuthToken(response.token);
+				setAuthToken(response.token, response.expiresIn);
+				if (response.refreshToken) {
+					setRefreshToken(response.refreshToken);
+				}
 			}, 'Login failed');
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
@@ -84,7 +87,10 @@ function createAuthStore() {
 				state.token = response.token;
 				state.isAuthenticated = true;
 
-				setAuthToken(response.token);
+				setAuthToken(response.token, response.expiresIn);
+				if (response.refreshToken) {
+					setRefreshToken(response.refreshToken);
+				}
 			}, 'Registration failed');
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
@@ -136,10 +142,18 @@ function createAuthStore() {
 	 * Refresh JWT token
 	 */
 	async function refreshToken(): Promise<void> {
+		const refreshTokenValue = getRefreshToken();
+		if (!refreshTokenValue) {
+			throw new AuthenticationError('No refresh token available');
+		}
+
 		try {
-			const response = await authApi.refreshToken();
+			const response = await authApi.refreshToken(refreshTokenValue);
 			state.token = response.token;
-			setAuthToken(response.token);
+			setAuthToken(response.token, response.expiresIn);
+			if (response.refreshToken) {
+				setRefreshToken(response.refreshToken);
+			}
 		} catch (error) {
 			console.error('Token refresh failed:', error);
 			logout();
@@ -167,6 +181,24 @@ function createAuthStore() {
 		}
 	}
 
+	/**
+	 * Check if token needs refresh
+	 */
+	function needsTokenRefresh(): boolean {
+		return isTokenExpired();
+	}
+
+	/**
+	 * Ensure valid token (refresh if needed)
+	 */
+	async function ensureValidToken(): Promise<void> {
+		if (!state.token) return;
+
+		if (isTokenExpired()) {
+			await refreshToken();
+		}
+	}
+
 	return {
 		get state() {
 			return state;
@@ -178,7 +210,9 @@ function createAuthStore() {
 		updateUser,
 		clearError,
 		refreshToken,
-		fetchCurrentUser
+		fetchCurrentUser,
+		needsTokenRefresh,
+		ensureValidToken
 	};
 }
 
