@@ -15,7 +15,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Protect dashboard routes
 	if (path.startsWith('/dashboard') && !authToken) {
-		redirect(302, '/auth/login');
+		const returnUrl = event.url.pathname + event.url.search;
+		redirect(302, `/auth/login?redirectTo=${encodeURIComponent(returnUrl)}`);
 	}
 
 	// Redirect authenticated users away from auth pages

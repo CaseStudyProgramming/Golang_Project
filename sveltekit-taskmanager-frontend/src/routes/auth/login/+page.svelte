@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { authStore } from '$lib/features/auth';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { getErrorMessage, isValidationError, isAuthenticationError } from '$lib/shared/utils/error.utils';
 	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
 
@@ -11,6 +12,12 @@
 	let fieldErrors = $state<Record<string, string>>({});
 	let toastError = $state('');
 
+	// Get redirect URL from query params
+	const getRedirectTo = () => {
+		const urlParams = new URLSearchParams($page.url.search);
+		return urlParams.get('redirectTo');
+	};
+
 	async function handleLogin(e: Event) {
 		e.preventDefault();
 		isLoading = true;
@@ -18,9 +25,15 @@
 		fieldErrors = {};
 		toastError = '';
 
+		// Save redirect URL before login
+		const redirectTo = getRedirectTo();
+		if (redirectTo) {
+			authStore.saveRedirectUrl(redirectTo);
+		}
+
 		try {
 			await authStore.login({ email, password });
-			await goto('/dashboard');
+			await authStore.redirectAfterAuth();
 		} catch (err) {
 			if (isValidationError(err)) {
 				fieldErrors[err.field] = err.message;

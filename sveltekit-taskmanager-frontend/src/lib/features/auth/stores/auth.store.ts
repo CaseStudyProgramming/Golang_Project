@@ -8,8 +8,10 @@ import { AuthenticationError, withErrorHandling, ValidationError } from '$lib/sh
 import { loginSchema, registerSchema } from '../schemas/auth.schemas';
 import { authApi } from '../api/auth.api';
 import type { User, AuthState } from '../types/auth.types';
+import { goto } from '$app/navigation';
 
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+const REDIRECT_KEY = 'auth_redirect';
 
 /**
  * Create authentication store with Svelte 5 runes
@@ -70,6 +72,36 @@ function createAuthStore() {
 		if (refreshTimer) {
 			clearInterval(refreshTimer);
 			refreshTimer = null;
+		}
+	}
+
+	/**
+	 * Save redirect URL for after authentication
+	 */
+	function saveRedirectUrl(url: string): void {
+		if (typeof window === 'undefined') return;
+		sessionStorage.setItem(REDIRECT_KEY, url);
+	}
+
+	/**
+	 * Get and clear redirect URL
+	 */
+	function getRedirectUrl(): string | null {
+		if (typeof window === 'undefined') return null;
+		const url = sessionStorage.getItem(REDIRECT_KEY);
+		sessionStorage.removeItem(REDIRECT_KEY);
+		return url;
+	}
+
+	/**
+	 * Perform redirect after authentication
+	 */
+	async function redirectAfterAuth(): Promise<void> {
+		const redirectUrl = getRedirectUrl();
+		if (redirectUrl) {
+			await goto(redirectUrl);
+		} else {
+			await goto('/dashboard');
 		}
 	}
 
@@ -253,7 +285,10 @@ function createAuthStore() {
 		fetchCurrentUser,
 		needsTokenRefresh,
 		ensureValidToken,
-		cleanup
+		cleanup,
+		saveRedirectUrl,
+		getRedirectUrl,
+		redirectAfterAuth
 	};
 }
 
