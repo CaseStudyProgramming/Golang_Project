@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { authStore } from '$lib/features/auth';
 	import { goto } from '$app/navigation';
+	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
 
 	let name = $state('');
 	let email = $state('');
@@ -81,6 +82,11 @@
 				class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
 				placeholder="••••••••"
 			/>
+			{#if password}
+				<div class="mt-2">
+					<PasswordStrength password={password} />
+				</div>
+			{/if}
 		</div>
 
 		<div>
