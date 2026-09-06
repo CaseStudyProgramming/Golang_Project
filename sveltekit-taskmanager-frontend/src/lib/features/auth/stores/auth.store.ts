@@ -6,6 +6,7 @@
 import { setAuthToken, removeAuthToken, getAuthToken } from '$lib/shared/utils/auth.interceptors';
 import { AuthenticationError, withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
 import { loginSchema, registerSchema } from '../schemas/auth.schemas';
+import { authApi } from '../api/auth.api';
 import type { User, AuthState } from '../types/auth.types';
 
 /**
@@ -45,23 +46,13 @@ function createAuthStore() {
 			const validatedCredentials = loginSchema.parse(credentials);
 
 			await withErrorHandling(async () => {
-				// This would be replaced with actual API call
-				// const response = await httpClient.post<{ user: User; token: string }>('/auth/login', validatedCredentials);
-				
-				// Mock response for development
-				const mockUser: User = {
-					id: '1',
-					email: validatedCredentials.email,
-					name: 'Test User',
-					role: 'user'
-				};
-				const mockToken = 'mock_jwt_token_' + Date.now();
+				const response = await authApi.login(validatedCredentials);
 
-				state.user = mockUser;
-				state.token = mockToken;
+				state.user = response.user;
+				state.token = response.token;
 				state.isAuthenticated = true;
 
-				setAuthToken(mockToken);
+				setAuthToken(response.token);
 			}, 'Login failed');
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
@@ -87,23 +78,13 @@ function createAuthStore() {
 			const validatedData = registerSchema.parse(data);
 
 			await withErrorHandling(async () => {
-				// This would be replaced with actual API call
-				// const response = await httpClient.post<{ user: User; token: string }>('/auth/register', validatedData);
-				
-				// Mock response for development
-				const mockUser: User = {
-					id: '1',
-					email: validatedData.email,
-					name: validatedData.name || 'New User',
-					role: 'user'
-				};
-				const mockToken = 'mock_jwt_token_' + Date.now();
+				const response = await authApi.register(validatedData);
 
-				state.user = mockUser;
-				state.token = mockToken;
+				state.user = response.user;
+				state.token = response.token;
 				state.isAuthenticated = true;
 
-				setAuthToken(mockToken);
+				setAuthToken(response.token);
 			}, 'Registration failed');
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
@@ -120,13 +101,19 @@ function createAuthStore() {
 	/**
 	 * Logout user
 	 */
-	function logout(): void {
-		state.user = null;
-		state.token = null;
-		state.isAuthenticated = false;
-		state.error = null;
+	async function logout(): Promise<void> {
+		try {
+			await authApi.logout();
+		} catch (error) {
+			console.error('Logout API call failed:', error);
+		} finally {
+			state.user = null;
+			state.token = null;
+			state.isAuthenticated = false;
+			state.error = null;
 
-		removeAuthToken();
+			removeAuthToken();
+		}
 	}
 
 	/**
@@ -145,6 +132,41 @@ function createAuthStore() {
 		state.error = null;
 	}
 
+	/**
+	 * Refresh JWT token
+	 */
+	async function refreshToken(): Promise<void> {
+		try {
+			const response = await authApi.refreshToken();
+			state.token = response.token;
+			setAuthToken(response.token);
+		} catch (error) {
+			console.error('Token refresh failed:', error);
+			logout();
+			throw error;
+		}
+	}
+
+	/**
+	 * Fetch current user data
+	 */
+	async function fetchCurrentUser(): Promise<void> {
+		if (!state.token) return;
+
+		state.isLoading = true;
+		try {
+			const user = await authApi.getCurrentUser();
+			state.user = user;
+			state.isAuthenticated = true;
+		} catch (error) {
+			console.error('Failed to fetch current user:', error);
+			state.error = error instanceof Error ? error.message : 'Failed to fetch user';
+			throw error;
+		} finally {
+			state.isLoading = false;
+		}
+	}
+
 	return {
 		get state() {
 			return state;
@@ -154,7 +176,9 @@ function createAuthStore() {
 		register,
 		logout,
 		updateUser,
-		clearError
+		clearError,
+		refreshToken,
+		fetchCurrentUser
 	};
 }
 
