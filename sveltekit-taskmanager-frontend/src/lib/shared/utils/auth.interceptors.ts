@@ -16,6 +16,8 @@ export function getAuthToken(): string | null {
 export function setAuthToken(token: string): void {
 	if (typeof window === 'undefined') return;
 	localStorage.setItem('auth_token', token);
+	// Also set as cookie for server-side access
+	document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Strict`;
 }
 
 /**
@@ -24,6 +26,8 @@ export function setAuthToken(token: string): void {
 export function removeAuthToken(): void {
 	if (typeof window === 'undefined') return;
 	localStorage.removeItem('auth_token');
+	// Also remove cookie
+	document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Strict';
 }
 
 /**

@@ -71,7 +71,7 @@ function createAuthStore() {
 				name: 'Test User',
 				role: 'user'
 			};
-			const mockToken = 'mock_jwt_token';
+			const mockToken = 'mock_jwt_token_' + Date.now();
 
 			state.user = mockUser;
 			state.token = mockToken;
@@ -104,7 +104,7 @@ function createAuthStore() {
 				name: name || 'New User',
 				role: 'user'
 			};
-			const mockToken = 'mock_jwt_token';
+			const mockToken = 'mock_jwt_token_' + Date.now();
 
 			state.user = mockUser;
 			state.token = mockToken;
