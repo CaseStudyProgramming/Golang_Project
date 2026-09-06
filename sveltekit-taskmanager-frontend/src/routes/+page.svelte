@@ -1,54 +1,58 @@
 <script lang="ts">
-	let taskCount = $state(0);
-	let newTaskTitle = $state('');
+	import { authStore } from '$lib/features/auth';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
-	function addTask() {
-		if (newTaskTitle.trim()) {
-			taskCount++;
-			newTaskTitle = '';
+	onMount(() => {
+		if (authStore.state.isAuthenticated) {
+			goto('/dashboard');
 		}
-	}
+	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-	<div class="max-w-4xl mx-auto">
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+	<div class="max-w-4xl mx-auto text-center">
 		<header class="mb-8">
-			<h1 class="text-4xl font-bold text-gray-800 mb-2">Task Manager</h1>
-			<p class="text-gray-600">Manage your tasks efficiently</p>
+			<h1 class="text-5xl font-bold text-gray-800 mb-4">Task Manager</h1>
+			<p class="text-xl text-gray-600">Manage your tasks efficiently</p>
 		</header>
 
-		<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-			<form onsubmit={(e) => { e.preventDefault(); addTask(); }} class="flex gap-4">
-				<input
-					type="text"
-					bind:value={newTaskTitle}
-					placeholder="Add a new task..."
-					class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-				/>
-				<button
-					type="submit"
-					class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-				>
-					Add Task
-				</button>
-			</form>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+			<div class="bg-white rounded-lg shadow-lg p-6">
+				<div class="text-4xl mb-4">📋</div>
+				<h3 class="text-xl font-semibold text-gray-800 mb-2">Organize Tasks</h3>
+				<p class="text-gray-600">Create and manage your tasks with ease</p>
+			</div>
+			<div class="bg-white rounded-lg shadow-lg p-6">
+				<div class="text-4xl mb-4">📊</div>
+				<h3 class="text-xl font-semibold text-gray-800 mb-2">Track Progress</h3>
+				<p class="text-gray-600">Monitor your productivity and completion rates</p>
+			</div>
+			<div class="bg-white rounded-lg shadow-lg p-6">
+				<div class="text-4xl mb-4">🏷️</div>
+				<h3 class="text-xl font-semibold text-gray-800 mb-2">Categories & Tags</h3>
+				<p class="text-gray-600">Organize tasks with categories and tags</p>
+			</div>
+			<div class="bg-white rounded-lg shadow-lg p-6">
+				<div class="text-4xl mb-4">🔒</div>
+				<h3 class="text-xl font-semibold text-gray-800 mb-2">Secure</h3>
+				<p class="text-gray-600">Your data is safe and secure</p>
+			</div>
 		</div>
 
-		<div class="bg-white rounded-lg shadow-lg p-6">
-			<h2 class="text-xl font-semibold text-gray-800 mb-4">Tasks ({taskCount})</h2>
-			{#if taskCount === 0}
-				<p class="text-gray-500 text-center py-8">No tasks yet. Add one above!</p>
-			{:else}
-				<div class="space-y-2">
-					{#each Array(taskCount) as _, i (i)}
-						<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-							<input type="checkbox" class="w-5 h-5 text-blue-600 rounded" />
-							<span class="flex-1 text-gray-700">Task {i + 1}</span>
-							<button class="text-red-500 hover:text-red-700">Delete</button>
-						</div>
-					{/each}
-				</div>
-			{/if}
+		<div class="flex flex-col sm:flex-row gap-4 justify-center">
+			<a
+				href="/auth/register"
+				class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
+			>
+				Get Started
+			</a>
+			<a
+				href="/auth/login"
+				class="px-8 py-3 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-lg font-medium"
+			>
+				Sign In
+			</a>
 		</div>
 	</div>
 </div>
