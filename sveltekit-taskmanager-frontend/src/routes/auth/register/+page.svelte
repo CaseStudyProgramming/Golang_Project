@@ -2,6 +2,8 @@
 	import { authStore } from '$lib/features/auth';
 	import { goto } from '$app/navigation';
 	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
+	import { getErrorMessage, isValidationError, isAuthenticationError } from '$lib/shared/utils/error.utils';
+	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
 
 	let name = $state('');
 	let email = $state('');
@@ -9,14 +11,19 @@
 	let confirmPassword = $state('');
 	let isLoading = $state(false);
 	let error = $state('');
+	let fieldErrors = $state<Record<string, string>>({});
+	let toastError = $state('');
 
 	async function handleRegister(e: Event) {
 		e.preventDefault();
 		isLoading = true;
 		error = '';
+		fieldErrors = {};
+		toastError = '';
 
 		if (password !== confirmPassword) {
-			error = 'Passwords do not match';
+			fieldErrors.confirmPassword = 'Passwords do not match';
+			error = 'Please fix the errors below.';
 			isLoading = false;
 			return;
 		}
@@ -25,10 +32,23 @@
 			await authStore.register({ email, password, name });
 			await goto('/dashboard');
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Registration failed';
+			if (isValidationError(err)) {
+				fieldErrors[err.field] = err.message;
+				error = 'Please fix the errors below.';
+			} else if (isAuthenticationError(err)) {
+				error = err.message;
+				toastError = err.message;
+			} else {
+				error = getErrorMessage(err);
+				toastError = getErrorMessage(err);
+			}
 		} finally {
 			isLoading = false;
 		}
+	}
+
+	function dismissToast() {
+		toastError = '';
 	}
 </script>
 
@@ -53,9 +73,12 @@
 				bind:value={name}
 				required
 				disabled={isLoading}
-				class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+				class="w-full px-4 py-2 border {fieldErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
 				placeholder="John Doe"
 			/>
+			{#if fieldErrors.name}
+				<p class="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+			{/if}
 		</div>
 
 		<div>
@@ -66,9 +89,12 @@
 				bind:value={email}
 				required
 				disabled={isLoading}
-				class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+				class="w-full px-4 py-2 border {fieldErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
 				placeholder="you@example.com"
 			/>
+			{#if fieldErrors.email}
+				<p class="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+			{/if}
 		</div>
 
 		<div>
@@ -79,9 +105,12 @@
 				bind:value={password}
 				required
 				disabled={isLoading}
-				class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+				class="w-full px-4 py-2 border {fieldErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
 				placeholder="••••••••"
 			/>
+			{#if fieldErrors.password}
+				<p class="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
+			{/if}
 			{#if password}
 				<div class="mt-2">
 					<PasswordStrength password={password} />
@@ -97,9 +126,12 @@
 				bind:value={confirmPassword}
 				required
 				disabled={isLoading}
-				class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+				class="w-full px-4 py-2 border {fieldErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
 				placeholder="••••••••"
 			/>
+			{#if fieldErrors.confirmPassword}
+				<p class="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>
+			{/if}
 		</div>
 
 		<button
@@ -118,3 +150,7 @@
 		</p>
 	</div>
 </div>
+
+{#if toastError}
+	<ErrorToast message={toastError} onDismiss={dismissToast} />
+{/if}
