@@ -4,22 +4,9 @@
 import { publicEnv } from '$lib/env';
 import type { ApiResponse, PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
 import { authRequestInterceptor, authResponseInterceptor, errorLoggingInterceptor } from './auth.interceptors';
+import { ApiError } from './error.utils';
 
 const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL;
-
-/**
- * Custom error class for API errors
- */
-export class ApiError extends Error {
-	constructor(
-		public status: number,
-		public statusText: string,
-		public data?: unknown
-	) {
-		super(`API Error: ${status} ${statusText}`);
-		this.name = 'ApiError';
-	}
-}
 
 /**
  * HTTP client configuration options

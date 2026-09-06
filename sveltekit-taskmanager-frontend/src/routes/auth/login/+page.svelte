@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authStore } from '$lib/shared/stores';
+	import { authStore } from '$lib/features/auth';
 	import { goto } from '$app/navigation';
 
 	let email = $state('');
@@ -13,7 +13,7 @@
 		error = '';
 
 		try {
-			await authStore.login(email, password);
+			await authStore.login({ email, password });
 			await goto('/dashboard');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Login failed';

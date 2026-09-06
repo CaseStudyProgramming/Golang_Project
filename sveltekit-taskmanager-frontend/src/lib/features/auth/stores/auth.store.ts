@@ -3,30 +3,9 @@
  * Manages user session, JWT token, and authentication state
  */
 
-import { setAuthToken, removeAuthToken, getAuthToken } from '../utils/auth.interceptors';
-
-/**
- * User interface
- */
-export interface User {
-	id: string;
-	email: string;
-	name?: string;
-	role?: string;
-	createdAt?: string;
-	updatedAt?: string;
-}
-
-/**
- * Authentication state interface
- */
-interface AuthState {
- isAuthenticated: boolean;
- user: User | null;
- token: string | null;
- isLoading: boolean;
- error: string | null;
-}
+import { setAuthToken, removeAuthToken, getAuthToken } from '$lib/shared/utils/auth.interceptors';
+import { AuthenticationError, withErrorHandling } from '$lib/shared/utils/error.utils';
+import type { User, AuthState, LoginCredentials, RegistrationData } from '../types/auth.types';
 
 /**
  * Create authentication store with Svelte 5 runes
@@ -56,28 +35,30 @@ function createAuthStore() {
 	/**
 	 * Login user with credentials
 	 */
-	async function login(email: string, password: string): Promise<void> {
+	async function login(credentials: LoginCredentials): Promise<void> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
-			// This would be replaced with actual API call
-			// const response = await httpClient.post<{ user: User; token: string }>('/auth/login', { email, password });
-			
-			// Mock response for development
-			const mockUser: User = {
-				id: '1',
-				email,
-				name: 'Test User',
-				role: 'user'
-			};
-			const mockToken = 'mock_jwt_token_' + Date.now();
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// const response = await httpClient.post<{ user: User; token: string }>('/auth/login', credentials);
+				
+				// Mock response for development
+				const mockUser: User = {
+					id: '1',
+					email: credentials.email,
+					name: 'Test User',
+					role: 'user'
+				};
+				const mockToken = 'mock_jwt_token_' + Date.now();
 
-			state.user = mockUser;
-			state.token = mockToken;
-			state.isAuthenticated = true;
+				state.user = mockUser;
+				state.token = mockToken;
+				state.isAuthenticated = true;
 
-			setAuthToken(mockToken);
+				setAuthToken(mockToken);
+			}, 'Login failed');
 		} catch (error) {
 			state.error = error instanceof Error ? error.message : 'Login failed';
 			throw error;
@@ -89,28 +70,30 @@ function createAuthStore() {
 	/**
 	 * Register new user
 	 */
-	async function register(email: string, password: string, name?: string): Promise<void> {
+	async function register(data: RegistrationData): Promise<void> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
-			// This would be replaced with actual API call
-			// const response = await httpClient.post<{ user: User; token: string }>('/auth/register', { email, password, name });
-			
-			// Mock response for development
-			const mockUser: User = {
-				id: '1',
-				email,
-				name: name || 'New User',
-				role: 'user'
-			};
-			const mockToken = 'mock_jwt_token_' + Date.now();
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// const response = await httpClient.post<{ user: User; token: string }>('/auth/register', data);
+				
+				// Mock response for development
+				const mockUser: User = {
+					id: '1',
+					email: data.email,
+					name: data.name || 'New User',
+					role: 'user'
+				};
+				const mockToken = 'mock_jwt_token_' + Date.now();
 
-			state.user = mockUser;
-			state.token = mockToken;
-			state.isAuthenticated = true;
+				state.user = mockUser;
+				state.token = mockToken;
+				state.isAuthenticated = true;
 
-			setAuthToken(mockToken);
+				setAuthToken(mockToken);
+			}, 'Registration failed');
 		} catch (error) {
 			state.error = error instanceof Error ? error.message : 'Registration failed';
 			throw error;

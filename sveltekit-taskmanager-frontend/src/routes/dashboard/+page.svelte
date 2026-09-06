@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { authStore } from '$lib/shared/stores';
-	import { taskStore } from '$lib/shared/stores';
+	import { authStore } from '$lib/features/auth';
+	import { taskStore } from '$lib/features/tasks';
 	import { onMount } from 'svelte';
 
 	onMount(async () => {

@@ -1,5 +1,5 @@
 /**
- * Category and tag related types and interfaces
+ * Category feature types
  */
 
 /**
@@ -11,18 +11,6 @@ export interface Category {
 	description?: string;
 	color?: string;
 	icon?: string;
-	userId: string;
-	createdAt: string;
-	updatedAt: string;
-}
-
-/**
- * Tag interface
- */
-export interface Tag {
-	id: string;
-	name: string;
-	color?: string;
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
@@ -49,17 +37,11 @@ export interface UpdateCategoryPayload {
 }
 
 /**
- * Tag creation payload
+ * Category store state interface
  */
-export interface CreateTagPayload {
-	name: string;
-	color?: string;
-}
-
-/**
- * Tag update payload
- */
-export interface UpdateTagPayload {
-	name?: string;
-	color?: string;
+export interface CategoryState {
+	categories: Category[];
+	currentCategory: Category | null;
+	isLoading: boolean;
+	error: string | null;
 }

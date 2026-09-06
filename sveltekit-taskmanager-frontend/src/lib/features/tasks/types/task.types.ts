@@ -1,5 +1,5 @@
 /**
- * Task-related types and interfaces
+ * Task feature types
  */
 
 /**
@@ -74,4 +74,22 @@ export interface UpdateTaskPayload {
 	dueDate?: string;
 	categoryId?: string;
 	tags?: string[];
+}
+
+/**
+ * Task store state interface
+ */
+export interface TaskState {
+	tasks: Task[];
+	currentTask: Task | null;
+	filters: TaskFilters;
+	sort: TaskSort;
+	pagination: {
+		page: number;
+		limit: number;
+		total: number;
+		totalPages: number;
+	};
+	isLoading: boolean;
+	error: string | null;
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authStore } from '$lib/shared/stores';
+	import { authStore } from '$lib/features/auth';
 	import { goto } from '$app/navigation';
 
 	let name = $state('');
@@ -21,7 +21,7 @@
 		}
 
 		try {
-			await authStore.register(email, password, name);
+			await authStore.register({ email, password, name });
 			await goto('/dashboard');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Registration failed';

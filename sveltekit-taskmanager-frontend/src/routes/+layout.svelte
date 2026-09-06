@@ -1,7 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { authStore } from '$lib/shared/stores';
+	import { authStore } from '$lib/features/auth';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
