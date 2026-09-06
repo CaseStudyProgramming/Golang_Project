@@ -160,12 +160,19 @@ function createAuthStore() {
 
 /**
  * Export authentication store instance
+ * Only create store instance on client side to avoid SSR issues
  */
-export const authStore = createAuthStore();
+let authStoreInstance: ReturnType<typeof createAuthStore> | null = null;
 
-/**
- * Initialize auth store on app load
- */
-if (typeof window !== 'undefined') {
-	authStore.initialize();
-}
+export const authStore = new Proxy({} as ReturnType<typeof createAuthStore>, {
+	get(_target, prop) {
+		if (!authStoreInstance) {
+			if (typeof window === 'undefined') {
+				throw new Error('authStore can only be accessed on the client side');
+			}
+			authStoreInstance = createAuthStore();
+			authStoreInstance.initialize();
+		}
+		return authStoreInstance[prop as keyof ReturnType<typeof createAuthStore>];
+	}
+});

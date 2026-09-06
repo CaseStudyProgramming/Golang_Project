@@ -220,5 +220,18 @@ function createTagStore() {
 
 /**
  * Export tag store instance
+ * Only create store instance on client side to avoid SSR issues
  */
-export const tagStore = createTagStore();
+let tagStoreInstance: ReturnType<typeof createTagStore> | null = null;
+
+export const tagStore = new Proxy({} as ReturnType<typeof createTagStore>, {
+	get(_target, prop) {
+		if (!tagStoreInstance) {
+			if (typeof window === 'undefined') {
+				throw new Error('tagStore can only be accessed on the client side');
+			}
+			tagStoreInstance = createTagStore();
+		}
+		return tagStoreInstance[prop as keyof ReturnType<typeof createTagStore>];
+	}
+});

@@ -224,5 +224,18 @@ function createCategoryStore() {
 
 /**
  * Export category store instance
+ * Only create store instance on client side to avoid SSR issues
  */
-export const categoryStore = createCategoryStore();
+let categoryStoreInstance: ReturnType<typeof createCategoryStore> | null = null;
+
+export const categoryStore = new Proxy({} as ReturnType<typeof createCategoryStore>, {
+	get(_target, prop) {
+		if (!categoryStoreInstance) {
+			if (typeof window === 'undefined') {
+				throw new Error('categoryStore can only be accessed on the client side');
+			}
+			categoryStoreInstance = createCategoryStore();
+		}
+		return categoryStoreInstance[prop as keyof ReturnType<typeof createCategoryStore>];
+	}
+});

@@ -322,5 +322,18 @@ function createTaskStore() {
 
 /**
  * Export task store instance
+ * Only create store instance on client side to avoid SSR issues
  */
-export const taskStore = createTaskStore();
+let taskStoreInstance: ReturnType<typeof createTaskStore> | null = null;
+
+export const taskStore = new Proxy({} as ReturnType<typeof createTaskStore>, {
+	get(_target, prop) {
+		if (!taskStoreInstance) {
+			if (typeof window === 'undefined') {
+				throw new Error('taskStore can only be accessed on the client side');
+			}
+			taskStoreInstance = createTaskStore();
+		}
+		return taskStoreInstance[prop as keyof ReturnType<typeof createTaskStore>];
+	}
+});

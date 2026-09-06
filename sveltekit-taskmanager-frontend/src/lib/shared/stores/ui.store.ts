@@ -238,5 +238,18 @@ function createUIStore() {
 
 /**
  * Export UI store instance
+ * Only create store instance on client side to avoid SSR issues
  */
-export const uiStore = createUIStore();
+let uiStoreInstance: ReturnType<typeof createUIStore> | null = null;
+
+export const uiStore = new Proxy({} as ReturnType<typeof createUIStore>, {
+	get(_target, prop) {
+		if (!uiStoreInstance) {
+			if (typeof window === 'undefined') {
+				throw new Error('uiStore can only be accessed on the client side');
+			}
+			uiStoreInstance = createUIStore();
+		}
+		return uiStoreInstance[prop as keyof ReturnType<typeof createUIStore>];
+	}
+});

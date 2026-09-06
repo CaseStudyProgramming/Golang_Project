@@ -42,7 +42,7 @@ type ResponseInterceptor = (response: Response) => Response | Promise<Response>;
 /**
  * HTTP client class with interceptors and retry logic
  */
-class HttpClient {
+export class HttpClient {
 	private baseUrl: string;
 	private defaultOptions: HttpClientOptions;
 	private requestInterceptors: RequestInterceptor[] = [];
@@ -230,18 +230,28 @@ class HttpClient {
 
 /**
  * Create HTTP client instance with interceptors
+ * Only create client instance on client side to avoid SSR issues
  */
-export const httpClient = new HttpClient(API_BASE_URL);
+let httpClientInstance: HttpClient | null = null;
 
-// Add authentication interceptors
-httpClient.addRequestInterceptor(authRequestInterceptor);
-httpClient.addResponseInterceptor(authResponseInterceptor);
-httpClient.addResponseInterceptor(errorLoggingInterceptor);
+export const httpClient = new Proxy({} as HttpClient, {
+	get(_target, prop) {
+		if (!httpClientInstance) {
+			httpClientInstance = new HttpClient(API_BASE_URL);
+			// Add authentication interceptors
+			httpClientInstance.addRequestInterceptor(authRequestInterceptor);
+			httpClientInstance.addResponseInterceptor(authResponseInterceptor);
+			httpClientInstance.addResponseInterceptor(errorLoggingInterceptor);
+		}
+		return httpClientInstance[prop as keyof HttpClient];
+	}
+});
 
 /**
  * Legacy fetchJson function for backward compatibility
  * @deprecated Use httpClient methods instead
  */
 export async function fetchJson<T>(url: string, options?: RequestOptions): Promise<T> {
-	return httpClient.get<T>(url, options);
+	const client = httpClient as HttpClient;
+	return client.get<T>(url, options);
 }
