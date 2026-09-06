@@ -115,6 +115,10 @@
 			<a href="/auth/register" class="text-blue-600 hover:text-blue-700 font-medium">Sign up</a>
 		</p>
 	</div>
+
+	<div class="mt-4 text-center">
+		<a href="/auth/forgot-password" class="text-sm text-blue-600 hover:text-blue-700">Forgot password?</a>
+	</div>
 </div>
 
 {#if toastError}

@@ -44,6 +44,22 @@ interface RegistrationData {
 }
 
 /**
+ * Forgot password request interface
+ */
+interface ForgotPasswordRequest {
+	email: string;
+}
+
+/**
+ * Reset password request interface
+ */
+interface ResetPasswordRequest {
+	token: string;
+	password: string;
+	confirmPassword: string;
+}
+
+/**
  * Authentication API client
  */
 export const authApi = {
@@ -80,5 +96,19 @@ export const authApi = {
 	 */
 	async getCurrentUser(): Promise<User> {
 		return httpClient.get<User>('/auth/me');
+	},
+
+	/**
+	 * Request password reset
+	 */
+	async forgotPassword(data: ForgotPasswordRequest): Promise<{ message: string }> {
+		return httpClient.post<{ message: string }>('/auth/forgot-password', data);
+	},
+
+	/**
+	 * Reset password with token
+	 */
+	async resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
+		return httpClient.post<{ message: string }>('/auth/reset-password', data);
 	}
 };
