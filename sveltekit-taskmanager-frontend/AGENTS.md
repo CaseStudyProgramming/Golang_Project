@@ -22,7 +22,7 @@
 
 ## Workflow & Task Execution
 - **Branch-Based Development**:
-  - Always work on a new branch for each sub-issue
+  - Always work on a new branch for each sub-issue using git branch standard naming convention (e.g., `feat/setup-sveltekit-frontend`).
 - **Task Breakdown via Checklists / Issues**:
   - Read and parse task lists (`- [ ]`) or sub-issues sequentially.
   - Work on only ONE granular checklist item at a time. Complete it fully before moving to the next.
