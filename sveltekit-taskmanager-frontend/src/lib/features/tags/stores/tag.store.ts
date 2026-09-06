@@ -3,8 +3,9 @@
  */
 
 import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling } from '$lib/shared/utils/error.utils';
-import type { Tag, CreateTagPayload, UpdateTagPayload, TagState } from '../types/tag.types';
+import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
+import { createTagSchema, updateTagSchema } from '../schemas/tag.schemas';
+import type { Tag, TagState } from '../types/tag.types';
 
 /**
  * Create tag store with Svelte 5 runes
@@ -76,20 +77,23 @@ function createTagStore() {
 	/**
 	 * Create new tag
 	 */
-	async function createTag(payload: CreateTagPayload): Promise<Tag> {
+	async function createTag(payload: unknown): Promise<Tag> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedPayload = createTagSchema.parse(payload);
+
 			const newTag = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.post<Tag>('/tags', payload);
+				// const response = await httpClient.post<Tag>('/tags', validatedPayload);
 				
 				// Mock response for development
 				const mockTag: Tag = {
 					id: Date.now().toString(),
-					name: payload.name,
-					color: payload.color,
+					name: validatedPayload.name,
+					color: validatedPayload.color,
 					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					userId: '1'
@@ -102,6 +106,10 @@ function createTagStore() {
 
 			return newTag;
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('tag', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Failed to create tag';
 			throw error;
 		} finally {
@@ -112,19 +120,22 @@ function createTagStore() {
 	/**
 	 * Update existing tag
 	 */
-	async function updateTag(id: string, payload: UpdateTagPayload): Promise<Tag> {
+	async function updateTag(id: string, payload: unknown): Promise<Tag> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedPayload = updateTagSchema.parse(payload);
+
 			const updatedTag = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.patch<Tag>(`/tags/${id}`, payload);
+				// const response = await httpClient.patch<Tag>(`/tags/${id}`, validatedPayload);
 				
 				// Mock response for development
 				const mockTag: Tag = {
 					...state.tags.find((t) => t.id === id)!,
-					...payload,
+					...validatedPayload,
 					updatedAt: new Date().toISOString()
 				};
 
@@ -139,6 +150,10 @@ function createTagStore() {
 
 			return updatedTag;
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('tag', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Failed to update tag';
 			throw error;
 		} finally {

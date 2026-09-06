@@ -15,22 +15,6 @@ export interface Tag {
 }
 
 /**
- * Tag creation payload
- */
-export interface CreateTagPayload {
-	name: string;
-	color?: string;
-}
-
-/**
- * Tag update payload
- */
-export interface UpdateTagPayload {
-	name?: string;
-	color?: string;
-}
-
-/**
  * Tag store state interface
  */
 export interface TagState {

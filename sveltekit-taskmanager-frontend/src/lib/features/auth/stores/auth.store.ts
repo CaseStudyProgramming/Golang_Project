@@ -4,8 +4,9 @@
  */
 
 import { setAuthToken, removeAuthToken, getAuthToken } from '$lib/shared/utils/auth.interceptors';
-import { AuthenticationError, withErrorHandling } from '$lib/shared/utils/error.utils';
-import type { User, AuthState, LoginCredentials, RegistrationData } from '../types/auth.types';
+import { AuthenticationError, withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
+import { loginSchema, registerSchema } from '../schemas/auth.schemas';
+import type { User, AuthState } from '../types/auth.types';
 
 /**
  * Create authentication store with Svelte 5 runes
@@ -35,19 +36,22 @@ function createAuthStore() {
 	/**
 	 * Login user with credentials
 	 */
-	async function login(credentials: LoginCredentials): Promise<void> {
+	async function login(credentials: { email: string; password: string }): Promise<void> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedCredentials = loginSchema.parse(credentials);
+
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.post<{ user: User; token: string }>('/auth/login', credentials);
+				// const response = await httpClient.post<{ user: User; token: string }>('/auth/login', validatedCredentials);
 				
 				// Mock response for development
 				const mockUser: User = {
 					id: '1',
-					email: credentials.email,
+					email: validatedCredentials.email,
 					name: 'Test User',
 					role: 'user'
 				};
@@ -60,6 +64,10 @@ function createAuthStore() {
 				setAuthToken(mockToken);
 			}, 'Login failed');
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('credentials', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Login failed';
 			throw error;
 		} finally {
@@ -70,20 +78,23 @@ function createAuthStore() {
 	/**
 	 * Register new user
 	 */
-	async function register(data: RegistrationData): Promise<void> {
+	async function register(data: { email: string; password: string; name?: string }): Promise<void> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedData = registerSchema.parse(data);
+
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.post<{ user: User; token: string }>('/auth/register', data);
+				// const response = await httpClient.post<{ user: User; token: string }>('/auth/register', validatedData);
 				
 				// Mock response for development
 				const mockUser: User = {
 					id: '1',
-					email: data.email,
-					name: data.name || 'New User',
+					email: validatedData.email,
+					name: validatedData.name || 'New User',
 					role: 'user'
 				};
 				const mockToken = 'mock_jwt_token_' + Date.now();
@@ -95,6 +106,10 @@ function createAuthStore() {
 				setAuthToken(mockToken);
 			}, 'Registration failed');
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('registration', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Registration failed';
 			throw error;
 		} finally {

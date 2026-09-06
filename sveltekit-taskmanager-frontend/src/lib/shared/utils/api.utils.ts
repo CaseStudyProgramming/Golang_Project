@@ -12,11 +12,22 @@ const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL;
  * HTTP client configuration options
  */
 interface HttpClientOptions {
-	 retries?: number;
-	 retryDelay?: number;
-	 timeout?: number;
-	 headers?: Record<string, string>;
+	retries?: number;
+	retryDelay?: number;
+	timeout?: number;
+	headers?: Record<string, string>;
 }
+
+/**
+ * Request options for HTTP methods
+ */
+interface RequestOptions {
+	headers?: Record<string, string>;
+	signal?: AbortSignal;
+	method?: string;
+	body?: string;
+}
+
 
 /**
  * Request interceptor function type
@@ -104,7 +115,7 @@ class HttpClient {
 	 */
 	private async request<T>(
 		endpoint: string,
-		options: RequestInit = {}
+		options: RequestOptions = {}
 	): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`;
 		const maxRetries = this.defaultOptions.retries || 0;
@@ -172,14 +183,14 @@ class HttpClient {
 	/**
 	 * GET request
 	 */
-	async get<T>(endpoint: string, options?: RequestInit): Promise<T> {
+	async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
 		return this.request<T>(endpoint, { ...options, method: 'GET' });
 	}
 
 	/**
 	 * POST request
 	 */
-	async post<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
+	async post<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
 		return this.request<T>(endpoint, {
 			...options,
 			method: 'POST',
@@ -190,7 +201,7 @@ class HttpClient {
 	/**
 	 * PUT request
 	 */
-	async put<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
+	async put<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
 		return this.request<T>(endpoint, {
 			...options,
 			method: 'PUT',
@@ -201,7 +212,7 @@ class HttpClient {
 	/**
 	 * PATCH request
 	 */
-	async patch<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
+	async patch<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
 		return this.request<T>(endpoint, {
 			...options,
 			method: 'PATCH',
@@ -212,7 +223,7 @@ class HttpClient {
 	/**
 	 * DELETE request
 	 */
-	async delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
+	async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
 		return this.request<T>(endpoint, { ...options, method: 'DELETE' });
 	}
 }
@@ -231,6 +242,6 @@ httpClient.addResponseInterceptor(errorLoggingInterceptor);
  * Legacy fetchJson function for backward compatibility
  * @deprecated Use httpClient methods instead
  */
-export async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+export async function fetchJson<T>(url: string, options?: RequestOptions): Promise<T> {
 	return httpClient.get<T>(url, options);
 }

@@ -17,26 +17,6 @@ export interface Category {
 }
 
 /**
- * Category creation payload
- */
-export interface CreateCategoryPayload {
-	name: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-}
-
-/**
- * Category update payload
- */
-export interface UpdateCategoryPayload {
-	name?: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-}
-
-/**
  * Category store state interface
  */
 export interface CategoryState {

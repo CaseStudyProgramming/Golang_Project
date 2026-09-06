@@ -15,6 +15,22 @@ interface UIState {
 }
 
 /**
+ * Options for adding notifications
+ */
+interface AddNotificationOptions {
+	duration?: number;
+	isPersistent?: boolean;
+}
+
+/**
+ * Options for opening modals
+ */
+interface OpenModalOptions {
+	confirmText?: string;
+	cancelText?: string;
+}
+
+/**
  * Create UI store with Svelte 5 runes
  */
 function createUIStore() {
@@ -48,7 +64,7 @@ function createUIStore() {
 		type: NotificationType,
 		title: string,
 		message?: string,
-		options?: { duration?: number; isPersistent?: boolean }
+		options?: AddNotificationOptions
 	): string {
 		const id = Date.now().toString();
 		const notification: Notification = {
@@ -90,28 +106,28 @@ function createUIStore() {
 	/**
 	 * Add success notification
 	 */
-	function success(title: string, message?: string, options?: { duration?: number }): string {
+	function success(title: string, message?: string, options?: AddNotificationOptions): string {
 		return addNotification('success', title, message, options);
 	}
 
 	/**
 	 * Add error notification
 	 */
-	function error(title: string, message?: string, options?: { duration?: number }): string {
+	function error(title: string, message?: string, options?: AddNotificationOptions): string {
 		return addNotification('error', title, message, { ...options, isPersistent: true });
 	}
 
 	/**
 	 * Add warning notification
 	 */
-	function warning(title: string, message?: string, options?: { duration?: number }): string {
+	function warning(title: string, message?: string, options?: AddNotificationOptions): string {
 		return addNotification('warning', title, message, options);
 	}
 
 	/**
 	 * Add info notification
 	 */
-	function info(title: string, message?: string, options?: { duration?: number }): string {
+	function info(title: string, message?: string, options?: AddNotificationOptions): string {
 		return addNotification('info', title, message, options);
 	}
 
@@ -163,7 +179,7 @@ function createUIStore() {
 		title: string,
 		message?: string,
 		onConfirm?: () => void | Promise<void>,
-		options?: { confirmText?: string; cancelText?: string }
+		options?: OpenModalOptions
 	): string {
 		return openModal({
 			type: 'confirm',
@@ -179,7 +195,7 @@ function createUIStore() {
 	/**
 	 * Open alert modal
 	 */
-	function alert(title: string, message?: string, options?: { confirmText?: string }): string {
+	function alert(title: string, message?: string, options?: OpenModalOptions): string {
 		return openModal({
 			type: 'alert',
 			title,

@@ -52,31 +52,6 @@ export interface TaskSort {
 }
 
 /**
- * Task creation payload
- */
-export interface CreateTaskPayload {
-	title: string;
-	description?: string;
-	priority?: TaskPriority;
-	dueDate?: string;
-	categoryId?: string;
-	tags?: string[];
-}
-
-/**
- * Task update payload
- */
-export interface UpdateTaskPayload {
-	title?: string;
-	description?: string;
-	status?: TaskStatus;
-	priority?: TaskPriority;
-	dueDate?: string;
-	categoryId?: string;
-	tags?: string[];
-}
-
-/**
  * Task store state interface
  */
 export interface TaskState {

@@ -4,8 +4,9 @@
  */
 
 import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling } from '$lib/shared/utils/error.utils';
-import type { Task, TaskFilters, TaskSort, CreateTaskPayload, UpdateTaskPayload, TaskState } from '../types/task.types';
+import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
+import { createTaskSchema, updateTaskSchema } from '../schemas/task.schemas';
+import type { Task, TaskFilters, TaskSort, TaskState } from '../types/task.types';
 import type { PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
 
 /**
@@ -121,25 +122,28 @@ function createTaskStore() {
 	/**
 	 * Create new task
 	 */
-	async function createTask(payload: CreateTaskPayload): Promise<Task> {
+	async function createTask(payload: unknown): Promise<Task> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedPayload = createTaskSchema.parse(payload);
+
 			const newTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.post<Task>('/tasks', payload);
+				// const response = await httpClient.post<Task>('/tasks', validatedPayload);
 				
 				// Mock response for development
 				const mockTask: Task = {
 					id: Date.now().toString(),
-					title: payload.title,
-					description: payload.description,
+					title: validatedPayload.title,
+					description: validatedPayload.description,
 					status: 'todo',
-					priority: payload.priority || 'medium',
-					dueDate: payload.dueDate,
-					categoryId: payload.categoryId,
-					tags: payload.tags,
+					priority: validatedPayload.priority || 'medium',
+					dueDate: validatedPayload.dueDate,
+					categoryId: validatedPayload.categoryId,
+					tags: validatedPayload.tags,
 					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					userId: '1'
@@ -153,6 +157,10 @@ function createTaskStore() {
 
 			return newTask;
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('task', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Failed to create task';
 			throw error;
 		} finally {
@@ -163,19 +171,22 @@ function createTaskStore() {
 	/**
 	 * Update existing task
 	 */
-	async function updateTask(id: string, payload: UpdateTaskPayload): Promise<Task> {
+	async function updateTask(id: string, payload: unknown): Promise<Task> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedPayload = updateTaskSchema.parse(payload);
+
 			const updatedTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.patch<Task>(`/tasks/${id}`, payload);
+				// const response = await httpClient.patch<Task>(`/tasks/${id}`, validatedPayload);
 				
 				// Mock response for development
 				const mockTask: Task = {
 					...state.tasks.find((t) => t.id === id)!,
-					...payload,
+					...validatedPayload,
 					updatedAt: new Date().toISOString()
 				};
 
@@ -189,6 +200,10 @@ function createTaskStore() {
 
 			return updatedTask;
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('task', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Failed to update task';
 			throw error;
 		} finally {

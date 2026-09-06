@@ -3,8 +3,9 @@
  */
 
 import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling } from '$lib/shared/utils/error.utils';
-import type { Category, CreateCategoryPayload, UpdateCategoryPayload, CategoryState } from '../types/category.types';
+import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
+import { createCategorySchema, updateCategorySchema } from '../schemas/category.schemas';
+import type { Category, CategoryState } from '../types/category.types';
 
 /**
  * Create category store with Svelte 5 runes
@@ -76,22 +77,25 @@ function createCategoryStore() {
 	/**
 	 * Create new category
 	 */
-	async function createCategory(payload: CreateCategoryPayload): Promise<Category> {
+	async function createCategory(payload: unknown): Promise<Category> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedPayload = createCategorySchema.parse(payload);
+
 			const newCategory = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.post<Category>('/categories', payload);
+				// const response = await httpClient.post<Category>('/categories', validatedPayload);
 				
 				// Mock response for development
 				const mockCategory: Category = {
 					id: Date.now().toString(),
-					name: payload.name,
-					description: payload.description,
-					color: payload.color,
-					icon: payload.icon,
+					name: validatedPayload.name,
+					description: validatedPayload.description,
+					color: validatedPayload.color,
+					icon: validatedPayload.icon,
 					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					userId: '1'
@@ -104,6 +108,10 @@ function createCategoryStore() {
 
 			return newCategory;
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('category', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Failed to create category';
 			throw error;
 		} finally {
@@ -114,19 +122,22 @@ function createCategoryStore() {
 	/**
 	 * Update existing category
 	 */
-	async function updateCategory(id: string, payload: UpdateCategoryPayload): Promise<Category> {
+	async function updateCategory(id: string, payload: unknown): Promise<Category> {
 		state.isLoading = true;
 		state.error = null;
 
 		try {
+			// Validate input with Zod
+			const validatedPayload = updateCategorySchema.parse(payload);
+
 			const updatedCategory = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
-				// const response = await httpClient.patch<Category>(`/categories/${id}`, payload);
+				// const response = await httpClient.patch<Category>(`/categories/${id}`, validatedPayload);
 				
 				// Mock response for development
 				const mockCategory: Category = {
 					...state.categories.find((c) => c.id === id)!,
-					...payload,
+					...validatedPayload,
 					updatedAt: new Date().toISOString()
 				};
 
@@ -143,6 +154,10 @@ function createCategoryStore() {
 
 			return updatedCategory;
 		} catch (error) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				state.error = 'Invalid input: ' + error.message;
+				throw new ValidationError('category', error.message);
+			}
 			state.error = error instanceof Error ? error.message : 'Failed to update category';
 			throw error;
 		} finally {
