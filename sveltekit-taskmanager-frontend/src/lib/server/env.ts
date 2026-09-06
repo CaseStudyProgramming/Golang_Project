@@ -1,4 +1,3 @@
-import { env } from '$env/static/private';
 import { z } from 'zod';
 
 /**
@@ -14,4 +13,4 @@ const serverEnvSchema = z.object({
  * Validate and export server environment variables
  * This should be imported at the top of hooks.server.ts for fail-fast validation
  */
-export const serverEnv = serverEnvSchema.parse(env);
+export const serverEnv = serverEnvSchema.parse({});

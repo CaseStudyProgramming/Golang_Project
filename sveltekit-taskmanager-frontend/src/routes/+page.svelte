@@ -40,7 +40,7 @@
 				<p class="text-gray-500 text-center py-8">No tasks yet. Add one above!</p>
 			{:else}
 				<div class="space-y-2">
-					{#each Array(taskCount) as _, i}
+					{#each Array(taskCount) as _, i (i)}
 						<div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
 							<input type="checkbox" class="w-5 h-5 text-blue-600 rounded" />
 							<span class="flex-1 text-gray-700">Task {i + 1}</span>

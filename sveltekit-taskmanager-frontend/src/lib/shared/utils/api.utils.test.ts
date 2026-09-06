@@ -1,12 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { fetchJson } from './api.utils';
 
 describe('fetchJson', () => {
 	it('handles successful API response', async () => {
-		global.fetch = vi.fn(() =>
+		globalThis.fetch = vi.fn(() =>
 			Promise.resolve({
-				ok: true,
-				json: () => Promise.resolve({ data: 'test' })
+				json: () => Promise.resolve({ data: 'test' }),
+				ok: true
 			} as Response)
 		);
 
@@ -15,7 +16,7 @@ describe('fetchJson', () => {
 	});
 
 	it('throws error on failed response', async () => {
-		global.fetch = vi.fn(() =>
+		globalThis.fetch = vi.fn(() =>
 			Promise.resolve({
 				ok: false,
 				status: 404

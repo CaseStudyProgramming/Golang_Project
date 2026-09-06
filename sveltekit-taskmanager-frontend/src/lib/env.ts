@@ -1,4 +1,3 @@
-import { env } from '$env/static/public';
 import { z } from 'zod';
 
 /**
@@ -12,4 +11,6 @@ const publicEnvSchema = z.object({
 /**
  * Validate and export public environment variables
  */
-export const publicEnv = publicEnvSchema.parse(env);
+export const publicEnv = publicEnvSchema.parse({
+	PUBLIC_API_BASE_URL: import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8080'
+});
