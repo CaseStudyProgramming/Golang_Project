@@ -9,6 +9,8 @@ import { loginSchema, registerSchema } from '../schemas/auth.schemas';
 import { authApi } from '../api/auth.api';
 import type { User, AuthState } from '../types/auth.types';
 
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
 /**
  * Create authentication store with Svelte 5 runes
  */
@@ -29,8 +31,45 @@ function createAuthStore() {
 		if (token) {
 			state.token = token;
 			state.isAuthenticated = true;
-			// In a real app, you might want to validate the token
-			// and fetch user data here
+			
+			// Set up automatic token refresh
+			setupTokenRefresh();
+			
+			// Fetch current user data
+			fetchCurrentUser().catch(() => {
+				// If fetch fails, token might be invalid
+				logout();
+			});
+		}
+	}
+
+	/**
+	 * Setup automatic token refresh
+	 */
+	function setupTokenRefresh(): void {
+		// Clear any existing timer
+		if (refreshTimer) {
+			clearTimeout(refreshTimer);
+		}
+
+		// Check token every minute
+		refreshTimer = setInterval(() => {
+			if (state.token && isTokenExpired()) {
+				refreshToken().catch(() => {
+					// If refresh fails, logout
+					logout();
+				});
+			}
+		}, 60000); // Check every minute
+	}
+
+	/**
+	 * Cleanup authentication state
+	 */
+	function cleanup(): void {
+		if (refreshTimer) {
+			clearInterval(refreshTimer);
+			refreshTimer = null;
 		}
 	}
 
@@ -119,6 +158,7 @@ function createAuthStore() {
 			state.error = null;
 
 			removeAuthToken();
+			cleanup();
 		}
 	}
 
@@ -212,7 +252,8 @@ function createAuthStore() {
 		refreshToken,
 		fetchCurrentUser,
 		needsTokenRefresh,
-		ensureValidToken
+		ensureValidToken,
+		cleanup
 	};
 }
 
