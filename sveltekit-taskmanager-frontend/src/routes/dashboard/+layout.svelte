@@ -3,10 +3,18 @@
 	import { goto } from '$app/navigation';
 
 	let { children } = $props();
+	let isLoggingOut = $state(false);
 
-	function handleLogout() {
-		authStore.logout();
-		goto('/auth/login');
+	async function handleLogout() {
+		isLoggingOut = true;
+		try {
+			await authStore.logout();
+			goto('/auth/login');
+		} catch (error) {
+			console.error('Logout failed:', error);
+		} finally {
+			isLoggingOut = false;
+		}
 	}
 </script>
 
@@ -32,9 +40,10 @@
 					</a>
 					<button
 						onclick={handleLogout}
-						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+						disabled={isLoggingOut}
+						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						Logout
+						{isLoggingOut ? 'Logging out...' : 'Logout'}
 					</button>
 				</div>
 			</div>

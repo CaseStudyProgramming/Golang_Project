@@ -5,11 +5,11 @@
 
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async () => {
-	// Note: This runs on the server, so we can't access localStorage
-	// The actual auth state will be initialized on the client in +layout.svelte
+export const load: LayoutServerLoad = async ({ cookies }) => {
+	// Check for auth token in cookies (set by client-side auth)
+	const authToken = cookies.get('auth_token');
 	
 	return {
-		// You can pass server-side data here if needed
+		isAuthenticated: !!authToken
 	};
 };

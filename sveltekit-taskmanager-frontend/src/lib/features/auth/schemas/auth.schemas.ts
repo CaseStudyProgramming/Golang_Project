@@ -53,6 +53,25 @@ export const registerSchema = z.object({
 });
 
 /**
+ * Forgot password request validation schema
+ */
+export const forgotPasswordSchema = z.object({
+	email: emailSchema
+});
+
+/**
+ * Reset password request validation schema
+ */
+export const resetPasswordSchema = z.object({
+	token: z.string().min(1, 'Reset token is required'),
+	password: passwordSchema,
+	confirmPassword: z.string().min(1, 'Please confirm your password')
+}).refine((data) => data.password === data.confirmPassword, {
+	message: 'Passwords do not match',
+	path: ['confirmPassword']
+});
+
+/**
  * Type inference for login credentials
  */
 export type LoginCredentials = z.infer<typeof loginSchema>;
@@ -61,3 +80,13 @@ export type LoginCredentials = z.infer<typeof loginSchema>;
  * Type inference for registration data
  */
 export type RegistrationData = z.infer<typeof registerSchema>;
+
+/**
+ * Type inference for forgot password request
+ */
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
+
+/**
+ * Type inference for reset password request
+ */
+export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
