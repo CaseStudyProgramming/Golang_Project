@@ -181,6 +181,7 @@
 			disabled={isLoading}
 			role="combobox"
 			aria-expanded={isOpen}
+			aria-controls="tag-listbox"
 			aria-haspopup="listbox"
 			aria-autocomplete="list"
 		/>
@@ -193,7 +194,7 @@
 
 	<!-- Dropdown suggestions -->
 	{#if isOpen && (filteredTags.length > 0 || input.trim())}
-		<div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" role="listbox">
+		<div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" role="listbox" id="tag-listbox">
 			{#if filteredTags.length > 0}
 				{#each filteredTags as tag, index}
 					<button
@@ -224,6 +225,7 @@
 					onclick={handleCreateTag}
 					class="w-full text-left px-3 py-2 cursor-pointer hover:bg-gray-100 text-blue-600"
 					role="option"
+					aria-selected="false"
 					tabindex={-1}
 				>
 					<div class="flex items-center gap-2">
