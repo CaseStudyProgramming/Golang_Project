@@ -1,5 +1,9 @@
 <script lang="ts">
 	import type { TaskFilters, TaskStatus, TaskPriority } from '../types/task.types';
+	import { categoryStore } from '$lib/features/categories';
+	import { tagStore } from '$lib/features/tags';
+	import { TagInput } from '$lib/features/tags';
+	import type { Category } from '$lib/features/categories';
 
 	let {
 		filters = $bindable({}),
@@ -10,6 +14,17 @@
 		onFilterChange?: (filters: TaskFilters) => void;
 		onClearFilters?: () => void;
 	} = $props();
+
+	let categories = $derived(categoryStore.state.categories);
+	let availableTags = $derived(tagStore.state.tags);
+
+	/**
+	 * Initialize categories and tags on mount
+	 */
+	$effect(() => {
+		categoryStore.fetchCategories();
+		tagStore.fetchTags();
+	});
 
 	const statusOptions: { value: TaskStatus; label: string }[] = [
 		{ value: 'todo', label: 'To Do' },
@@ -37,10 +52,36 @@
 	}
 
 	/**
+	 * Handle tag filter change
+	 */
+	function handleTagFilterChange(tagIds: string[]): void {
+		const newFilters = { ...filters, tags: tagIds.length > 0 ? tagIds : undefined };
+		filters = newFilters;
+		onFilterChange?.(newFilters);
+	}
+
+	/**
+	 * Create reactive binding for tags filter
+	 */
+	let tagFilterIds = $state(filters.tags || []);
+
+	/**
+	 * Sync tag filter changes with filters
+	 */
+	$effect(() => {
+		if (tagFilterIds.length > 0) {
+			handleTagFilterChange(tagFilterIds);
+		} else if (filters.tags) {
+			handleTagFilterChange([]);
+		}
+	});
+
+	/**
 	 * Clear all filters
 	 */
 	function handleClearFilters(): void {
 		filters = {};
+		tagFilterIds = [];
 		onClearFilters?.();
 	}
 
@@ -48,6 +89,7 @@
 	 * Check if any filters are active
 	 */
 	const hasActiveFilters = $derived(
+		tagFilterIds.length > 0 ||
 		Object.values(filters).some(
 			(value) => value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0)
 		)
@@ -67,7 +109,7 @@
 		{/if}
 	</div>
 
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 		<div>
 			<label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
 			<select
@@ -100,13 +142,25 @@
 
 		<div>
 			<label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-			<input
+			<select
 				id="category"
-				type="text"
 				value={filters.categoryId || ''}
-				oninput={(e) => handleFilterChange('categoryId', e)}
-				placeholder="Filter by category ID"
+				onchange={(e) => handleFilterChange('categoryId', e)}
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+			>
+				<option value="">All Categories</option>
+				{#each categories as category}
+					<option value={category.id}>{category.icon ? category.icon + ' ' : ''}{category.name}</option>
+				{/each}
+			</select>
+		</div>
+
+		<div>
+			<label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+			<TagInput
+				bind:selectedTags={tagFilterIds}
+				bind:availableTags={availableTags}
+				placeholder="Filter by tags..."
 			/>
 		</div>
 	</div>

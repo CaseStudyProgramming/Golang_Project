@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { taskStore } from '../stores/task.store';
 	import type { Task } from '../types/task.types';
+	import { categoryStore } from '$lib/features/categories';
+	import { tagStore } from '$lib/features/tags';
 
 	let { 
 		tasks = $bindable(taskStore.state.tasks),
@@ -15,6 +17,17 @@
 		onEditTask?: (task: Task) => void;
 		onDeleteTask?: (task: Task) => void;
 	} = $props();
+
+	let categories = $derived(categoryStore.state.categories);
+	let tags = $derived(tagStore.state.tags);
+
+	/**
+	 * Initialize categories and tags on mount
+	 */
+	$effect(() => {
+		categoryStore.fetchCategories();
+		tagStore.fetchTags();
+	});
 
 	/**
 	 * Get priority color class
@@ -53,6 +66,24 @@
 			day: 'numeric',
 			year: 'numeric'
 		});
+	}
+
+	/**
+	 * Get category by ID
+	 */
+	function getCategory(categoryId?: string) {
+		if (!categoryId) return null;
+		return categories.find((c) => c.id === categoryId) || null;
+	}
+
+	/**
+	 * Get tag objects by IDs
+	 */
+	function getTagObjects(tagIds?: string[]) {
+		if (!tagIds || tagIds.length === 0) return [];
+		return tagIds
+			.map((id) => tags.find((t) => t.id === id))
+			.filter((tag): tag is typeof tags[0] => tag !== undefined);
 	}
 </script>
 
@@ -95,15 +126,34 @@
 									</svg>
 									{formatDate(task.dueDate)}
 								</div>
-								{#if task.categoryId}
+								{#if getCategory(task.categoryId)}
 									<div class="flex items-center">
 										<svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
 										</svg>
-										{task.categoryId}
+										{getCategory(task.categoryId)?.icon} {getCategory(task.categoryId)?.name}
 									</div>
 								{/if}
 							</div>
+							{#if task.progress !== undefined && task.progress > 0}
+								<div class="mt-2">
+									<div class="flex items-center gap-2">
+										<div class="flex-1 bg-gray-200 rounded-full h-1.5">
+											<div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: {task.progress}%"></div>
+										</div>
+										<span class="text-xs text-gray-500">{task.progress}%</span>
+									</div>
+								</div>
+							{/if}
+							{#if task.tags && task.tags.length > 0}
+								<div class="flex flex-wrap gap-1 mt-2">
+									{#each getTagObjects(task.tags) as tag}
+										<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}">
+											{tag.name}
+										</span>
+									{/each}
+								</div>
+							{/if}
 						</div>
 						<div class="flex items-center gap-2 ml-4">
 							{#if onViewTask}
