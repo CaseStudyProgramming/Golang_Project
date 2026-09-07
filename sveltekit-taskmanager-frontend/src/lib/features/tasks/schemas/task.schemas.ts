@@ -45,8 +45,8 @@ const prioritySchema = z.enum(['low', 'medium', 'high', 'urgent'], {
 /**
  * Task status validation schema
  */
-const statusSchema = z.enum(['todo', 'in_progress', 'completed', 'cancelled'], {
-	message: 'Invalid status. Must be todo, in_progress, completed, or cancelled'
+const statusSchema = z.enum(['todo', 'in_progress', 'completed', 'cancelled', 'deleted'], {
+	message: 'Invalid status. Must be todo, in_progress, completed, cancelled, or deleted'
 });
 
 /**

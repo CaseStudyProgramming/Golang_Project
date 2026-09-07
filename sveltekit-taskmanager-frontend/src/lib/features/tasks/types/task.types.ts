@@ -10,7 +10,7 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 /**
  * Task status
  */
-export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'cancelled';
+export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'cancelled' | 'deleted';
 
 /**
  * Task interface
