@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { taskStore, TaskForm } from '$lib/features/tasks';
+	import { taskStore, TaskForm, SubtaskList, ActivityLog } from '$lib/features/tasks';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { activityStore } from '$lib/features/tasks';
 
 	let taskId = $derived($page.params.id || '');
 	let isEditing = $state(false);
@@ -12,6 +13,7 @@
 		if (!taskId) return;
 		try {
 			await taskStore.fetchTaskById(taskId);
+			await activityStore.fetchActivities({ taskId });
 		} catch (error) {
 			console.error('Failed to fetch task:', error);
 		}
@@ -28,6 +30,71 @@
 			await taskStore.fetchTaskById(taskId);
 		} catch (error) {
 			console.error('Failed to update task:', error);
+		}
+	}
+
+	/**
+	 * Handle add subtask
+	 */
+	async function handleAddSubtask(title: string): Promise<void> {
+		if (!taskId) return;
+		try {
+			await taskStore.addSubtask(taskId, title);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to add subtask:', error);
+		}
+	}
+
+	/**
+	 * Handle toggle subtask
+	 */
+	async function handleToggleSubtask(subtaskId: string): Promise<void> {
+		if (!taskId) return;
+		try {
+			await taskStore.toggleSubtask(taskId, subtaskId);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to toggle subtask:', error);
+		}
+	}
+
+	/**
+	 * Handle delete subtask
+	 */
+	async function handleDeleteSubtask(subtaskId: string): Promise<void> {
+		if (!taskId) return;
+		try {
+			await taskStore.deleteSubtask(taskId, subtaskId);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to delete subtask:', error);
+		}
+	}
+
+	/**
+	 * Handle bulk complete subtasks
+	 */
+	async function handleBulkComplete(subtaskIds: string[]): Promise<void> {
+		if (!taskId || subtaskIds.length === 0) return;
+		try {
+			await taskStore.bulkCompleteSubtasks(taskId, subtaskIds);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to bulk complete subtasks:', error);
+		}
+	}
+
+	/**
+	 * Handle bulk delete subtasks
+	 */
+	async function handleBulkDelete(subtaskIds: string[]): Promise<void> {
+		if (!taskId || subtaskIds.length === 0) return;
+		try {
+			await taskStore.bulkDeleteSubtasks(taskId, subtaskIds);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to bulk delete subtasks:', error);
 		}
 	}
 
@@ -191,6 +258,39 @@
 							<p class="text-gray-900">{formatDate(taskStore.state.currentTask.completedAt)}</p>
 						</div>
 					{/if}
+
+					{#if taskStore.state.currentTask.progress !== undefined}
+						<div>
+							<h2 class="text-sm font-medium text-gray-500 mb-2">Progress</h2>
+							<div class="flex items-center gap-3">
+								<div class="flex-1 bg-gray-200 rounded-full h-2">
+									<div
+										class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+										style="width: {taskStore.state.currentTask.progress}%"
+									></div>
+								</div>
+								<span class="text-sm text-gray-600">{taskStore.state.currentTask.progress}%</span>
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				{#if taskStore.state.currentTask.subtasks}
+					<div class="mt-6">
+						<SubtaskList
+							bind:subtasks={taskStore.state.currentTask.subtasks}
+							taskId={taskId}
+							onAddSubtask={handleAddSubtask}
+							onToggleSubtask={handleToggleSubtask}
+							onDeleteSubtask={handleDeleteSubtask}
+							onBulkComplete={handleBulkComplete}
+							onBulkDelete={handleBulkDelete}
+						/>
+					</div>
+				{/if}
+
+				<div class="mt-6">
+					<ActivityLog taskId={taskId} />
 				</div>
 			{/if}
 		</div>

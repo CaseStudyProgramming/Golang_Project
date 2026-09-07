@@ -15,8 +15,8 @@
 		onAddSubtask?: (title: string) => Promise<void>;
 		onToggleSubtask?: (subtaskId: string) => Promise<void>;
 		onDeleteSubtask?: (subtaskId: string) => Promise<void>;
-		onBulkComplete?: () => Promise<void>;
-		onBulkDelete?: () => Promise<void>;
+		onBulkComplete?: (subtaskIds: string[]) => Promise<void>;
+		onBulkDelete?: (subtaskIds: string[]) => Promise<void>;
 	} = $props();
 
 	let newSubtaskTitle = $state('');
@@ -93,7 +93,7 @@
 		if (!onBulkComplete || selectedSubtasks.size === 0) return;
 
 		try {
-			await onBulkComplete();
+			await onBulkComplete(Array.from(selectedSubtasks));
 			selectedSubtasks = new Set();
 		} catch (error) {
 			console.error('Failed to bulk complete subtasks:', error);
@@ -107,7 +107,7 @@
 		if (!onBulkDelete || selectedSubtasks.size === 0) return;
 
 		try {
-			await onBulkDelete();
+			await onBulkDelete(Array.from(selectedSubtasks));
 			selectedSubtasks = new Set();
 		} catch (error) {
 			console.error('Failed to bulk delete subtasks:', error);

@@ -35,7 +35,7 @@
 	/**
 	 * Get filtered activities
 	 */
-	const filteredActivities: Activity[] = $derived(() => {
+	let filteredActivities = $derived(() => {
 		let filtered = activities;
 
 		if (taskId) {
@@ -176,7 +176,7 @@
 		</div>
 	{:else}
 		<div class="space-y-3">
-			{#each filteredActivities as activity}
+			{#each filteredActivities() as activity (activity.id)}
 				<div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
 					<div class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow">
 						<span class="text-lg">{getActivityIcon(activity.type)}</span>
