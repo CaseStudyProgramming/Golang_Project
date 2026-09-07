@@ -9,7 +9,7 @@ import { z } from 'zod';
  */
 const emailSchema = z
 	.string()
-	.min(1, 'Email is required')
+	.min(1, 'Email is required')1
 	.email('Invalid email format')
 	.max(255, 'Email is too long')
 	.transform((val) => val.toLowerCase().trim());
