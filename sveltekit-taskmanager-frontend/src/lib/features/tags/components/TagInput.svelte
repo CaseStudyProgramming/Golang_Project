@@ -117,6 +117,10 @@
 					removeTag(selectedTags[selectedTags.length - 1]);
 				}
 				break;
+			case 'Tab':
+				isOpen = false;
+				highlightedIndex = -1;
+				break;
 		}
 	}
 
@@ -134,17 +138,25 @@
 <div class="relative">
 	<!-- Selected tags display -->
 	{#if selectedTagObjects.length > 0}
-		<div class="flex flex-wrap gap-2 mb-2">
+		<div class="flex flex-wrap gap-2 mb-2" role="list">
 			{#each selectedTagObjects as tag}
 				<div
 					class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm"
 					style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}; border: 1px solid {tag.color || '#3B82F6'}40"
+					role="listitem"
 				>
 					<span>{tag.name}</span>
 					<button
 						onclick={() => removeTag(tag.id)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								removeTag(tag.id);
+							}
+						}}
 						class="hover:opacity-70 transition-opacity"
 						title="Remove tag"
+						aria-label={`Remove ${tag.name} tag`}
 					>
 						<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -167,6 +179,10 @@
 			placeholder={placeholder}
 			class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 			disabled={isLoading}
+			role="combobox"
+			aria-expanded={isOpen}
+			aria-haspopup="listbox"
+			aria-autocomplete="list"
 		/>
 		{#if isLoading}
 			<div class="absolute right-3 top-1/2 -translate-y-1/2">
@@ -177,14 +193,16 @@
 
 	<!-- Dropdown suggestions -->
 	{#if isOpen && (filteredTags.length > 0 || input.trim())}
-		<div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+		<div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" role="listbox">
 			{#if filteredTags.length > 0}
 				{#each filteredTags as tag, index}
 					<button
 						type="button"
 						onclick={() => selectTag(tag)}
-						onmouseover={() => (highlightedIndex = index)}
 						class="w-full text-left px-3 py-2 cursor-pointer hover:bg-gray-100 {index === highlightedIndex ? 'bg-blue-50' : ''}"
+						role="option"
+						aria-selected={selectedTags.includes(tag.id)}
+						tabindex={-1}
 					>
 						<div class="flex items-center gap-2">
 							<div
@@ -205,6 +223,8 @@
 					type="button"
 					onclick={handleCreateTag}
 					class="w-full text-left px-3 py-2 cursor-pointer hover:bg-gray-100 text-blue-600"
+					role="option"
+					tabindex={-1}
 				>
 					<div class="flex items-center gap-2">
 						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
