@@ -212,7 +212,7 @@ function createTaskStore() {
 	}
 
 	/**
-	 * Delete task
+	 * Delete task (soft delete)
 	 */
 	async function deleteTask(id: string): Promise<void> {
 		state.isLoading = true;
@@ -220,10 +220,13 @@ function createTaskStore() {
 
 		try {
 			await withErrorHandling(async () => {
-				// This would be replaced with actual API call
-				// await httpClient.delete(`/tasks/${id}`);
+				// This would be replaced with actual API call for soft delete
+				// await httpClient.patch(`/tasks/${id}`, { status: 'deleted' });
 				
-				state.tasks = state.tasks.filter((task) => task.id !== id);
+				// Optimistic update: soft delete by updating status
+				state.tasks = state.tasks.map((task) =>
+					task.id === id ? { ...task, status: 'deleted' as const, updatedAt: new Date().toISOString() } : task
+				);
 				state.pagination.total -= 1;
 
 				if (state.currentTask?.id === id) {
@@ -232,6 +235,56 @@ function createTaskStore() {
 			}, 'Failed to delete task');
 		} catch (error) {
 			state.error = error instanceof Error ? error.message : 'Failed to delete task';
+			throw error;
+		} finally {
+			state.isLoading = false;
+		}
+	}
+
+	/**
+	 * Restore deleted task
+	 */
+	async function restoreTask(id: string): Promise<void> {
+		state.isLoading = true;
+		state.error = null;
+
+		try {
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.patch(`/tasks/${id}`, { status: 'todo' });
+				
+				state.tasks = state.tasks.map((task) =>
+					task.id === id ? { ...task, status: 'todo' as const, updatedAt: new Date().toISOString() } : task
+				);
+				state.pagination.total += 1;
+			}, 'Failed to restore task');
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to restore task';
+			throw error;
+		} finally {
+			state.isLoading = false;
+		}
+	}
+
+	/**
+	 * Permanently delete task
+	 */
+	async function permanentDeleteTask(id: string): Promise<void> {
+		state.isLoading = true;
+		state.error = null;
+
+		try {
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.delete(`/tasks/${id}/permanent`);
+				
+				state.tasks = state.tasks.filter((task) => task.id !== id);
+				if (state.currentTask?.id === id) {
+					state.currentTask = null;
+				}
+			}, 'Failed to permanently delete task');
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to permanently delete task';
 			throw error;
 		} finally {
 			state.isLoading = false;
@@ -310,6 +363,8 @@ function createTaskStore() {
 		createTask,
 		updateTask,
 		deleteTask,
+		restoreTask,
+		permanentDeleteTask,
 		setFilters,
 		clearFilters,
 		setSort,
