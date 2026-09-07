@@ -34,12 +34,19 @@
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each categories as category}
-				<button
-					type="button"
-					class="w-full text-left bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 border-l-4 cursor-pointer"
+				<div
+					class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 border-l-4 cursor-pointer"
 					style:border-left-color={category.color || '#3B82F6'}
 					style:background-color={`${category.color || '#3B82F6'}10`}
 					onclick={() => onSelectCategory?.(category)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							onSelectCategory?.(category);
+						}
+					}}
+					role="button"
+					tabindex="0"
 				>
 					<div class="flex items-start justify-between mb-2">
 						<div class="flex items-center gap-2">
@@ -85,7 +92,7 @@
 					<div class="mt-3 text-xs text-gray-500">
 						Created {new Date(category.createdAt).toLocaleDateString()}
 					</div>
-				</button>
+				</div>
 			{/each}
 		</div>
 	{/if}
