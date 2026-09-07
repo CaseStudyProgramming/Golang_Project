@@ -108,6 +108,15 @@ export interface ActivityFilters {
 }
 
 /**
+ * Activity store state interface
+ */
+export interface ActivityState {
+	activities: Activity[];
+	isLoading: boolean;
+	error: string | null;
+}
+
+/**
  * Task store state interface
  */
 export interface TaskState {
