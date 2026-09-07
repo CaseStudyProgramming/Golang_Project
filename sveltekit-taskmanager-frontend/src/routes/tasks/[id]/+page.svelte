@@ -4,16 +4,23 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { activityStore } from '$lib/features/tasks';
+	import { categoryStore } from '$lib/features/categories';
+	import { tagStore } from '$lib/features/tags';
 
 	let taskId = $derived($page.params.id || '');
 	let isEditing = $state(false);
 	let showDeleteConfirm = $state(false);
+
+	let categories = $derived(categoryStore.state.categories);
+	let tags = $derived(tagStore.state.tags);
 
 	onMount(async () => {
 		if (!taskId) return;
 		try {
 			await taskStore.fetchTaskById(taskId);
 			await activityStore.fetchActivities({ taskId });
+			await categoryStore.fetchCategories();
+			await tagStore.fetchTags();
 		} catch (error) {
 			console.error('Failed to fetch task:', error);
 		}
@@ -151,6 +158,24 @@
 			minute: '2-digit'
 		});
 	}
+
+	/**
+	 * Get category object by ID
+	 */
+	function getCategory(categoryId?: string) {
+		if (!categoryId) return null;
+		return categories.find((c) => c.id === categoryId) || null;
+	}
+
+	/**
+	 * Get tag objects by IDs
+	 */
+	function getTagObjects(tagIds?: string[]) {
+		if (!tagIds || tagIds.length === 0) return [];
+		return tagIds
+			.map((id) => tags.find((t) => t.id === id))
+			.filter((tag): tag is typeof tags[0] => tag !== undefined);
+	}
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -227,7 +252,14 @@
 						</div>
 						<div>
 							<h2 class="text-sm font-medium text-gray-500 mb-2">Category</h2>
-							<p class="text-gray-900">{taskStore.state.currentTask.categoryId || 'None'}</p>
+							{#if getCategory(taskStore.state.currentTask.categoryId)}
+								<p class="text-gray-900">
+									{getCategory(taskStore.state.currentTask.categoryId)?.icon}
+									{getCategory(taskStore.state.currentTask.categoryId)?.name}
+								</p>
+							{:else}
+								<p class="text-gray-900">None</p>
+							{/if}
 						</div>
 						<div>
 							<h2 class="text-sm font-medium text-gray-500 mb-2">Created</h2>
@@ -243,9 +275,9 @@
 						<div class="mb-6">
 							<h2 class="text-sm font-medium text-gray-500 mb-2">Tags</h2>
 							<div class="flex flex-wrap gap-2">
-								{#each taskStore.state.currentTask.tags as tag}
-									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-										{tag}
+								{#each getTagObjects(taskStore.state.currentTask.tags) as tag}
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}">
+										{tag.name}
 									</span>
 								{/each}
 							</div>
