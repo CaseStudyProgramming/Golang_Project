@@ -15,22 +15,12 @@
 		onCancel?: () => void;
 	} = $props();
 
-	// Initialize form data from initialData
-	const initialFormData = $derived({
-		title: initialData?.title || '',
-		description: initialData?.description || '',
-		priority: initialData?.priority || 'medium',
-		dueDate: initialData?.dueDate || '',
-		categoryId: initialData?.categoryId || '',
-		tags: initialData?.tags || []
-	});
-
-	let title = $state(initialFormData.title);
-	let description = $state(initialFormData.description);
-	let priority = $state<TaskPriority>(initialFormData.priority);
-	let dueDate = $state(initialFormData.dueDate);
-	let categoryId = $state(initialFormData.categoryId);
-	let tags = $state<string[]>(initialFormData.tags);
+	let title = $state(initialData?.title || '');
+	let description = $state(initialData?.description || '');
+	let priority = $state<TaskPriority>(initialData?.priority || 'medium');
+	let dueDate = $state(initialData?.dueDate || '');
+	let categoryId = $state(initialData?.categoryId || '');
+	let tags = $state<string[]>(initialData?.tags || []);
 	let tagInput = $state('');
 	let errors = $state<Record<string, string>>({});
 	let isSubmitting = $state(false);
