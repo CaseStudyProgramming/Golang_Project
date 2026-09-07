@@ -13,12 +13,29 @@
 		onCancel?: () => void;
 	} = $props();
 
-	let name = $state(initialData?.name || '');
-	let description = $state(initialData?.description || '');
-	let color = $state(initialData?.color || '#3B82F6');
-	let icon = $state(initialData?.icon || '');
+	let name = $state('');
+	let description = $state('');
+	let color = $state('#3B82F6');
+	let icon = $state('');
 	let isSubmitting = $state(false);
 	let error = $state('');
+
+	/**
+	 * Sync form state when initialData reference changes
+	 */
+	$effect(() => {
+		if (initialData) {
+			name = initialData.name;
+			description = initialData.description || '';
+			color = initialData.color || '#3B82F6';
+			icon = initialData.icon || '';
+		} else {
+			name = '';
+			description = '';
+			color = '#3B82F6';
+			icon = '';
+		}
+	});
 
 	const predefinedColors = [
 		'#3B82F6', // blue

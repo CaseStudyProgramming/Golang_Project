@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { taskStore } from '../stores/task.store';
-	import { createTaskSchema, type CreateTaskPayload } from '../schemas/task.schemas';
+	import { createTaskSchema, type CreateTaskPayload, type UpdateTaskPayload } from '../schemas/task.schemas';
 	import type { TaskPriority } from '../types/task.types';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
@@ -19,14 +19,36 @@
 		onCancel?: () => void;
 	} = $props();
 
-	let title = $state(initialData?.title || '');
-	let description = $state(initialData?.description || '');
-	let priority = $state<TaskPriority>(initialData?.priority || 'medium');
-	let dueDate = $state(initialData?.dueDate || '');
-	let categoryId = $state(initialData?.categoryId || '');
-	let tags = $state<string[]>(initialData?.tags || []);
+	let title = $state('');
+	let description = $state('');
+	let priority = $state<TaskPriority>('medium');
+	let dueDate = $state('');
+	let categoryId = $state('');
+	let tags = $state<string[]>([]);
 	let errors = $state<Record<string, string>>({});
 	let isSubmitting = $state(false);
+
+	/**
+	 * Get derived values from initialData
+	 */
+	const initialTitle = $derived(initialData?.title || '');
+	const initialDescription = $derived(initialData?.description || '');
+	const initialPriority = $derived<TaskPriority>(initialData?.priority || 'medium');
+	const initialDueDate = $derived(initialData?.dueDate || '');
+	const initialCategoryId = $derived(initialData?.categoryId || '');
+	const initialTags = $derived<string[]>(initialData?.tags || []);
+
+	/**
+	 * Sync form state when initialData changes
+	 */
+	$effect(() => {
+		title = initialTitle;
+		description = initialDescription;
+		priority = initialPriority;
+		dueDate = initialDueDate;
+		categoryId = initialCategoryId;
+		tags = initialTags;
+	});
 
 	let categories = $derived(categoryStore.state.categories);
 	let availableTags = $derived(tagStore.state.tags);
