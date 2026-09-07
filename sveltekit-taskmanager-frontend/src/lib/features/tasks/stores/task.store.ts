@@ -6,8 +6,9 @@
 import { httpClient } from '$lib/shared/utils/api.utils';
 import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
 import { createTaskSchema, updateTaskSchema } from '../schemas/task.schemas';
-import type { Task, TaskFilters, TaskSort, TaskState } from '../types/task.types';
+import type { Task, TaskFilters, TaskSort, TaskState, Subtask } from '../types/task.types';
 import type { PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
+import { z } from 'zod';
 
 /**
  * Create task store with Svelte 5 runes
@@ -337,6 +338,200 @@ function createTaskStore() {
 	}
 
 	/**
+	 * Add subtask to task
+	 */
+	async function addSubtask(taskId: string, title: string): Promise<Subtask> {
+		try {
+			const subtask = await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// const response = await httpClient.post<Subtask>(`/tasks/${taskId}/subtasks`, { title });
+				
+				// Mock response for development
+				const mockSubtask: Subtask = {
+					id: Date.now().toString(),
+					taskId,
+					title: title.trim(),
+					isCompleted: false,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString()
+				};
+
+				// Update task's subtasks and progress
+				state.tasks = state.tasks.map((task) => {
+					if (task.id === taskId) {
+						const updatedSubtasks = [...(task.subtasks || []), mockSubtask];
+						const progress = calculateProgress(updatedSubtasks);
+						return { ...task, subtasks: updatedSubtasks, progress };
+					}
+					return task;
+				});
+
+				if (state.currentTask?.id === taskId) {
+					const updatedSubtasks = [...(state.currentTask.subtasks || []), mockSubtask];
+					const progress = calculateProgress(updatedSubtasks);
+					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+				}
+
+				return mockSubtask;
+			}, 'Failed to add subtask');
+
+			return subtask;
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to add subtask';
+			throw error;
+		}
+	}
+
+	/**
+	 * Toggle subtask completion
+	 */
+	async function toggleSubtask(taskId: string, subtaskId: string): Promise<void> {
+		try {
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.patch(`/tasks/${taskId}/subtasks/${subtaskId}`, { isCompleted: !isCompleted });
+				
+				// Update task's subtasks and progress
+				state.tasks = state.tasks.map((task) => {
+					if (task.id === taskId) {
+						const updatedSubtasks = task.subtasks?.map((subtask) =>
+							subtask.id === subtaskId
+								? { ...subtask, isCompleted: !subtask.isCompleted, updatedAt: new Date().toISOString() }
+								: subtask
+						) || [];
+						const progress = calculateProgress(updatedSubtasks);
+						return { ...task, subtasks: updatedSubtasks, progress };
+					}
+					return task;
+				});
+
+				if (state.currentTask?.id === taskId) {
+					const updatedSubtasks = state.currentTask.subtasks?.map((subtask) =>
+						subtask.id === subtaskId
+							? { ...subtask, isCompleted: !subtask.isCompleted, updatedAt: new Date().toISOString() }
+							: subtask
+					) || [];
+					const progress = calculateProgress(updatedSubtasks);
+					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+				}
+			}, 'Failed to toggle subtask');
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to toggle subtask';
+			throw error;
+		}
+	}
+
+	/**
+	 * Delete subtask
+	 */
+	async function deleteSubtask(taskId: string, subtaskId: string): Promise<void> {
+		try {
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.delete(`/tasks/${taskId}/subtasks/${subtaskId}`);
+				
+				// Update task's subtasks and progress
+				state.tasks = state.tasks.map((task) => {
+					if (task.id === taskId) {
+						const updatedSubtasks = task.subtasks?.filter((subtask) => subtask.id !== subtaskId) || [];
+						const progress = calculateProgress(updatedSubtasks);
+						return { ...task, subtasks: updatedSubtasks, progress };
+					}
+					return task;
+				});
+
+				if (state.currentTask?.id === taskId) {
+					const updatedSubtasks = state.currentTask.subtasks?.filter((subtask) => subtask.id !== subtaskId) || [];
+					const progress = calculateProgress(updatedSubtasks);
+					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+				}
+			}, 'Failed to delete subtask');
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to delete subtask';
+			throw error;
+		}
+	}
+
+	/**
+	 * Bulk complete subtasks
+	 */
+	async function bulkCompleteSubtasks(taskId: string, subtaskIds: string[]): Promise<void> {
+		try {
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.post(`/tasks/${taskId}/subtasks/bulk-complete`, { subtaskIds });
+				
+				// Update task's subtasks and progress
+				state.tasks = state.tasks.map((task) => {
+					if (task.id === taskId) {
+						const updatedSubtasks = task.subtasks?.map((subtask) =>
+							subtaskIds.includes(subtask.id)
+								? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
+								: subtask
+						) || [];
+						const progress = calculateProgress(updatedSubtasks);
+						return { ...task, subtasks: updatedSubtasks, progress };
+					}
+					return task;
+				});
+
+				if (state.currentTask?.id === taskId) {
+					const updatedSubtasks = state.currentTask.subtasks?.map((subtask) =>
+						subtaskIds.includes(subtask.id)
+							? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
+							: subtask
+					) || [];
+					const progress = calculateProgress(updatedSubtasks);
+					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+				}
+			}, 'Failed to bulk complete subtasks');
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to bulk complete subtasks';
+			throw error;
+		}
+	}
+
+	/**
+	 * Bulk delete subtasks
+	 */
+	async function bulkDeleteSubtasks(taskId: string, subtaskIds: string[]): Promise<void> {
+		try {
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.post(`/tasks/${taskId}/subtasks/bulk-delete`, { subtaskIds });
+				
+				// Update task's subtasks and progress
+				state.tasks = state.tasks.map((task) => {
+					if (task.id === taskId) {
+						const updatedSubtasks = task.subtasks?.filter((subtask) => !subtaskIds.includes(subtask.id)) || [];
+						const progress = calculateProgress(updatedSubtasks);
+						return { ...task, subtasks: updatedSubtasks, progress };
+					}
+					return task;
+				});
+
+				if (state.currentTask?.id === taskId) {
+					const updatedSubtasks = state.currentTask.subtasks?.filter((subtask) => !subtaskIds.includes(subtask.id)) || [];
+					const progress = calculateProgress(updatedSubtasks);
+					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+				}
+			}, 'Failed to bulk delete subtasks');
+		} catch (error) {
+			state.error = error instanceof Error ? error.message : 'Failed to bulk delete subtasks';
+			throw error;
+		}
+	}
+
+	/**
+	 * Calculate progress percentage based on completed subtasks
+	 */
+	function calculateProgress(subtasks: Subtask[]): number {
+		if (subtasks.length === 0) return 0;
+		const completed = subtasks.filter((s) => s.isCompleted).length;
+		return Math.round((completed / subtasks.length) * 100);
+	}
+
+	/**
 	 * Reset store state
 	 */
 	function reset(): void {
@@ -365,6 +560,11 @@ function createTaskStore() {
 		deleteTask,
 		restoreTask,
 		permanentDeleteTask,
+		addSubtask,
+		toggleSubtask,
+		deleteSubtask,
+		bulkCompleteSubtasks,
+		bulkDeleteSubtasks,
 		setFilters,
 		clearFilters,
 		setSort,

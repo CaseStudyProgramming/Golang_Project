@@ -50,6 +50,18 @@ const statusSchema = z.enum(['todo', 'in_progress', 'completed', 'cancelled', 'd
 });
 
 /**
+ * Subtask validation schema
+ */
+const subtaskSchema = z.object({
+	id: idSchema,
+	taskId: idSchema,
+	title: titleSchema,
+	isCompleted: z.boolean(),
+	createdAt: z.string(),
+	updatedAt: z.string()
+});
+
+/**
  * Create task validation schema
  */
 export const createTaskSchema = z.object({
@@ -58,7 +70,8 @@ export const createTaskSchema = z.object({
 	priority: prioritySchema.optional(),
 	dueDate: dateSchema,
 	categoryId: idSchema.optional(),
-	tags: z.array(z.string()).optional()
+	tags: z.array(z.string()).optional(),
+	subtasks: z.array(subtaskSchema).optional()
 });
 
 /**

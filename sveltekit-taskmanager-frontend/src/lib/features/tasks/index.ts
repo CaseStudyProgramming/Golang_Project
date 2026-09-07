@@ -6,3 +6,4 @@ export { default as Pagination } from './components/Pagination.svelte';
 export { default as TaskForm } from './components/TaskForm.svelte';
 export { default as TaskSearch } from './components/TaskSearch.svelte';
 export { default as TaskFilters } from './components/TaskFilters.svelte';
+export { default as SubtaskList } from './components/SubtaskList.svelte';
