@@ -1,2 +1,2 @@
 backend Golang Vanila atau Murni Taskmanager
-Frontend Sveltekit
+Frontend Sveltekit typeScript
