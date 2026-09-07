@@ -2,6 +2,10 @@
 	import { taskStore } from '../stores/task.store';
 	import { createTaskSchema, type CreateTaskPayload } from '../schemas/task.schemas';
 	import type { TaskPriority } from '../types/task.types';
+	import { categoryStore } from '$lib/features/categories';
+	import { tagStore } from '$lib/features/tags';
+	import { TagInput } from '$lib/features/tags';
+	import type { Category } from '$lib/features/categories';
 
 	let {
 		mode = 'create',
@@ -21,27 +25,30 @@
 	let dueDate = $state(initialData?.dueDate || '');
 	let categoryId = $state(initialData?.categoryId || '');
 	let tags = $state<string[]>(initialData?.tags || []);
-	let tagInput = $state('');
 	let errors = $state<Record<string, string>>({});
 	let isSubmitting = $state(false);
 
-	/**
-	 * Handle tag input
-	 */
-	function handleTagInput(event: KeyboardEvent): void {
-		if (event.key === 'Enter' && tagInput.trim()) {
-			if (!tags.includes(tagInput.trim())) {
-				tags = [...tags, tagInput.trim()];
-			}
-			tagInput = '';
-		}
-	}
+	let categories = $derived(categoryStore.state.categories);
+	let availableTags = $derived(tagStore.state.tags);
 
 	/**
-	 * Remove tag
+	 * Initialize categories and tags on mount
 	 */
-	function removeTag(tag: string): void {
-		tags = tags.filter((t) => t !== tag);
+	$effect(() => {
+		categoryStore.fetchCategories();
+		tagStore.fetchTags();
+	});
+
+	/**
+	 * Handle creating new tag
+	 */
+	async function handleCreateTag(name: string): Promise<void> {
+		try {
+			const newTag = await tagStore.createTag({ name });
+			tags = [...tags, newTag.id];
+		} catch (error) {
+			console.error('Failed to create tag:', error);
+		}
 	}
 
 	/**
@@ -180,41 +187,26 @@
 
 	<div>
 		<label for="categoryId" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-		<input
+		<select
 			id="categoryId"
-			type="text"
 			bind:value={categoryId}
 			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-			placeholder="Enter category ID"
-		/>
+		>
+			<option value="">No category</option>
+			{#each categories as category}
+				<option value={category.id}>{category.icon ? category.icon + ' ' : ''}{category.name}</option>
+			{/each}
+		</select>
 	</div>
 
 	<div>
 		<label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-		<input
-			id="tags"
-			type="text"
-			bind:value={tagInput}
-			onkeydown={handleTagInput}
-			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-			placeholder="Type tag and press Enter"
+		<TagInput
+			bind:selectedTags={tags}
+			bind:availableTags={availableTags}
+			onCreateTag={handleCreateTag}
+			placeholder="Add tags..."
 		/>
-		{#if tags.length > 0}
-			<div class="flex flex-wrap gap-2 mt-2">
-				{#each tags as tag}
-					<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-						{tag}
-						<button
-							type="button"
-							onclick={() => removeTag(tag)}
-							class="ml-1 text-blue-600 hover:text-blue-800"
-						>
-							&times;
-						</button>
-					</span>
-				{/each}
-			</div>
-		{/if}
 	</div>
 
 	<div class="flex justify-end gap-3">
