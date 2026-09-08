@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -57,6 +58,46 @@ func LoadConfig(filePath string) (*Config, error) {
 	// Default JWT secret for development (should be changed in production)
 	if cfg.JWT.Secret == "" {
 		cfg.JWT.Secret = "dev-secret-key-change-in-production"
+	}
+
+	// Environment variables take precedence over config file values
+	if host := os.Getenv("DB_HOST"); host != "" {
+		cfg.Database.Host = host
+	} else if cfg.Database.Host == "" {
+		cfg.Database.Host = "localhost"
+	}
+
+	if port := os.Getenv("DB_PORT"); port != "" {
+		var portInt int
+		if _, err := fmt.Sscanf(port, "%d", &portInt); err == nil {
+			cfg.Database.Port = portInt
+		}
+	} else if cfg.Database.Port == 0 {
+		cfg.Database.Port = 5432
+	}
+
+	if user := os.Getenv("DB_USER"); user != "" {
+		cfg.Database.User = user
+	} else if cfg.Database.User == "" {
+		cfg.Database.User = "postgres"
+	}
+
+	if password := os.Getenv("DB_PASSWORD"); password != "" {
+		cfg.Database.Password = password
+	} else if cfg.Database.Password == "" {
+		cfg.Database.Password = "postgres"
+	}
+
+	if dbname := os.Getenv("DB_NAME"); dbname != "" {
+		cfg.Database.DBName = dbname
+	} else if cfg.Database.DBName == "" {
+		cfg.Database.DBName = "taskmanager"
+	}
+
+	if sslmode := os.Getenv("DB_SSLMODE"); sslmode != "" {
+		cfg.Database.SSLMode = sslmode
+	} else if cfg.Database.SSLMode == "" {
+		cfg.Database.SSLMode = "disable"
 	}
 
 	// Default CORS origins for development (should be restricted in production)
