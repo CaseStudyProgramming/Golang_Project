@@ -1,24 +1,12 @@
 # AGENTS.md
 
-## Core Directives & Priority
+## Core Directives & Priority (Precedence Order)
 1. **Security First**: OWASP guidelines override all formatting and style rules.
 2. **Architecture Integrity**: Vertical Slice rules override file-level preferences.
-3. **Circuit Breaker**: Stop and ask after 3 consecutive failed test/type-check attempts.
-4. **When in Doubt, Ask**: Stop and request clarification if user instructions contradict these rules or if a requirement is ambiguous.
+3. **Functionality > Style**: Working implementation takes priority over code style/refactoring.
+4. **Circuit Breaker**: Stop and ask after 3 consecutive failed test/type-check attempts.
+5. **When in Doubt, Ask**: Stop and request clarification if user instructions contradict these rules or if a requirement is ambiguous.
 
-## Principles
-- **OWASP Security Standard**: Validate all inputs with Zod/Valibot, prevent XSS/injection, and leverage SvelteKit CSRF/CORS protections, OWASP Top 10
-- **Clarity and Consistency**: Clarity over cleverness. Minimal changes. Match existing code patterns.
-- **Modularity**: Keep components and functions short; break down when it improves readability and structure.
-- **Type Safety**: TypeScript everywhere. No `any` unless isolated, documented, and strictly necessary.
-- **Error Handling**: Avoid unnecessary `try/catch`. Use type narrowing over type casting.
-- **Exports & Routing**: Use named exports for TypeScript modules. Follow SvelteKit file-based routing conventions (`+page.svelte`, `+page.server.ts`, `+layout.svelte`, etc.).
-- **Path Aliases**: Use absolute imports via `$lib/...` (SvelteKit standard path alias).
-- **Tooling**: Follow existing ESLint, Prettier, or Biome setups; do not reformat unrelated code.
-- **Schema Validation:** Import Zod as a value (`import { z } from 'zod';`) when building/parsing runtime schemas (e.g., `env.ts`, form actions). Use `import type` ONLY when importing inferred TypeScript types (`type User = z.infer<typeof userSchema>`).
-- **Type Inference**: Let the compiler infer return types unless explicit annotation improves clarity.
-- **Function Parameters**: Use an options object for functions with 3+ parameters, optional flags, or ambiguous arguments.
-- **Debugging**: Hypothesis-driven debugging—formulate 1–3 most likely causes first, then validate incrementally.
 
 ## Workflow & Task Execution
 - **Branch-Based Development**:
@@ -33,8 +21,35 @@
 - **Rollback Readiness**:
   - Each completed task MUST correspond to a clean, isolated Git commit to allow single-step rollbacks (`git revert`) without losing previous progress.
 
+
 ## Token Efficiency
 - Skip recaps and conversational summaries unless the result is ambiguous or requires further input.
+
+## Principles
+- **OWASP Security Standard**: Validate all inputs with Zod/Valibot, prevent XSS/injection, and leverage SvelteKit CSRF/CORS protections, OWASP Top 10
+- **Clarity and Consistency**: Clarity over cleverness. Match existing code patterns. Minimal changes unless refactoring is explicitly requested.
+- **Modularity**: Keep functions under 50 lines and components under 200 lines. Break down when improves readability and structure.
+- **Type Safety**: TypeScript everywhere. Use `any` ONLY when dealing with external libraries without types, and document why.
+- **Error Handling**: Avoid unnecessary `try/catch`. Use type narrowing over type casting. Use SvelteKit error boundaries for critical failures.
+- **Exports & Routing**: Use named exports for TypeScript modules. Follow SvelteKit file-based routing conventions (`+page.svelte`, `+page.server.ts`, `+layout.svelte`, etc.).
+- **Path Aliases**: Use absolute imports via `$lib/...` (SvelteKit standard path alias).
+- **Tooling**: Follow existing ESLint, Prettier, or Biome setups; do not reformat unrelated code.
+- **Schema Validation:** Import Zod as a value (`import { z } from 'zod';`) when building/parsing runtime schemas (e.g., `env.ts`, form actions). Use `import type` ONLY when importing inferred TypeScript types (`type User = z.infer<typeof userSchema>`).
+- **Type Inference**: Let the compiler infer return types unless: (1) function is exported, (2) return type is complex, or (3) explicit annotation improves clarity.
+- **Function Parameters**: Use an options object for functions with 3+ parameters, optional flags, or ambiguous arguments.
+- **Debugging**: Hypothesis-driven debugging—formulate 1–3 most likely causes first, then validate incrementally.
+
+
+## System Quality & Reliability (Frontend/Client-Side Scope)
+- **System Observability & Incident Response**: Implement client-side error tracking (e.g., Sentry, LogRocket), logging for user actions, and performance monitoring. Ensure auditability of all critical operations in server-side SvelteKit code.
+- **High Availability & Fault Tolerance (HA/FT)**: Implement graceful degradation for API failures, offline support via service workers, and retry mechanisms with exponential backoff for network requests.
+- **API Defensive Design (Defensive Programming) & Code Quality**: Validate all API responses, implement error boundaries, use defensive coding practices. Follow SOLID principles and maintain high code coverage with meaningful tests.
+- **Performance & Concurrency**: Optimize bundle size, implement lazy loading and code splitting, handle concurrent state updates safely, use debouncing/throttling for expensive operations.
+- **Security**: Follow OWASP Top 10 guidelines (XSS, CSRF, injection prevention), implement content security policy, use secure communication (HTTPS), and regularly update dependencies. Never expose secrets or sensitive data in client code.
+- **Usability / Robustness**: Design intuitive error messages, implement graceful error handling, and ensure the system provides helpful feedback. Design for edge cases and unexpected user behavior.
+- **Data Privacy & Information Disclosure Protection**: Implement data minimization in client storage, avoid logging sensitive information, and comply with privacy regulations (GDPR, CCPA). Never store PII in localStorage/sessionStorage without encryption.
+
+**Note**: Infrastructure, database resiliency, traffic control at server level, and data consistency rules apply to backend systems. Frontend should handle UI-level error states and retry logic for API calls.
 
 ## Commands (Bun)
 - Always use `bun` as the package manager and test/runtime runner:
