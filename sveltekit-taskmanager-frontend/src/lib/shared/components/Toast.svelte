@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { toastStore } from '$lib/shared/stores';
 	import { fly } from 'svelte/transition';
-	import type { Toast } from '$lib/shared/stores/toast.store';
+	import type { Toast as ToastType } from '$lib/shared/stores/toast.store';
 
-	let { toast }: { toast: Toast } = $props();
+	let { toast }: { toast: ToastType } = $props();
 
 	const typeIcons = $derived(() => {
 		switch (toast.type) {
