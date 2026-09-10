@@ -126,10 +126,115 @@
 - Write short, sentence-case, present-tense descriptions of intent.
 - Tag order: description → `@param` → `@returns` → `@throws` (only if it can throw).
 
-## Tests
+## Testing Standards & Best Practices
 
-- Co-locate unit and integration tests (`*.test.ts`) with implementation files.
-- Place Playwright E2E tests (`*.spec.ts` or `*.e2e.ts`) in the `tests/` directory.
-- Test structure: Top `describe` = subject; nested `describe` = scenarios/contexts.
-- `it` titles: short, third-person present, `verb + object + context` (sentence case, no period). Omit words like "should/works/handles".
-- Avoid unnecessary mocking unless dealing with external network or hardware I/O.
+### Testing Framework Stack
+- **Unit Testing**: Vitest (via `bun test`)
+- **Component Testing**: Testing Library for Svelte (`@testing-library/svelte`)
+- **E2E Testing**: Playwright (`@playwright/test`)
+- **API Mocking**: MSW (Mock Service Worker)
+- **Coverage**: c8 (built-in Vitest coverage)
+
+### Test Organization
+- **Unit & Integration Tests**: Co-locate with implementation files (`*.test.ts`)
+- **Component Tests**: Co-locate with components (`*.component.test.ts`)
+- **E2E Tests**: Place in `tests/` directory (`*.spec.ts` or `*.e2e.ts`)
+- **Logic Tests**: Separate business logic tests (`*.logic.test.ts`)
+
+### Test Structure
+- Top `describe` = subject (function, component, module)
+- Nested `describe` = scenarios/contexts
+- `it` titles: short, third-person present, `verb + object + context` (sentence case, no period)
+- Omit words like "should/works/handles"
+- Example: `calculates total price from cart items` instead of `should calculate total price`
+
+### Testing Strategy (Testing Pyramid)
+```
+        E2E Tests (Playwright) - 10-15%
+         ↑ Critical user journeys
+    Integration Tests - 20-30%
+         ↑ Component + store interactions
+        Unit Tests (Vitest) - 60-70%
+         ↑ Business logic, utilities, stores
+```
+
+### Unit Testing Guidelines
+- Test business logic in isolation
+- Test pure functions without external dependencies
+- Use logic-focused tests for Svelte 5 stores (avoid Svelte rune dependencies)
+- Mock external API calls, network I/O, and hardware interactions
+- Focus on behavior over implementation details
+- Keep tests fast and deterministic
+
+### Component Testing Guidelines
+- Use Testing Library for Svelte component testing
+- Test user interactions and behavior, not internal state
+- Test accessibility (ARIA attributes, keyboard navigation)
+- Test component props and emitted events
+- Avoid testing Svelte implementation details (reactive statements, runes)
+- Focus on what users see and interact with
+
+### E2E Testing Guidelines
+- Use Playwright for critical user journeys only
+- Test cross-browser compatibility (Chrome, Firefox, Safari)
+- Test mobile responsiveness and touch interactions
+- Test authentication flows and critical business workflows
+- Keep E2E tests minimal and focused on happy paths
+- Use test data fixtures for consistent test data
+
+### API Mocking Guidelines
+- Use MSW for network-level API mocking
+- Mock at HTTP level, not at function level
+- Mock both success and error scenarios
+- Keep mocks close to real API responses
+- Use request handlers for different endpoints
+- Test edge cases: rate limiting, network errors, timeouts
+
+### Coverage Guidelines
+- Target 80%+ overall code coverage
+- Prioritize coverage for critical business logic
+- Don't chase 100% coverage for trivial code
+- Use coverage reports to identify testing gaps
+- Focus on coverage of complex logic over simple getters/setters
+
+### Test Data Management
+- Use test fixtures for consistent test data
+- Clean up test data after each test
+- Use factories for complex object creation
+- Avoid hardcoded test data in test bodies
+- Use realistic data that mirrors production
+
+### Performance Testing
+- Test critical path performance (TTI, LCP, CLS)
+- Test bundle size impact of new features
+- Test memory usage and cleanup
+- Test concurrent operations and race conditions
+- Test debouncing/throttling for expensive operations
+
+### Error Scenario Testing
+- Test network failures (timeout, connection refused, offline)
+- Test API errors (400, 401, 403, 404, 429, 500, 503)
+- Test validation errors (required fields, type validation)
+- Test authentication errors (invalid token, expired token)
+- Test state consistency and race conditions
+
+### Accessibility Testing
+- Test keyboard navigation for all interactive components
+- Test ARIA attributes and roles
+- Test screen reader compatibility
+- Test color contrast and visual accessibility
+- Test focus management and tab order
+
+### Security Testing
+- Test input validation and sanitization
+- Test XSS prevention in user-generated content
+- Test CSRF protection for form submissions
+- Test authentication and authorization flows
+- Test sensitive data handling (no logging of secrets)
+
+### Test CI/CD Integration
+- Run unit tests on every commit
+- Run integration tests on pull requests
+- Run E2E tests on main branch and releases
+- Fail builds if critical tests fail
+- Use coverage gates for minimum coverage requirements
