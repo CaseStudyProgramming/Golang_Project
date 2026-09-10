@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 describe('Task Store Logic', () => {
 	describe('Task CRUD Operations', () => {
 		it('creates task with optimistic update', () => {
-			const tasks = [];
+			const tasks: Array<{ id: string; title: string; status: string; createdAt: string }> = [];
 			const tempId = `temp-${Date.now()}`;
 			const newTask = {
 				id: tempId,
@@ -156,7 +156,7 @@ describe('Task Store Logic', () => {
 		});
 
 		it('returns 0 for empty subtasks', () => {
-			const subtasks = [];
+			const subtasks: Array<{ isCompleted: boolean }> = [];
 			const progress = subtasks.length === 0 ? 0 : Math.round((subtasks.filter(s => s.isCompleted).length / subtasks.length) * 100);
 
 			expect(progress).toBe(0);
@@ -179,7 +179,11 @@ describe('Task Store Logic', () => {
 		});
 
 		it('clears all filters', () => {
-			const state = {
+			type FilterState = {
+				filters: { status?: string; priority?: string };
+				pagination: { page: number };
+			};
+			const state: FilterState = {
 				filters: { status: 'completed', priority: 'high' },
 				pagination: { page: 3 }
 			};
@@ -223,14 +227,16 @@ describe('Task Store Logic', () => {
 
 	describe('Error Handling', () => {
 		it('sets error on failure', () => {
-			const state = { error: null };
+			type ErrorState = { error: string | null };
+			const state: ErrorState = { error: null };
 			state.error = 'Failed to fetch tasks';
 
 			expect(state.error).toBe('Failed to fetch tasks');
 		});
 
 		it('clears error state', () => {
-			const state = { error: 'Test error' };
+			type ErrorState = { error: string | null };
+			const state: ErrorState = { error: 'Test error' };
 			state.error = null;
 
 			expect(state.error).toBe(null);

@@ -18,13 +18,15 @@ describe('UI Store Logic', () => {
 		});
 
 		it('sets loading state without message', () => {
-			const loading = { isLoading: true, message: undefined };
+			type LoadingState = { isLoading: boolean; message?: string };
+			const loading: LoadingState = { isLoading: true, message: undefined };
 			expect(loading.isLoading).toBe(true);
 			expect(loading.message).toBeUndefined();
 		});
 
 		it('clears loading state', () => {
-			let loading = { isLoading: true, message: 'Loading...' };
+			type LoadingState = { isLoading: boolean; message?: string };
+			let loading: LoadingState = { isLoading: true, message: 'Loading...' };
 			loading = { isLoading: false, message: undefined };
 			expect(loading.isLoading).toBe(false);
 			expect(loading.message).toBeUndefined();
@@ -225,7 +227,13 @@ describe('UI Store Logic', () => {
 
 	describe('State Reset', () => {
 		it('resets loading state', () => {
-			let state = {
+			type LoadingState = { isLoading: boolean; message?: string };
+			type UIState = {
+				loading: LoadingState;
+				notifications: unknown[];
+				modals: unknown[];
+			};
+			let state: UIState = {
 				loading: { isLoading: true, message: 'Loading...' },
 				notifications: [],
 				modals: []

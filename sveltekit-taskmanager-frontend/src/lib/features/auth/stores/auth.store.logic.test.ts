@@ -25,7 +25,7 @@ describe('Auth Store Logic', () => {
 	describe('Redirect URL Management', () => {
 		it('saves and retrieves redirect URL', () => {
 			const sessionStorageMock = {
-				getItem: vi.fn(() => '/protected/page'),
+				getItem: vi.fn((key: string) => key === 'auth_redirect' ? '/protected/page' : null),
 				removeItem: vi.fn(),
 				setItem: vi.fn()
 			};
@@ -34,13 +34,13 @@ describe('Auth Store Logic', () => {
 			const url = sessionStorageMock.getItem('auth_redirect');
 			sessionStorageMock.removeItem('auth_redirect');
 
-		 expect(url).toBe('/protected/page');
+			expect(url).toBe('/protected/page');
 			expect(sessionStorageMock.removeItem).toHaveBeenCalledWith('auth_redirect');
 		});
 
 		it('returns null when no redirect URL is saved', () => {
 			const sessionStorageMock = {
-				getItem: vi.fn(() => null),
+				getItem: vi.fn((key: string) => null),
 				removeItem: vi.fn(),
 				setItem: vi.fn()
 			};
@@ -67,13 +67,19 @@ describe('Auth Store Logic', () => {
 		});
 
 		it('clears user state on logout', () => {
-			const state = {
+			type AuthState = {
+				user: { email: string; id: string; name: string } | null;
+				token: string | null;
+				isAuthenticated: boolean;
+			};
+
+			const state: AuthState = {
 				user: { email: 'test@example.com', id: '1', name: 'Test' },
 				token: 'auth-token',
 				isAuthenticated: true
 			};
 
-			const clearedState = {
+			const clearedState: AuthState = {
 				user: null,
 				token: null,
 				isAuthenticated: false
@@ -94,7 +100,8 @@ describe('Auth Store Logic', () => {
 		});
 
 		it('clears error state', () => {
-			const state = { error: 'Test error' };
+			type ErrorState = { error: string | null };
+			const state: ErrorState = { error: 'Test error' };
 			state.error = null;
 
 			expect(state.error).toBe(null);

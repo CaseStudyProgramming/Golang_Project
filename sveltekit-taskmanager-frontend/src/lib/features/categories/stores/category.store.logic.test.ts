@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 describe('Category Store Logic', () => {
 	describe('Category CRUD Operations', () => {
 		it('creates new category', () => {
-			const categories = [];
+			const categories: Array<{ id: string; name: string; description: string; color: string; icon: string; createdAt: string }> = [];
 			const newCategory = {
 				id: '1',
 				name: 'New Category',
@@ -49,7 +49,10 @@ describe('Category Store Logic', () => {
 
 	describe('Current Category Management', () => {
 		it('sets current category', () => {
-			const state = { currentCategory: null };
+			type CategoryState = {
+				currentCategory: { id: string; name: string } | null;
+			};
+			const state: CategoryState = { currentCategory: null };
 			const category = { id: '1', name: 'Test Category' };
 			state.currentCategory = category;
 
@@ -57,7 +60,10 @@ describe('Category Store Logic', () => {
 		});
 
 		it('clears current category on delete', () => {
-			const state = {
+			type CategoryState = {
+				currentCategory: { id: string; name: string } | null;
+			};
+			const state: CategoryState = {
 				currentCategory: { id: '1', name: 'Category to delete' }
 			};
 
@@ -86,14 +92,16 @@ describe('Category Store Logic', () => {
 
 	describe('Error Handling', () => {
 		it('sets error on failure', () => {
-			const state = { error: null };
+			type ErrorState = { error: string | null };
+			const state: ErrorState = { error: null };
 			state.error = 'Failed to fetch categories';
 
 			expect(state.error).toBe('Failed to fetch categories');
 		});
 
 		it('clears error state', () => {
-			const state = { error: 'Test error' };
+			type ErrorState = { error: string | null };
+			const state: ErrorState = { error: 'Test error' };
 			state.error = null;
 
 			expect(state.error).toBe(null);

@@ -105,7 +105,16 @@ describe('Confirm Store Logic', () => {
 
 	describe('Optional Callbacks', () => {
 		it('handles missing onConfirm callback', () => {
-			const options = {
+			type ConfirmOptions = {
+				title: string;
+				message: string;
+				confirmText: string;
+				cancelText: string;
+				type: ConfirmType;
+				onConfirm?: unknown;
+				onCancel?: unknown;
+			};
+			const options: ConfirmOptions = {
 				title: 'Test',
 				message: 'Test message',
 				confirmText: 'OK',
@@ -117,7 +126,16 @@ describe('Confirm Store Logic', () => {
 		});
 
 		it('handles missing onCancel callback', () => {
-			const options = {
+			type ConfirmOptions = {
+				title: string;
+				message: string;
+				confirmText: string;
+				cancelText: string;
+				type: ConfirmType;
+				onConfirm?: unknown;
+				onCancel?: unknown;
+			};
+			const options: ConfirmOptions = {
 				title: 'Test',
 				message: 'Test message',
 				confirmText: 'OK',

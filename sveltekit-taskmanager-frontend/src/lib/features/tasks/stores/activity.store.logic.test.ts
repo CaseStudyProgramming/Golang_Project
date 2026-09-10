@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Activity } from '../types/task.types';
+import type { Activity, ActivityType } from '../types/task.types';
 
 describe('Activity Store Logic', () => {
 	describe('Activity Fetching', () => {
@@ -27,7 +27,7 @@ describe('Activity Store Logic', () => {
 			const activity: Activity = {
 				id: '123',
 				taskId: 'task-1',
-				type: 'status_change',
+				type: 'status_changed' as ActivityType,
 				description: 'Task status changed to in_progress',
 				userId: 'user1',
 				userName: 'John Doe',
@@ -44,7 +44,7 @@ describe('Activity Store Logic', () => {
 			const activity: Activity = {
 				id: '123',
 				taskId: 'task-1',
-				type: 'status_change',
+				type: 'status_changed' as ActivityType,
 				description: 'Task status changed',
 				userId: 'user1',
 				userName: 'John Doe',
@@ -65,7 +65,7 @@ describe('Activity Store Logic', () => {
 			const activity1: Activity = {
 				id: '1',
 				taskId: 'task-1',
-				type: 'created',
+				type: 'task_created' as ActivityType,
 				description: 'Task created',
 				userId: 'user1',
 				userName: 'User 1',
@@ -75,7 +75,7 @@ describe('Activity Store Logic', () => {
 			const activity2: Activity = {
 				id: '2',
 				taskId: 'task-2',
-				type: 'updated',
+				type: 'task_updated' as ActivityType,
 				description: 'Task updated',
 				userId: 'user1',
 				userName: 'User 1',
@@ -91,9 +91,9 @@ describe('Activity Store Logic', () => {
 	describe('Activity Filtering', () => {
 		it('filters activities by task ID', () => {
 			const activities: Activity[] = [
-				{ id: '1', taskId: 'task-1', type: 'created', description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', taskId: 'task-2', type: 'updated', description: 'Updated', userId: 'user1', userName: 'User', createdAt: '2024-01-02T00:00:00Z' },
-				{ id: '3', taskId: 'task-1', type: 'deleted', description: 'Deleted', userId: 'user1', userName: 'User', createdAt: '2024-01-03T00:00:00Z' }
+				{ id: '1', taskId: 'task-1', type: 'task_created' as ActivityType, description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-01T00:00:00Z' },
+				{ id: '2', taskId: 'task-2', type: 'task_updated' as ActivityType, description: 'Updated', userId: 'user1', userName: 'User', createdAt: '2024-01-02T00:00:00Z' },
+				{ id: '3', taskId: 'task-1', type: 'task_deleted' as ActivityType, description: 'Deleted', userId: 'user1', userName: 'User', createdAt: '2024-01-03T00:00:00Z' }
 			];
 
 			const filtered = activities.filter(a => a.taskId === 'task-1');
@@ -102,19 +102,19 @@ describe('Activity Store Logic', () => {
 
 		it('filters activities by type', () => {
 			const activities: Activity[] = [
-				{ id: '1', taskId: 'task-1', type: 'created', description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', taskId: 'task-2', type: 'updated', description: 'Updated', userId: 'user1', userName: 'User', createdAt: '2024-01-02T00:00:00Z' },
-				{ id: '3', taskId: 'task-3', type: 'created', description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-03T00:00:00Z' }
+				{ id: '1', taskId: 'task-1', type: 'task_created' as ActivityType, description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-01T00:00:00Z' },
+				{ id: '2', taskId: 'task-2', type: 'task_updated' as ActivityType, description: 'Updated', userId: 'user1', userName: 'User', createdAt: '2024-01-02T00:00:00Z' },
+				{ id: '3', taskId: 'task-3', type: 'task_created' as ActivityType, description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-03T00:00:00Z' }
 			];
 
-			const filtered = activities.filter(a => a.type === 'created');
+			const filtered = activities.filter(a => a.type === 'task_created');
 			expect(filtered).toHaveLength(2);
 		});
 
 		it('filters activities by user ID', () => {
 			const activities: Activity[] = [
-				{ id: '1', taskId: 'task-1', type: 'created', description: 'Created', userId: 'user1', userName: 'User 1', createdAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', taskId: 'task-2', type: 'updated', description: 'Updated', userId: 'user2', userName: 'User 2', createdAt: '2024-01-02T00:00:00Z' }
+				{ id: '1', taskId: 'task-1', type: 'task_created' as ActivityType, description: 'Created', userId: 'user1', userName: 'User 1', createdAt: '2024-01-01T00:00:00Z' },
+				{ id: '2', taskId: 'task-2', type: 'task_updated' as ActivityType, description: 'Updated', userId: 'user2', userName: 'User 2', createdAt: '2024-01-02T00:00:00Z' }
 			];
 
 			const filtered = activities.filter(a => a.userId === 'user1');
@@ -127,7 +127,7 @@ describe('Activity Store Logic', () => {
 			const activity: Activity = {
 				id: '123',
 				taskId: 'task-1',
-				type: 'status_change',
+				type: 'status_changed' as ActivityType,
 				description: 'Task status changed',
 				userId: 'user1',
 				userName: 'Current User',
@@ -136,7 +136,7 @@ describe('Activity Store Logic', () => {
 			};
 
 			expect(activity.taskId).toBe('task-1');
-			expect(activity.type).toBe('status_change');
+			expect(activity.type).toBe('status_changed');
 			expect(activity.changes).toBeDefined();
 		});
 
@@ -144,7 +144,7 @@ describe('Activity Store Logic', () => {
 			const activity: Activity = {
 				id: '123',
 				taskId: 'task-1',
-				type: 'comment',
+				type: 'tag_added' as ActivityType,
 				description: 'User added a comment',
 				userId: 'user1',
 				userName: 'Current User',
@@ -158,7 +158,7 @@ describe('Activity Store Logic', () => {
 			const activity: Activity = {
 				id: '123',
 				taskId: 'task-1',
-				type: 'created',
+				type: 'task_created' as ActivityType,
 				description: 'Task created',
 				userId: '1',
 				userName: 'Current User',
@@ -187,7 +187,7 @@ describe('Activity Store Logic', () => {
 	describe('State Reset', () => {
 		it('resets activities array', () => {
 			let activities: Activity[] = [
-				{ id: '1', taskId: 'task-1', type: 'created', description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-01T00:00:00Z' }
+				{ id: '1', taskId: 'task-1', type: 'task_created' as ActivityType, description: 'Created', userId: 'user1', userName: 'User', createdAt: '2024-01-01T00:00:00Z' }
 			];
 
 			activities = [];
@@ -209,9 +209,9 @@ describe('Activity Store Logic', () => {
 	describe('Activity State Management', () => {
 		it('maintains activity list across operations', () => {
 			const activities: Activity[] = [
-				{ id: '1', taskId: 'task-1', type: 'created', description: 'Activity 1', userId: 'user1', userName: 'User 1', createdAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', taskId: 'task-2', type: 'updated', description: 'Activity 2', userId: 'user1', userName: 'User 1', createdAt: '2024-01-02T00:00:00Z' },
-				{ id: '3', taskId: 'task-3', type: 'deleted', description: 'Activity 3', userId: 'user1', userName: 'User 1', createdAt: '2024-01-03T00:00:00Z' }
+				{ id: '1', taskId: 'task-1', type: 'task_created' as ActivityType, description: 'Activity 1', userId: 'user1', userName: 'User 1', createdAt: '2024-01-01T00:00:00Z' },
+				{ id: '2', taskId: 'task-2', type: 'task_updated' as ActivityType, description: 'Activity 2', userId: 'user1', userName: 'User 1', createdAt: '2024-01-02T00:00:00Z' },
+				{ id: '3', taskId: 'task-3', type: 'task_deleted' as ActivityType, description: 'Activity 3', userId: 'user1', userName: 'User 1', createdAt: '2024-01-03T00:00:00Z' }
 			];
 
 			expect(activities).toHaveLength(3);

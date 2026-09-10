@@ -175,7 +175,8 @@ describe('TagInput Component Logic', () => {
 
 	describe('Color Fallback', () => {
 		it('uses default color when tag color is not provided', () => {
-			const tag = { id: '1', name: 'Test' };
+			type Tag = { id: string; name: string; color?: string };
+			const tag: Tag = { id: '1', name: 'Test' };
 			const defaultColor = '#3B82F6';
 			const backgroundColor = tag.color || defaultColor;
 
@@ -183,7 +184,8 @@ describe('TagInput Component Logic', () => {
 		});
 
 		it('uses tag color when provided', () => {
-			const tag = { id: '1', name: 'Test', color: '#FF0000' };
+			type Tag = { id: string; name: string; color?: string };
+			const tag: Tag = { id: '1', name: 'Test', color: '#FF0000' };
 			const defaultColor = '#3B82F6';
 			const backgroundColor = tag.color || defaultColor;
 
