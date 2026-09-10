@@ -124,15 +124,34 @@ function createTaskStore() {
 	}
 
 	/**
-	 * Create new task
+	 * Create new task with optimistic UI update
 	 */
 	async function createTask(payload: unknown): Promise<Task> {
-		state.isLoading = true;
 		state.error = null;
 
 		try {
 			// Validate input with Zod
 			const validatedPayload = createTaskSchema.parse(payload);
+
+			// Optimistic update: create temporary task with generated ID
+			const tempId = `temp-${Date.now()}`;
+			const optimisticTask: Task = {
+				categoryId: validatedPayload.categoryId,
+				createdAt: new Date().toISOString(),
+				description: validatedPayload.description,
+				dueDate: validatedPayload.dueDate,
+				id: tempId,
+				priority: validatedPayload.priority || 'medium',
+				status: 'todo',
+				tags: validatedPayload.tags,
+				title: validatedPayload.title,
+				updatedAt: new Date().toISOString(),
+				userId: '1'
+			};
+
+			// Add to state immediately
+			state.tasks = [optimisticTask, ...state.tasks];
+			state.pagination.total += 1;
 
 			const newTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -140,48 +159,58 @@ function createTaskStore() {
 
 				// Mock response for development
 				const mockTask: Task = {
-					categoryId: validatedPayload.categoryId,
-					createdAt: new Date().toISOString(),
-					description: validatedPayload.description,
-					dueDate: validatedPayload.dueDate,
-					id: Date.now().toString(),
-					priority: validatedPayload.priority || 'medium',
-					status: 'todo',
-					tags: validatedPayload.tags,
-					title: validatedPayload.title,
-					updatedAt: new Date().toISOString(),
-					userId: '1'
+					...optimisticTask,
+					id: Date.now().toString() // Replace temp ID with real ID
 				};
 
-				state.tasks = [mockTask, ...state.tasks];
-				state.pagination.total += 1;
+				// Replace optimistic task with real task
+				state.tasks = state.tasks.map((task) => 
+					task.id === tempId ? mockTask : task
+				);
 
 				return mockTask;
 			}, 'Failed to create task');
 
 			return newTask;
 		} catch (error) {
+			// Rollback optimistic update on error
+			state.tasks = state.tasks.filter(task => !task.id.startsWith('temp-'));
+			state.pagination.total -= 1;
+
 			if (error instanceof Error && error.name === 'ZodError') {
 				state.error = 'Invalid input: ' + error.message;
 				throw new ValidationError('task', error.message);
 			}
 			state.error = error instanceof Error ? error.message : 'Failed to create task';
 			throw error;
-		} finally {
-			state.isLoading = false;
 		}
 	}
 
 	/**
-	 * Update existing task
+	 * Update existing task with optimistic UI update
 	 */
 	async function updateTask(id: string, payload: unknown): Promise<Task> {
-		state.isLoading = true;
 		state.error = null;
+
+		// Store previous state for rollback
+		const previousTask = state.tasks.find((t) => t.id === id);
+		const previousCurrentTask = state.currentTask?.id === id ? { ...state.currentTask } : null;
 
 		try {
 			// Validate input with Zod
 			const validatedPayload = updateTaskSchema.parse(payload);
+
+			// Optimistic update
+			const optimisticTask: Task = {
+				...previousTask!,
+				...validatedPayload,
+				updatedAt: new Date().toISOString()
+			};
+
+			state.tasks = state.tasks.map((task) => (task.id === id ? optimisticTask : task));
+			if (state.currentTask?.id === id) {
+				state.currentTask = optimisticTask;
+			}
 
 			const updatedTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -189,12 +218,11 @@ function createTaskStore() {
 
 				// Mock response for development
 				const mockTask: Task = {
-					...state.tasks.find(t => t.id === id)!,
-					...validatedPayload,
+					...optimisticTask,
 					updatedAt: new Date().toISOString()
 				};
 
-				state.tasks = state.tasks.map(task => (task.id === id ? mockTask : task));
+				state.tasks = state.tasks.map((task) => (task.id === id ? mockTask : task));
 				if (state.currentTask?.id === id) {
 					state.currentTask = mockTask;
 				}
@@ -204,46 +232,62 @@ function createTaskStore() {
 
 			return updatedTask;
 		} catch (error) {
+			// Rollback optimistic update on error
+			if (previousTask) {
+				state.tasks = state.tasks.map((task) => (task.id === id ? { ...previousTask } : task));
+			}
+			if (previousCurrentTask) {
+				state.currentTask = previousCurrentTask;
+			}
+
 			if (error instanceof Error && error.name === 'ZodError') {
 				state.error = 'Invalid input: ' + error.message;
 				throw new ValidationError('task', error.message);
 			}
 			state.error = error instanceof Error ? error.message : 'Failed to update task';
 			throw error;
-		} finally {
-			state.isLoading = false;
 		}
 	}
 
 	/**
-	 * Delete task (soft delete)
+	 * Delete task (soft delete) with optimistic UI update
 	 */
 	async function deleteTask(id: string): Promise<void> {
-		state.isLoading = true;
 		state.error = null;
 
+		// Store previous state for rollback
+		const previousTask = state.tasks.find((t) => t.id === id);
+		const previousCurrentTask = state.currentTask?.id === id ? { ...state.currentTask } : null;
+
 		try {
+			// Optimistic update: soft delete by updating status
+			state.tasks = state.tasks.map((task) =>
+				task.id === id
+					? { ...task, status: 'deleted' as const, updatedAt: new Date().toISOString() }
+					: task
+			);
+			state.pagination.total -= 1;
+
+			if (state.currentTask?.id === id) {
+				state.currentTask = null;
+			}
+
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call for soft delete
 				// await httpClient.patch(`/tasks/${id}`, { status: 'deleted' });
-
-				// Optimistic update: soft delete by updating status
-				state.tasks = state.tasks.map(task =>
-					task.id === id
-						? { ...task, status: 'deleted' as const, updatedAt: new Date().toISOString() }
-						: task
-				);
-				state.pagination.total -= 1;
-
-				if (state.currentTask?.id === id) {
-					state.currentTask = null;
-				}
 			}, 'Failed to delete task');
 		} catch (error) {
+			// Rollback optimistic update on error
+			if (previousTask) {
+				state.tasks = state.tasks.map((task) => (task.id === id ? { ...previousTask } : task));
+				state.pagination.total += 1;
+			}
+			if (previousCurrentTask) {
+				state.currentTask = previousCurrentTask;
+			}
+
 			state.error = error instanceof Error ? error.message : 'Failed to delete task';
 			throw error;
-		} finally {
-			state.isLoading = false;
 		}
 	}
 
@@ -390,36 +434,19 @@ function createTaskStore() {
 	}
 
 	/**
-	 * Toggle subtask completion
+	 * Toggle subtask completion with optimistic UI update
 	 */
 	async function toggleSubtask(taskId: string, subtaskId: string): Promise<void> {
+		// Store previous state for rollback
+		const previousTask = state.tasks.find((t) => t.id === taskId);
+		const previousCurrentTask = state.currentTask?.id === taskId ? { ...state.currentTask } : null;
+
 		try {
-			await withErrorHandling(async () => {
-				// This would be replaced with actual API call
-				// await httpClient.patch(`/tasks/${taskId}/subtasks/${subtaskId}`, { isCompleted: !isCompleted });
-
-				// Update task's subtasks and progress
-				state.tasks = state.tasks.map(task => {
-					if (task.id === taskId) {
-						const updatedSubtasks =
-							task.subtasks?.map(subtask =>
-								subtask.id === subtaskId
-									? {
-											...subtask,
-											isCompleted: !subtask.isCompleted,
-											updatedAt: new Date().toISOString()
-										}
-									: subtask
-							) || [];
-						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, progress, subtasks: updatedSubtasks };
-					}
-					return task;
-				});
-
-				if (state.currentTask?.id === taskId) {
+			// Optimistic update
+			state.tasks = state.tasks.map((task) => {
+				if (task.id === taskId) {
 					const updatedSubtasks =
-						state.currentTask.subtasks?.map(subtask =>
+						task.subtasks?.map((subtask) =>
 							subtask.id === subtaskId
 								? {
 										...subtask,
@@ -429,10 +456,39 @@ function createTaskStore() {
 								: subtask
 						) || [];
 					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+					return { ...task, progress, subtasks: updatedSubtasks };
 				}
+				return task;
+			});
+
+			if (state.currentTask?.id === taskId) {
+				const updatedSubtasks =
+					state.currentTask.subtasks?.map((subtask) =>
+						subtask.id === subtaskId
+							? {
+									...subtask,
+									isCompleted: !subtask.isCompleted,
+									updatedAt: new Date().toISOString()
+								}
+							: subtask
+					) || [];
+				const progress = calculateProgress(updatedSubtasks);
+				state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+			}
+
+			await withErrorHandling(async () => {
+				// This would be replaced with actual API call
+				// await httpClient.patch(`/tasks/${taskId}/subtasks/${subtaskId}`, { isCompleted: !isCompleted });
 			}, 'Failed to toggle subtask');
 		} catch (error) {
+			// Rollback optimistic update on error
+			if (previousTask) {
+				state.tasks = state.tasks.map((task) => (task.id === taskId ? { ...previousTask } : task));
+			}
+			if (previousCurrentTask) {
+				state.currentTask = previousCurrentTask;
+			}
+
 			state.error = error instanceof Error ? error.message : 'Failed to toggle subtask';
 			throw error;
 		}
