@@ -10,7 +10,10 @@
 	import OverdueTasksSummary from '$lib/features/analytics/components/OverdueTasksSummary.svelte';
 	import ProductivityInsights from '$lib/features/analytics/components/ProductivityInsights.svelte';
 	import TimePeriodSelector from '$lib/features/analytics/components/TimePeriodSelector.svelte';
+	import ChartSkeleton from '$lib/features/analytics/components/ChartSkeleton.svelte';
+	import { EmptyState } from '$lib/shared/components';
 	import type { TimePeriod } from '$lib/features/analytics';
+	import type { TaskStatistics } from '$lib/features/analytics/types/analytics.types';
 	import type { Task } from '$lib/features/tasks/types/task.types';
 
 	onMount(async () => {
@@ -31,39 +34,61 @@
 			(t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
 		)
 	);
+
+	const defaultStatistics: TaskStatistics = {
+		total: 0,
+		completed: 0,
+		inProgress: 0,
+		todo: 0,
+		overdue: 0,
+		cancelled: 0,
+		completionRate: 0
+	};
 </script>
 
-<div class="mb-8">
-	<div class="flex items-center justify-between mb-2">
-		<h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+<div class="mb-6 sm:mb-8">
+	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+		<h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
 		<TimePeriodSelector
 			selectedPeriod={analyticsStore.state.selectedPeriod}
 			onPeriodChange={handlePeriodChange}
 		/>
 	</div>
-	<p class="text-gray-600">
+	<p class="text-gray-600 text-sm sm:text-base">
 		Welcome back, {authStore.state.user?.name || authStore.state.user?.email || 'User'}!
 	</p>
 </div>
 
 {#if analyticsStore.state.isLoading}
-	<div class="text-center py-12">
-		<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-		<p class="mt-4 text-gray-500">Loading analytics...</p>
+	<div class="space-y-4 sm:space-y-6">
+		<!-- Statistics Cards Skeleton -->
+		<StatisticsCards statistics={defaultStatistics} isLoading={true} />
+		
+		<!-- Charts Skeleton -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+			<ChartSkeleton title="Completion Rate" />
+			<ChartSkeleton title="Priority Distribution" />
+		</div>
+		
+		<!-- Additional Charts Skeleton -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+			<ChartSkeleton title="Category Distribution" />
+			<ChartSkeleton title="Overdue Tasks" />
+		</div>
 	</div>
 {:else if analyticsStore.state.data}
-	<div class="space-y-6">
+	<div class="space-y-4 sm:space-y-6">
 		<!-- Statistics Cards -->
 		<StatisticsCards statistics={analyticsStore.state.data.statistics} />
 
 		<!-- Charts Row -->
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 			<CompletionRateChart timeBasedData={analyticsStore.state.data.timeBasedData} />
 			<PriorityChart distribution={analyticsStore.state.data.priorityDistribution} />
 		</div>
 
 		<!-- Category Chart and Overdue Tasks -->
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 			<CategoryChart categoryDistribution={analyticsStore.state.data.categoryDistribution} />
 			<OverdueTasksSummary overdueTasks={overdueTasks} />
 		</div>
@@ -72,7 +97,11 @@
 		<ProductivityInsights insights={analyticsStore.state.data.productivityInsights} />
 	</div>
 {:else}
-	<div class="text-center py-12">
-		<p class="text-gray-500">No analytics data available</p>
+	<div class="bg-white rounded-lg shadow">
+		<EmptyState 
+			icon='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>'
+			title="No analytics data"
+			description="Start creating tasks to see your productivity analytics and insights."
+		/>
 	</div>
 {/if}

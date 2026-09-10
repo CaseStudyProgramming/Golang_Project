@@ -2,6 +2,7 @@
 	import { categoryStore } from '../stores/category.store';
 	import type { Category } from '../types/category.types';
 	import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas';
+	import { toastStore } from '$lib/shared/stores';
 
 	let {
 		initialData,
@@ -78,6 +79,12 @@
 				}
 			}
 
+			// Show success toast
+			toastStore.success(
+				initialData ? 'Category updated' : 'Category created',
+				initialData ? 'Your category has been updated successfully' : 'Your category has been created successfully'
+			);
+
 			// Reset form if creating new category
 			if (!initialData) {
 				name = '';
@@ -87,6 +94,10 @@
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to save category';
+			toastStore.error(
+				initialData ? 'Failed to update category' : 'Failed to create category',
+				error
+			);
 		} finally {
 			isSubmitting = false;
 		}
@@ -102,8 +113,8 @@
 	}
 </script>
 
-<div class="bg-white rounded-lg shadow p-6">
-	<h2 class="text-lg font-medium text-gray-900 mb-4">
+<div class="bg-white rounded-lg shadow p-4 sm:p-6">
+	<h2 class="text-base sm:text-lg font-medium text-gray-900 mb-4">
 		{initialData ? 'Edit Category' : 'Create Category'}
 	</h2>
 
@@ -121,7 +132,7 @@
 				type="text"
 				bind:value={name}
 				placeholder="Category name"
-				class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+				class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
 				disabled={isSubmitting}
 			/>
 		</div>
@@ -133,7 +144,7 @@
 				bind:value={description}
 				placeholder="Category description (optional)"
 				rows="3"
-				class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+				class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
 				disabled={isSubmitting}
 			></textarea>
 		</div>
@@ -153,7 +164,7 @@
 						<button
 							type="button"
 							onclick={() => (color = presetColor)}
-							class="w-8 h-8 rounded-full border-2 {color === presetColor ? 'border-gray-900' : 'border-gray-300'} hover:scale-110 transition-transform"
+							class="w-8 h-8 rounded-full border-2 {color === presetColor ? 'border-gray-900' : 'border-gray-300'} hover:scale-110 transition-transform min-w-[44px] min-h-[44px]"
 							style="background-color: {presetColor}"
 							disabled={isSubmitting}
 							aria-label={`Select color ${presetColor}`}
@@ -171,17 +182,17 @@
 				bind:value={icon}
 				placeholder="📁 or 🎯"
 				maxlength="50"
-				class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+				class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
 				disabled={isSubmitting}
 			/>
 		</div>
 
-		<div class="flex gap-3 pt-4">
+		<div class="flex flex-col sm:flex-row gap-3 pt-4">
 			<button
 				type="button"
 				onclick={handleSubmit}
 				disabled={isSubmitting}
-				class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+				class="flex-1 px-4 py-3 sm:px-4 sm:py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-h-[44px]"
 			>
 				{isSubmitting ? 'Saving...' : initialData ? 'Update' : 'Create'}
 			</button>
@@ -190,7 +201,7 @@
 					type="button"
 					onclick={handleCancel}
 					disabled={isSubmitting}
-					class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+					class="px-4 py-3 sm:px-4 sm:py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors min-h-[44px]"
 				>
 					Cancel
 				</button>

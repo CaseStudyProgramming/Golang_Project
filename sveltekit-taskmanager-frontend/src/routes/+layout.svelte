@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { authStore } from '$lib/features/auth';
 	import { onDestroy, onMount } from 'svelte';
+	import { ToastContainer, ConfirmDialogContainer } from '$lib/shared/components';
 
 	let { children } = $props();
 
@@ -24,3 +25,6 @@
 </svelte:head>
 
 {@render children()}
+
+<ToastContainer />
+<ConfirmDialogContainer />

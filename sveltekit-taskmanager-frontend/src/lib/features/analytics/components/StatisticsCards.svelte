@@ -1,7 +1,14 @@
 <script lang="ts">
 	import type { TaskStatistics } from '../types/analytics.types';
+	import StatisticsCardsSkeleton from './StatisticsCardsSkeleton.svelte';
 
-	let { statistics }: { statistics: TaskStatistics } = $props();
+	let { 
+		statistics,
+		isLoading = false 
+	}: { 
+		statistics: TaskStatistics;
+		isLoading?: boolean;
+	} = $props();
 
 	type CardColor = 'blue' | 'green' | 'orange' | 'purple' | 'red' | 'emerald';
 
@@ -61,16 +68,20 @@
 	};
 </script>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-	{#each cards as card}
-		<div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-500 mb-1">{card.label}</p>
-					<p class="text-3xl font-bold {colorClasses[card.color].split(' ')[0]}">{card.value}</p>
+{#if isLoading}
+	<StatisticsCardsSkeleton />
+{:else}
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+		{#each cards as card}
+			<div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-gray-500 mb-1">{card.label}</p>
+						<p class="text-2xl sm:text-3xl font-bold {colorClasses[card.color].split(' ')[0]}">{card.value}</p>
+					</div>
+					<div class="text-2xl sm:text-3xl">{card.icon}</div>
 				</div>
-				<div class="text-3xl">{card.icon}</div>
 			</div>
-		</div>
-	{/each}
-</div>
+		{/each}
+	</div>
+{/if}
