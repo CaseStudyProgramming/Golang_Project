@@ -3,6 +3,7 @@
 	import type { Task } from '../types/task.types';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
+	import { LoadingSpinner, ProgressBar } from '$lib/shared/components';
 	import TaskListSkeleton from './TaskListSkeleton.svelte';
 
 	let { 
@@ -90,7 +91,9 @@
 
 <div class="space-y-3 sm:space-y-4">
 	{#if isLoading}
-		<TaskListSkeleton />
+		<div class="text-center py-8 sm:py-12">
+			<LoadingSpinner text="Loading tasks..." />
+		</div>
 	{:else if tasks.length === 0}
 		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
 			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -135,12 +138,7 @@
 							</div>
 							{#if task.progress !== undefined && task.progress > 0}
 								<div class="mt-2">
-									<div class="flex items-center gap-2">
-										<div class="flex-1 bg-gray-200 rounded-full h-1.5">
-											<div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: {task.progress}%"></div>
-										</div>
-										<span class="text-xs text-gray-500">{task.progress}%</span>
-									</div>
+									<ProgressBar progress={task.progress} size="sm" showLabel={true} />
 								</div>
 							{/if}
 							{#if task.tags && task.tags.length > 0}

@@ -5,6 +5,7 @@
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
 	import { TagInput } from '$lib/features/tags';
+	import { LoadingSpinner } from '$lib/shared/components';
 	import type { Category } from '$lib/features/categories';
 
 	let {
@@ -247,8 +248,11 @@
 		<button
 			type="submit"
 			disabled={isSubmitting}
-			class="w-full sm:w-auto px-4 py-3 sm:px-4 sm:py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors min-h-[44px]"
+			class="w-full sm:w-auto px-4 py-3 sm:px-4 sm:py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors min-h-[44px] flex items-center justify-center gap-2"
 		>
+			{#if isSubmitting}
+				<LoadingSpinner size="sm" color="white" />
+			{/if}
 			{isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Task' : 'Update Task'}
 		</button>
 	</div>

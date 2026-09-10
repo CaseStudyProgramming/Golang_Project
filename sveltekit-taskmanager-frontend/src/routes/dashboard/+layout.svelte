@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/features/auth';
+	import { LoadingSpinner } from '$lib/shared/components';
 
 	let { children } = $props();
 	let isLoggingOut = $state(false);
@@ -52,8 +53,11 @@
 					<button
 						onclick={handleLogout}
 						disabled={isLoggingOut}
-						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 					>
+						{#if isLoggingOut}
+							<LoadingSpinner size="sm" color="gray" />
+						{/if}
 						{isLoggingOut ? 'Logging out...' : 'Logout'}
 					</button>
 				</div>
@@ -102,8 +106,11 @@
 							closeMobileMenu();
 						}}
 						disabled={isLoggingOut}
-						class="w-full text-left text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center"
+						class="w-full text-left text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center gap-2"
 					>
+						{#if isLoggingOut}
+							<LoadingSpinner size="sm" color="gray" />
+						{/if}
 						{isLoggingOut ? 'Logging out...' : 'Logout'}
 					</button>
 				</div>

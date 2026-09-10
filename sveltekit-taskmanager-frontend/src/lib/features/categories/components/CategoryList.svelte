@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { categoryStore } from '../stores/category.store';
 	import type { Category } from '../types/category.types';
+	import { LoadingSpinner } from '$lib/shared/components';
 	import CategoryListSkeleton from './CategoryListSkeleton.svelte';
 
 	let {
@@ -20,7 +21,9 @@
 
 <div class="space-y-3 sm:space-y-4">
 	{#if isLoading}
-		<CategoryListSkeleton />
+		<div class="text-center py-8 sm:py-12">
+			<LoadingSpinner text="Loading categories..." />
+		</div>
 	{:else if categories.length === 0}
 		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
 			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
