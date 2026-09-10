@@ -11,7 +11,18 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"
-	}
+	},
+	"exclude": [
+		"node_modules",
+		".svelte-kit",
+		"build",
+		"dist",
+		"**/*.test.ts",
+		"**/*.test.js",
+		"**/*.logic.test.ts",
+		"**/*.spec.ts",
+		"tests/**"
+	]
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
 	//
