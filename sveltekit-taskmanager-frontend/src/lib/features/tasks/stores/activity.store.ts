@@ -141,3 +141,8 @@ export const activityStore = new Proxy({} as ReturnType<typeof createActivitySto
 		return activityStoreInstance[prop as keyof ReturnType<typeof createActivityStore>];
 	}
 });
+
+/**
+ * Export store creator for testing
+ */
+export { createActivityStore };
