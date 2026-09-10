@@ -51,20 +51,12 @@ if (!globalThis.window?.location) {
 	});
 }
 
-// Mock Svelte 5 runes for testing
-globalThis.$state = <T>(initial: T): T => {
-	return initial;
-};
-
-globalThis.$derived = <T>(fn: () => T): T => {
-	return fn();
-};
-
-globalThis.$props = <T extends Record<string, unknown>>(): T => {
-	return {} as T;
-};
-
-globalThis.$effect = (fn: () => void): void => {
+// Mock Svelte 5 runes for testing (simplified version)
+// Note: Using type casting to avoid TypeScript errors with Svelte 5 rune types
+(globalThis as any).$state = <T>(initial: T): T => initial;
+(globalThis as any).$derived = <T>(fn: () => T): T => fn();
+(globalThis as any).$props = <T extends Record<string, unknown>>(): T => {} as T;
+(globalThis as any).$effect = (fn: () => void): void => {
 	// No-op for tests
 };
 

@@ -126,7 +126,9 @@ describe('Performance Testing', () => {
 
 	describe('Memory Usage', () => {
 		it('measures memory footprint of data structures', () => {
-			const beforeMemory = performance.memory?.usedJSHeapSize || 0;
+			// performance.memory is not available in all environments, so we skip this test
+			// In a real browser environment, you would use performance.memory
+			const beforeMemory = (performance as any).memory?.usedJSHeapSize || 0;
 
 			// Create large data structure
 			const largeDataSet = new Map();
@@ -137,7 +139,7 @@ describe('Performance Testing', () => {
 				});
 			}
 
-			const afterMemory = performance.memory?.usedJSHeapSize || 0;
+			const afterMemory = (performance as any).memory?.usedJSHeapSize || 0;
 			const memoryIncrease = afterMemory - beforeMemory;
 
 			// Memory increase should be reasonable (less than 50MB)
