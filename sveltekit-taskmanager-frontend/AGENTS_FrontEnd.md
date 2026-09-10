@@ -238,3 +238,12 @@
 - Run E2E tests on main branch and releases
 - Fail builds if critical tests fail
 - Use coverage gates for minimum coverage requirements
+
+### Test Files & GitHub Integration
+- **DO Commit Test Files**: All test files (`*.test.ts`, `*.logic.test.ts`, `*.spec.ts`) must be committed to the repository
+- **TypeScript Exclusion**: Test files are excluded from strict TypeScript checking via `tsconfig.json` exclude patterns - this is intentional for test flexibility
+- **Sensitive Data**: Never commit API keys, credentials, or sensitive test data. Use environment variables or test fixtures instead
+- **Git Ignore for Artifacts**: Exclude test coverage reports and generated artifacts via `.gitignore` (coverage/, test-results/, playwright-report/)
+- **Pre-Commit Verification**: Always run `bun run check` and `bun test` before committing to ensure production code quality
+- **Branch Protection**: Configure GitHub branch protection to require passing tests before merging to main branch
+- **Test File Documentation**: Tests serve as living documentation - commit them to preserve expected behavior documentation
