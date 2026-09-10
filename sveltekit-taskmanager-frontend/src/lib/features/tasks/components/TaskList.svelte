@@ -4,6 +4,7 @@
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
 	import { LoadingSpinner, ProgressBar, EmptyState } from '$lib/shared/components';
+	import { confirmStore } from '$lib/shared/stores';
 	import TaskListSkeleton from './TaskListSkeleton.svelte';
 
 	let { 
@@ -86,6 +87,23 @@
 		return tagIds
 			.map((id) => tags.find((t) => t.id === id))
 			.filter((tag): tag is typeof tags[0] => tag !== undefined);
+	}
+
+	/**
+	 * Handle delete task with confirmation
+	 */
+	async function handleDeleteTask(task: Task) {
+		const confirmed = await confirmStore.showConfirm({
+			title: 'Delete Task',
+			message: `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
+			confirmText: 'Delete',
+			cancelText: 'Cancel',
+			type: 'danger'
+		});
+
+		if (confirmed && onDeleteTask) {
+			onDeleteTask(task);
+		}
 	}
 </script>
 
@@ -179,7 +197,7 @@
 							{/if}
 							{#if onDeleteTask}
 								<button
-									onclick={() => onDeleteTask(task)}
+									onclick={() => handleDeleteTask(task)}
 									class="p-3 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
 									title="Delete task"
 									aria-label="Delete task"

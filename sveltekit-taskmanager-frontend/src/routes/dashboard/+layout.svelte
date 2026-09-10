@@ -2,13 +2,23 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/features/auth';
 	import { LoadingSpinner } from '$lib/shared/components';
-	import { toastStore } from '$lib/shared/stores';
+	import { toastStore, confirmStore } from '$lib/shared/stores';
 
 	let { children } = $props();
 	let isLoggingOut = $state(false);
 	let isMobileMenuOpen = $state(false);
 
 	async function handleLogout() {
+		const confirmed = await confirmStore.showConfirm({
+			title: 'Logout',
+			message: 'Are you sure you want to logout?',
+			confirmText: 'Logout',
+			cancelText: 'Cancel',
+			type: 'info'
+		});
+
+		if (!confirmed) return;
+
 		isLoggingOut = true;
 		try {
 			await authStore.logout();
@@ -104,10 +114,7 @@
 						Tasks
 					</a>
 					<button
-						onclick={() => {
-							handleLogout();
-							closeMobileMenu();
-						}}
+						onclick={handleLogout}
 						disabled={isLoggingOut}
 						class="w-full text-left text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center gap-2"
 					>
