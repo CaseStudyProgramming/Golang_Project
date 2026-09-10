@@ -33,37 +33,37 @@
 	);
 </script>
 
-<div class="mb-8">
-	<div class="flex items-center justify-between mb-2">
-		<h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+<div class="mb-6 sm:mb-8">
+	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+		<h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
 		<TimePeriodSelector
 			selectedPeriod={analyticsStore.state.selectedPeriod}
 			onPeriodChange={handlePeriodChange}
 		/>
 	</div>
-	<p class="text-gray-600">
+	<p class="text-gray-600 text-sm sm:text-base">
 		Welcome back, {authStore.state.user?.name || authStore.state.user?.email || 'User'}!
 	</p>
 </div>
 
 {#if analyticsStore.state.isLoading}
-	<div class="text-center py-12">
+	<div class="text-center py-8 sm:py-12">
 		<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-		<p class="mt-4 text-gray-500">Loading analytics...</p>
+		<p class="mt-4 text-gray-500 text-sm sm:text-base">Loading analytics...</p>
 	</div>
 {:else if analyticsStore.state.data}
-	<div class="space-y-6">
+	<div class="space-y-4 sm:space-y-6">
 		<!-- Statistics Cards -->
 		<StatisticsCards statistics={analyticsStore.state.data.statistics} />
 
 		<!-- Charts Row -->
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 			<CompletionRateChart timeBasedData={analyticsStore.state.data.timeBasedData} />
 			<PriorityChart distribution={analyticsStore.state.data.priorityDistribution} />
 		</div>
 
 		<!-- Category Chart and Overdue Tasks -->
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 			<CategoryChart categoryDistribution={analyticsStore.state.data.categoryDistribution} />
 			<OverdueTasksSummary overdueTasks={overdueTasks} />
 		</div>
@@ -72,7 +72,7 @@
 		<ProductivityInsights insights={analyticsStore.state.data.productivityInsights} />
 	</div>
 {:else}
-	<div class="text-center py-12">
-		<p class="text-gray-500">No analytics data available</p>
+	<div class="text-center py-8 sm:py-12">
+		<p class="text-gray-500 text-sm sm:text-base">No analytics data available</p>
 	</div>
 {/if}

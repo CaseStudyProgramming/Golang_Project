@@ -150,14 +150,14 @@
 	}
 </script>
 
-<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
+<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4 sm:space-y-6">
 	<div>
 		<label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
 		<input
 			id="title"
 			type="text"
 			bind:value={title}
-			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+			class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
 			placeholder="Enter task title"
 			required
 		/>
@@ -172,7 +172,7 @@
 			id="description"
 			bind:value={description}
 			rows="3"
-			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+			class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
 			placeholder="Enter task description"
 		></textarea>
 		{#if errors.description}
@@ -180,31 +180,33 @@
 		{/if}
 	</div>
 
-	<div>
-		<label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-		<select
-			id="priority"
-			bind:value={priority}
-			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-		>
-			<option value="low">Low</option>
-			<option value="medium">Medium</option>
-			<option value="high">High</option>
-			<option value="urgent">Urgent</option>
-		</select>
-	</div>
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+		<div>
+			<label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+			<select
+				id="priority"
+				bind:value={priority}
+				class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+			>
+				<option value="low">Low</option>
+				<option value="medium">Medium</option>
+				<option value="high">High</option>
+				<option value="urgent">Urgent</option>
+			</select>
+		</div>
 
-	<div>
-		<label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-		<input
-			id="dueDate"
-			type="date"
-			bind:value={dueDate}
-			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-		/>
-		{#if errors.dueDate}
-			<p class="mt-1 text-sm text-red-600">{errors.dueDate}</p>
-		{/if}
+		<div>
+			<label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+			<input
+				id="dueDate"
+				type="date"
+				bind:value={dueDate}
+				class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+			/>
+			{#if errors.dueDate}
+				<p class="mt-1 text-sm text-red-600">{errors.dueDate}</p>
+			{/if}
+		</div>
 	</div>
 
 	<div>
@@ -212,7 +214,7 @@
 		<select
 			id="categoryId"
 			bind:value={categoryId}
-			class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+			class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
 		>
 			<option value="">No category</option>
 			{#each categories as category}
@@ -231,13 +233,13 @@
 		/>
 	</div>
 
-	<div class="flex justify-end gap-3">
+	<div class="flex flex-col sm:flex-row justify-end gap-3">
 		{#if onCancel}
 			<button
 				type="button"
 				onclick={handleCancel}
 				disabled={isSubmitting}
-				class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+				class="w-full sm:w-auto px-4 py-2 sm:px-4 sm:py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
 			>
 				Cancel
 			</button>
@@ -245,7 +247,7 @@
 		<button
 			type="submit"
 			disabled={isSubmitting}
-			class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+			class="w-full sm:w-auto px-4 py-2 sm:px-4 sm:py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
 		>
 			{isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Task' : 'Update Task'}
 		</button>

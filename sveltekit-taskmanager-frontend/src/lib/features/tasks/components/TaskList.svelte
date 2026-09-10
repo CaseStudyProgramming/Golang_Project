@@ -87,15 +87,15 @@
 	}
 </script>
 
-<div class="space-y-4">
+<div class="space-y-3 sm:space-y-4">
 	{#if isLoading}
-		<div class="text-center py-12">
+		<div class="text-center py-8 sm:py-12">
 			<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-			<p class="mt-4 text-gray-500">Loading tasks...</p>
+			<p class="mt-4 text-gray-500 text-sm sm:text-base">Loading tasks...</p>
 		</div>
 	{:else if tasks.length === 0}
-		<div class="text-center py-12 bg-white rounded-lg shadow">
-			<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
+			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
 			</svg>
 			<h3 class="mt-2 text-sm font-medium text-gray-900">No tasks</h3>
@@ -104,22 +104,22 @@
 	{:else}
 		<div class="space-y-3">
 			{#each tasks as task}
-				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">
-					<div class="flex items-start justify-between">
+				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-3 sm:p-4">
+					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
 						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 mb-2">
-								<h3 class="text-lg font-medium text-gray-900 truncate">{task.title}</h3>
-								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getPriorityColor(task.priority)}">
+							<div class="flex flex-wrap items-center gap-2 mb-2">
+								<h3 class="text-base sm:text-lg font-medium text-gray-900 truncate">{task.title}</h3>
+								<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getPriorityColor(task.priority)}">
 									{task.priority}
 								</span>
-								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusColor(task.status)}">
+								<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getStatusColor(task.status)}">
 									{task.status.replace('_', ' ')}
 								</span>
 							</div>
 							{#if task.description}
 								<p class="text-sm text-gray-600 mb-2 line-clamp-2">{task.description}</p>
 							{/if}
-							<div class="flex items-center gap-4 text-sm text-gray-500">
+							<div class="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-500">
 								<div class="flex items-center">
 									<svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -155,7 +155,7 @@
 								</div>
 							{/if}
 						</div>
-						<div class="flex items-center gap-2 ml-4">
+						<div class="flex items-center gap-2 sm:ml-4">
 							{#if onViewTask}
 								<button
 									onclick={() => onViewTask(task)}
