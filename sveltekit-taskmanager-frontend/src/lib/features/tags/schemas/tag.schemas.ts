@@ -11,7 +11,7 @@ const nameSchema = z
 	.string()
 	.min(1, 'Name is required')
 	.max(50, 'Name is too long')
-	.transform((val) => val.trim());
+	.transform(val => val.trim());
 
 /**
  * Color validation schema (hex color)
@@ -25,16 +25,16 @@ const colorSchema = z
  * Create tag validation schema
  */
 export const createTagSchema = z.object({
-	name: nameSchema,
-	color: colorSchema
+	color: colorSchema,
+	name: nameSchema
 });
 
 /**
  * Update tag validation schema
  */
 export const updateTagSchema = z.object({
-	name: nameSchema.optional(),
-	color: colorSchema
+	color: colorSchema,
+	name: nameSchema.optional()
 });
 
 /**

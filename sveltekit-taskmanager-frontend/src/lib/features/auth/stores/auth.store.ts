@@ -3,14 +3,27 @@
  * Manages user session, JWT token, and authentication state
  */
 
-import { setAuthToken, removeAuthToken, getAuthToken, setRefreshToken, getRefreshToken, isTokenExpired } from '$lib/shared/utils/auth.interceptors';
-import { AuthenticationError, withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
-import { loginSchema, registerSchema } from '../schemas/auth.schemas';
-import { authApi } from '../api/auth.api';
-import type { User, AuthState } from '../types/auth.types';
 import { goto } from '$app/navigation';
+import {
+	getAuthToken,
+	getRefreshToken,
+	isTokenExpired,
+	removeAuthToken,
+	setAuthToken,
+	setRefreshToken
+} from '$lib/shared/utils/auth.interceptors';
+import {
+	AuthenticationError,
+	ValidationError,
+	withErrorHandling
+} from '$lib/shared/utils/error.utils';
 
-let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+import type { AuthState, User } from '../types/auth.types';
+
+import { authApi } from '../api/auth.api';
+import { loginSchema, registerSchema } from '../schemas/auth.schemas';
+
+let refreshTimer: null | ReturnType<typeof setTimeout> = null;
 const REDIRECT_KEY = 'auth_redirect';
 
 /**
@@ -18,11 +31,11 @@ const REDIRECT_KEY = 'auth_redirect';
  */
 function createAuthStore() {
 	const state = $state<AuthState>({
+		error: null,
 		isAuthenticated: false,
-		user: null,
-		token: null,
 		isLoading: false,
-		error: null
+		token: null,
+		user: null
 	});
 
 	/**
@@ -33,10 +46,10 @@ function createAuthStore() {
 		if (token) {
 			state.token = token;
 			state.isAuthenticated = true;
-			
+
 			// Set up automatic token refresh
 			setupTokenRefresh();
-			
+
 			// Fetch current user data
 			fetchCurrentUser().catch(() => {
 				// If fetch fails, token might be invalid
@@ -86,7 +99,7 @@ function createAuthStore() {
 	/**
 	 * Get and clear redirect URL
 	 */
-	function getRedirectUrl(): string | null {
+	function getRedirectUrl(): null | string {
 		if (typeof window === 'undefined') return null;
 		const url = sessionStorage.getItem(REDIRECT_KEY);
 		sessionStorage.removeItem(REDIRECT_KEY);
@@ -143,7 +156,7 @@ function createAuthStore() {
 	/**
 	 * Register new user
 	 */
-	async function register(data: { email: string; password: string; name?: string }): Promise<void> {
+	async function register(data: { email: string; name?: string; password: string }): Promise<void> {
 		state.isLoading = true;
 		state.error = null;
 
@@ -272,23 +285,23 @@ function createAuthStore() {
 	}
 
 	return {
+		cleanup,
+		clearError,
+		ensureValidToken,
+		fetchCurrentUser,
+		getRedirectUrl,
+		initialize,
+		login,
+		logout,
+		needsTokenRefresh,
+		redirectAfterAuth,
+		refreshToken,
+		register,
+		saveRedirectUrl,
 		get state() {
 			return state;
 		},
-		initialize,
-		login,
-		register,
-		logout,
-		updateUser,
-		clearError,
-		refreshToken,
-		fetchCurrentUser,
-		needsTokenRefresh,
-		ensureValidToken,
-		cleanup,
-		saveRedirectUrl,
-		getRedirectUrl,
-		redirectAfterAuth
+		updateUser
 	};
 }
 
@@ -296,7 +309,7 @@ function createAuthStore() {
  * Export authentication store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let authStoreInstance: ReturnType<typeof createAuthStore> | null = null;
+let authStoreInstance: null | ReturnType<typeof createAuthStore> = null;
 
 export const authStore = new Proxy({} as ReturnType<typeof createAuthStore>, {
 	get(_target, prop) {

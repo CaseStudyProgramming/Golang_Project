@@ -11,7 +11,7 @@ const nameSchema = z
 	.string()
 	.min(1, 'Name is required')
 	.max(100, 'Name is too long')
-	.transform((val) => val.trim());
+	.transform(val => val.trim());
 
 /**
  * Description validation schema
@@ -19,7 +19,7 @@ const nameSchema = z
 const descriptionSchema = z
 	.string()
 	.max(500, 'Description is too long')
-	.transform((val) => val.trim())
+	.transform(val => val.trim())
 	.optional();
 
 /**
@@ -34,20 +34,20 @@ const colorSchema = z
  * Create category validation schema
  */
 export const createCategorySchema = z.object({
-	name: nameSchema,
-	description: descriptionSchema,
 	color: colorSchema,
-	icon: z.string().max(50, 'Icon is too long').optional()
+	description: descriptionSchema,
+	icon: z.string().max(50, 'Icon is too long').optional(),
+	name: nameSchema
 });
 
 /**
  * Update category validation schema
  */
 export const updateCategorySchema = z.object({
-	name: nameSchema.optional(),
-	description: descriptionSchema,
 	color: colorSchema,
-	icon: z.string().max(50, 'Icon is too long').optional()
+	description: descriptionSchema,
+	icon: z.string().max(50, 'Icon is too long').optional(),
+	name: nameSchema.optional()
 });
 
 /**

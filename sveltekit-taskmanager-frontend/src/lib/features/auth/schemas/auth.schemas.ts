@@ -12,7 +12,7 @@ const emailSchema = z
 	.min(1, 'Email is required')
 	.email('Invalid email format')
 	.max(255, 'Email is too long')
-	.transform((val) => val.toLowerCase().trim());
+	.transform(val => val.toLowerCase().trim());
 
 /**
  * Password validation schema (OWASP password guidelines)
@@ -33,7 +33,7 @@ const nameSchema = z
 	.string()
 	.min(1, 'Name is required')
 	.max(100, 'Name is too long')
-	.transform((val) => val.trim());
+	.transform(val => val.trim());
 
 /**
  * Login credentials validation schema
@@ -48,8 +48,8 @@ export const loginSchema = z.object({
  */
 export const registerSchema = z.object({
 	email: emailSchema,
-	password: passwordSchema,
-	name: nameSchema.optional()
+	name: nameSchema.optional(),
+	password: passwordSchema
 });
 
 /**
@@ -62,14 +62,21 @@ export const forgotPasswordSchema = z.object({
 /**
  * Reset password request validation schema
  */
-export const resetPasswordSchema = z.object({
-	token: z.string().min(1, 'Reset token is required'),
-	password: passwordSchema,
-	confirmPassword: z.string().min(1, 'Please confirm your password')
-}).refine((data) => data.password === data.confirmPassword, {
-	message: 'Passwords do not match',
-	path: ['confirmPassword']
-});
+export const resetPasswordSchema = z
+	.object({
+		confirmPassword: z.string().min(1, 'Please confirm your password'),
+		password: passwordSchema,
+		token: z.string().min(1, 'Reset token is required')
+	})
+	.refine(data => data.password === data.confirmPassword, {
+		message: 'Passwords do not match',
+		path: ['confirmPassword']
+	});
+
+/**
+ * Type inference for forgot password request
+ */
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
 
 /**
  * Type inference for login credentials
@@ -80,11 +87,6 @@ export type LoginCredentials = z.infer<typeof loginSchema>;
  * Type inference for registration data
  */
 export type RegistrationData = z.infer<typeof registerSchema>;
-
-/**
- * Type inference for forgot password request
- */
-export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
 
 /**
  * Type inference for reset password request

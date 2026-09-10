@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-
-	function goHome() {
-		goto('/');
-	}
+	import { page } from '$app/stores';
 
 	function goBack() {
 		window.history.back();
+	}
+
+	function goHome() {
+		goto('/');
 	}
 </script>
 

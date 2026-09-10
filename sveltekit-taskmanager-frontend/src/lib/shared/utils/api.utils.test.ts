@@ -1,21 +1,21 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpClient } from './api.utils';
 
 // Mock window object for tests
 const localStorageMock = {
 	getItem: vi.fn(() => null),
-	setItem: vi.fn(),
-	removeItem: vi.fn()
+	removeItem: vi.fn(),
+	setItem: vi.fn()
 };
 
 Object.defineProperty(globalThis, 'window', {
 	value: {
 		...globalThis.window,
-		localStorage: localStorageMock,
 		document: {
 			cookie: ''
-		}
+		},
+		localStorage: localStorageMock
 	},
 	writable: true
 });

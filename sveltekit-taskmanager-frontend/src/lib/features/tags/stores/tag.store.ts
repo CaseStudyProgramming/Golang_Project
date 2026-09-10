@@ -3,19 +3,21 @@
  */
 
 import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
-import { createTagSchema, updateTagSchema } from '../schemas/tag.schemas';
+import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
+
 import type { Tag, TagState } from '../types/tag.types';
+
+import { createTagSchema, updateTagSchema } from '../schemas/tag.schemas';
 
 /**
  * Create tag store with Svelte 5 runes
  */
 function createTagStore() {
 	const state = $state<TagState>({
-		tags: [],
 		currentTag: null,
+		error: null,
 		isLoading: false,
-		error: null
+		tags: []
 	});
 
 	/**
@@ -29,7 +31,7 @@ function createTagStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.get<Tag[]>('/tags');
-				
+
 				// Mock response for development
 				const mockTags: Tag[] = [];
 
@@ -54,12 +56,12 @@ function createTagStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.get<Tag>(`/tags/${id}`);
-				
+
 				// Mock response for development
 				const mockTag: Tag = {
+					createdAt: new Date().toISOString(),
 					id,
 					name: 'Mock Tag',
-					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					userId: '1'
 				};
@@ -88,13 +90,13 @@ function createTagStore() {
 			const newTag = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.post<Tag>('/tags', validatedPayload);
-				
+
 				// Mock response for development
 				const mockTag: Tag = {
-					id: Date.now().toString(),
-					name: validatedPayload.name,
 					color: validatedPayload.color,
 					createdAt: new Date().toISOString(),
+					id: Date.now().toString(),
+					name: validatedPayload.name,
 					updatedAt: new Date().toISOString(),
 					userId: '1'
 				};
@@ -131,15 +133,15 @@ function createTagStore() {
 			const updatedTag = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.patch<Tag>(`/tags/${id}`, validatedPayload);
-				
+
 				// Mock response for development
 				const mockTag: Tag = {
-					...state.tags.find((t) => t.id === id)!,
+					...state.tags.find(t => t.id === id)!,
 					...validatedPayload,
 					updatedAt: new Date().toISOString()
 				};
 
-				state.tags = state.tags.map((tag) => (tag.id === id ? mockTag : tag));
+				state.tags = state.tags.map(tag => (tag.id === id ? mockTag : tag));
 
 				if (state.currentTag?.id === id) {
 					state.currentTag = mockTag;
@@ -172,8 +174,8 @@ function createTagStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/tags/${id}`);
-				
-				state.tags = state.tags.filter((tag) => tag.id !== id);
+
+				state.tags = state.tags.filter(tag => tag.id !== id);
 
 				if (state.currentTag?.id === id) {
 					state.currentTag = null;
@@ -205,16 +207,16 @@ function createTagStore() {
 	}
 
 	return {
+		clearError,
+		createTag,
+		deleteTag,
+		fetchTagById,
+		fetchTags,
+		reset,
 		get state() {
 			return state;
 		},
-		fetchTags,
-		fetchTagById,
-		createTag,
-		updateTag,
-		deleteTag,
-		clearError,
-		reset
+		updateTag
 	};
 }
 
@@ -222,7 +224,7 @@ function createTagStore() {
  * Export tag store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let tagStoreInstance: ReturnType<typeof createTagStore> | null = null;
+let tagStoreInstance: null | ReturnType<typeof createTagStore> = null;
 
 export const tagStore = new Proxy({} as ReturnType<typeof createTagStore>, {
 	get(_target, prop) {

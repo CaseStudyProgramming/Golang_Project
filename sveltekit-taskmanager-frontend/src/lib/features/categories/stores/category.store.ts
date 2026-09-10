@@ -3,9 +3,11 @@
  */
 
 import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
-import { createCategorySchema, updateCategorySchema } from '../schemas/category.schemas';
+import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
+
 import type { Category, CategoryState } from '../types/category.types';
+
+import { createCategorySchema, updateCategorySchema } from '../schemas/category.schemas';
 
 /**
  * Create category store with Svelte 5 runes
@@ -14,8 +16,8 @@ function createCategoryStore() {
 	const state = $state<CategoryState>({
 		categories: [],
 		currentCategory: null,
-		isLoading: false,
-		error: null
+		error: null,
+		isLoading: false
 	});
 
 	/**
@@ -29,7 +31,7 @@ function createCategoryStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.get<Category[]>('/categories');
-				
+
 				// Mock response for development
 				const mockCategories: Category[] = [];
 
@@ -54,12 +56,12 @@ function createCategoryStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.get<Category>(`/categories/${id}`);
-				
+
 				// Mock response for development
 				const mockCategory: Category = {
+					createdAt: new Date().toISOString(),
 					id,
 					name: 'Mock Category',
-					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					userId: '1'
 				};
@@ -88,15 +90,15 @@ function createCategoryStore() {
 			const newCategory = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.post<Category>('/categories', validatedPayload);
-				
+
 				// Mock response for development
 				const mockCategory: Category = {
+					color: validatedPayload.color,
+					createdAt: new Date().toISOString(),
+					description: validatedPayload.description,
+					icon: validatedPayload.icon,
 					id: Date.now().toString(),
 					name: validatedPayload.name,
-					description: validatedPayload.description,
-					color: validatedPayload.color,
-					icon: validatedPayload.icon,
-					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString(),
 					userId: '1'
 				};
@@ -133,15 +135,15 @@ function createCategoryStore() {
 			const updatedCategory = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.patch<Category>(`/categories/${id}`, validatedPayload);
-				
+
 				// Mock response for development
 				const mockCategory: Category = {
-					...state.categories.find((c) => c.id === id)!,
+					...state.categories.find(c => c.id === id)!,
 					...validatedPayload,
 					updatedAt: new Date().toISOString()
 				};
 
-				state.categories = state.categories.map((category) =>
+				state.categories = state.categories.map(category =>
 					category.id === id ? mockCategory : category
 				);
 
@@ -176,8 +178,8 @@ function createCategoryStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/categories/${id}`);
-				
-				state.categories = state.categories.filter((category) => category.id !== id);
+
+				state.categories = state.categories.filter(category => category.id !== id);
 
 				if (state.currentCategory?.id === id) {
 					state.currentCategory = null;
@@ -209,16 +211,16 @@ function createCategoryStore() {
 	}
 
 	return {
+		clearError,
+		createCategory,
+		deleteCategory,
+		fetchCategories,
+		fetchCategoryById,
+		reset,
 		get state() {
 			return state;
 		},
-		fetchCategories,
-		fetchCategoryById,
-		createCategory,
-		updateCategory,
-		deleteCategory,
-		clearError,
-		reset
+		updateCategory
 	};
 }
 
@@ -226,7 +228,7 @@ function createCategoryStore() {
  * Export category store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let categoryStoreInstance: ReturnType<typeof createCategoryStore> | null = null;
+let categoryStoreInstance: null | ReturnType<typeof createCategoryStore> = null;
 
 export const categoryStore = new Proxy({} as ReturnType<typeof createCategoryStore>, {
 	get(_target, prop) {

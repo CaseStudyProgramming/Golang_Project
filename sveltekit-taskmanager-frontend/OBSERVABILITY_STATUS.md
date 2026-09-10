@@ -3,6 +3,7 @@
 ## Current Implementation Status
 
 ### ✅ Implemented
+
 - **Error Handling Utilities**: Custom error classes in `src/lib/shared/utils/error.utils.ts`
   - `ApiError` for API-specific errors
   - `ValidationError` for validation errors
@@ -26,6 +27,7 @@
   - Session management
 
 ### ❌ Not Implemented (Production Gaps)
+
 - **Production Error Tracking**: No integration with error tracking services (Sentry, LogRocket, etc.)
 - **Structured Logging**: No structured logging library or JSON format for logs
 - **Performance Monitoring**: No dedicated performance monitoring service (Web Vitals, bundle analysis)
@@ -40,16 +42,19 @@
 ## Migration Guide (Recommended for Production)
 
 ### Phase 1: Error Tracking
+
 **Priority**: High
 **Estimated Effort**: 2-3 days
 
 **Goals**:
+
 - Integrate production error tracking service
 - Configure source maps for better error debugging
 - Track JavaScript errors, API failures, and user interactions
 - Set up alerting for critical errors
 
 **Implementation Steps**:
+
 1. Choose error tracking service:
    - **Sentry** (recommended, excellent for JavaScript/TypeScript)
    - **LogRocket** (includes session replay)
@@ -57,20 +62,22 @@
    - **Rollbar** (real-time error tracking)
 
 2. Install Sentry (example):
+
    ```bash
    bun add @sentry/sveltekit
    ```
 
 3. Configure Sentry in SvelteKit:
+
    ```typescript
    // src/hooks.client.ts
    import * as Sentry from '@sentry/sveltekit';
 
    Sentry.init({
-     dsn: import.meta.env.VITE_PUBLIC_SENTRY_DSN,
-     tracesSampleRate: 1.0,
-     environment: import.meta.env.MODE,
-     release: import.meta.env.VITE_APP_VERSION,
+   	dsn: import.meta.env.VITE_PUBLIC_SENTRY_DSN,
+   	tracesSampleRate: 1.0,
+   	environment: import.meta.env.MODE,
+   	release: import.meta.env.VITE_APP_VERSION
    });
    ```
 
@@ -79,33 +86,35 @@
    import * as Sentry from '@sentry/sveltekit';
 
    Sentry.init({
-     dsn: import.meta.env.VITE_PUBLIC_SENTRY_DSN,
-     environment: import.meta.env.MODE,
-     tracesSampleRate: 1.0,
+   	dsn: import.meta.env.VITE_PUBLIC_SENTRY_DSN,
+   	environment: import.meta.env.MODE,
+   	tracesSampleRate: 1.0
    });
    ```
 
 4. Configure source maps:
+
    ```javascript
    // vite.config.ts
    export default defineConfig({
-     build: {
-       sourcemap: true, // Enable source maps for production
-     },
+   	build: {
+   		sourcemap: true // Enable source maps for production
+   	}
    });
    ```
 
 5. Add user context to errors:
+
    ```typescript
    // In error handlers
    Sentry.setUser({
-     id: user.id,
-     email: user.email,
+   	id: user.id,
+   	email: user.email
    });
 
    Sentry.setContext('task_operation', {
-     task_id: task.id,
-     operation: 'create',
+   	task_id: task.id,
+   	operation: 'create'
    });
    ```
 
@@ -115,83 +124,92 @@
    - Alert on specific error types (authentication failures, etc.)
 
 **Files to Create**:
+
 - `src/hooks.client.ts` (if not exists)
 - Update `src/hooks.server.ts`
 
 **Files to Modify**:
+
 - `vite.config.ts`
 - `src/lib/shared/utils/error.utils.ts` (integrate Sentry)
 - `.env` (add Sentry DSN)
 
 ### Phase 2: Performance Monitoring
+
 **Priority**: High
 **Estimated Effort**: 2-3 days
 
 **Goals**:
+
 - Implement Web Vitals monitoring (LCP, FID, CLS)
 - Track page load times and API response times
 - Monitor bundle size and loading performance
 - Set up performance budgets and alerts
 
 **Implementation Steps**:
+
 1. Add Web Vitals library:
+
    ```bash
    bun add web-vitals
    ```
 
 2. Implement Web Vitals tracking:
+
    ```typescript
    // src/lib/shared/utils/performance.utils.ts
    import { onCLS, onFID, onLCP, onFCP, onTTFB } from 'web-vitals';
 
    export function initWebVitals() {
-     onCLS((metric) => {
-       sendToAnalytics('CLS', metric);
-     });
+   	onCLS(metric => {
+   		sendToAnalytics('CLS', metric);
+   	});
 
-     onFID((metric) => {
-       sendToAnalytics('FID', metric);
-     });
+   	onFID(metric => {
+   		sendToAnalytics('FID', metric);
+   	});
 
-     onLCP((metric) => {
-       sendToAnalytics('LCP', metric);
-     });
+   	onLCP(metric => {
+   		sendToAnalytics('LCP', metric);
+   	});
 
-     onFCP((metric) => {
-       sendToAnalytics('FCP', metric);
-     });
+   	onFCP(metric => {
+   		sendToAnalytics('FCP', metric);
+   	});
 
-     onTTFB((metric) => {
-       sendToAnalytics('TTFB', metric);
-     });
+   	onTTFB(metric => {
+   		sendToAnalytics('TTFB', metric);
+   	});
    }
 
    function sendToAnalytics(name: string, metric: any) {
-     // Send to analytics service (Sentry, Google Analytics, etc.)
-     if (typeof window !== 'undefined' && window.Sentry) {
-       window.Sentry.captureMessage(`Web Vital: ${name}`, {
-         level: 'info',
-         extra: {
-           value: metric.value,
-           rating: metric.rating,
-         },
-       });
-     }
+   	// Send to analytics service (Sentry, Google Analytics, etc.)
+   	if (typeof window !== 'undefined' && window.Sentry) {
+   		window.Sentry.captureMessage(`Web Vital: ${name}`, {
+   			level: 'info',
+   			extra: {
+   				value: metric.value,
+   				rating: metric.rating
+   			}
+   		});
+   	}
    }
    ```
 
 3. Initialize Web Vitals in app:
+
    ```typescript
    // src/routes/+layout.svelte
    import { onMount } from 'svelte';
    import { initWebVitals } from '$lib/shared/utils/performance.utils';
 
    onMount(() => {
-     initWebVitals();
+   	initWebVitals();
    });
    ```
 
 4. Add bundle size monitoring:
+
    ```bash
    bun add -D rollup-plugin-visualizer
    ```
@@ -201,30 +219,31 @@
    import { visualizer } from 'rollup-plugin-visualizer';
 
    export default defineConfig({
-     plugins: [
-       visualizer({
-         open: true,
-         gzipSize: true,
-         brotliSize: true,
-       }),
-     ],
+   	plugins: [
+   		visualizer({
+   			open: true,
+   			gzipSize: true,
+   			brotliSize: true
+   		})
+   	]
    });
    ```
 
 5. Set up performance budgets:
+
    ```javascript
    // vite.config.ts
    export default defineConfig({
-     build: {
-       rollupOptions: {
-         output: {
-           manualChunks: {
-             vendor: ['svelte', '@sveltejs/kit'],
-             ui: ['bits-ui', 'lucide-svelte'],
-           },
-         },
-       },
-     },
+   	build: {
+   		rollupOptions: {
+   			output: {
+   				manualChunks: {
+   					vendor: ['svelte', '@sveltejs/kit'],
+   					ui: ['bits-ui', 'lucide-svelte']
+   				}
+   			}
+   		}
+   	}
    });
    ```
 
@@ -232,45 +251,50 @@
    ```typescript
    // In api.utils.ts
    export async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
-     const start = performance.now();
+   	const start = performance.now();
 
-     try {
-       const response = await fetch(url, options);
-       const duration = performance.now() - start;
+   	try {
+   		const response = await fetch(url, options);
+   		const duration = performance.now() - start;
 
-       // Track API performance
-       if (duration > 1000) {
-         console.warn(`Slow API request: ${url} took ${duration}ms`);
-         // Send to analytics
-       }
+   		// Track API performance
+   		if (duration > 1000) {
+   			console.warn(`Slow API request: ${url} took ${duration}ms`);
+   			// Send to analytics
+   		}
 
-       return response.json();
-     } catch (error) {
-       const duration = performance.now() - start;
-       // Track failed requests
-       throw error;
-     }
+   		return response.json();
+   	} catch (error) {
+   		const duration = performance.now() - start;
+   		// Track failed requests
+   		throw error;
+   	}
    }
    ```
 
 **Files to Create**:
+
 - `src/lib/shared/utils/performance.utils.ts`
 
 **Files to Modify**:
+
 - `src/routes/+layout.svelte`
 - `vite.config.ts`
 - `src/lib/shared/utils/api.utils.ts`
 
 ### Phase 3: User Analytics
+
 **Priority**: Medium
 **Estimated Effort**: 3-4 days
 
 **Goals**:
+
 - Implement user action tracking for critical flows
 - Track feature usage and user engagement
 - Set up funnel analysis for key user journeys
 
 **Implementation Steps**:
+
 1. Choose analytics service:
    - **Google Analytics 4** (free, widely used)
    - **Mixpanel** (excellent for product analytics)
@@ -278,38 +302,42 @@
    - **PostHog** (open-source alternative)
 
 2. Install analytics library (example with Google Analytics):
+
    ```bash
    bun add @sveltejs/analytics
    ```
 
 3. Configure analytics:
+
    ```typescript
    // src/hooks.client.ts
    import { analytics } from '@sveltejs/analytics/google';
 
    analytics('G-XXXXXXXXXX', {
-     pageview: true,
+   	pageview: true
    });
    ```
 
 4. Track custom events:
+
    ```typescript
    // src/lib/shared/utils/analytics.utils.ts
    export function trackEvent(eventName: string, properties?: Record<string, any>) {
-     if (typeof window !== 'undefined' && window.gtag) {
-       window.gtag('event', eventName, properties);
-     }
+   	if (typeof window !== 'undefined' && window.gtag) {
+   		window.gtag('event', eventName, properties);
+   	}
    }
 
    export function trackUserAction(action: string, context?: Record<string, any>) {
-     trackEvent('user_action', {
-       action,
-       ...context,
-     });
+   	trackEvent('user_action', {
+   		action,
+   		...context
+   	});
    }
    ```
 
 5. Track critical user flows:
+
    ```typescript
    // In auth.store.ts
    async login(email: string, password: string) {
@@ -326,6 +354,7 @@
    ```
 
 6. Track feature usage:
+
    ```typescript
    // In task store
    async createTask(taskData: TaskData) {
@@ -343,24 +372,30 @@
    - Track feature adoption: tags, categories, subtasks usage
 
 **Files to Create**:
+
 - `src/lib/shared/utils/analytics.utils.ts`
 
 **Files to Modify**:
+
 - `src/hooks.client.ts`
 - `src/lib/features/auth/stores/auth.store.ts`
 - `src/lib/features/tasks/stores/task.store.ts`
 
 ### Phase 4: Error Boundaries & UX Improvements
+
 **Priority**: Medium
 **Estimated Effort**: 2-3 days
 
 **Goals**:
+
 - Implement custom error boundaries for better error UX
 - Add error recovery mechanisms
 - Implement fallback UI for critical failures
 
 **Implementation Steps**:
+
 1. Create custom error pages:
+
    ```svelte
    <!-- src/routes/+error.svelte -->
    <script lang="ts">
@@ -395,6 +430,7 @@
    ```
 
 2. Implement component-level error boundaries:
+
    ```svelte
    <!-- src/lib/shared/components/ErrorBoundary.svelte -->
    <script lang="ts">
@@ -438,6 +474,7 @@
    ```
 
 3. Implement loading states and skeletons:
+
    ```svelte
    <!-- Example skeleton loading -->
    {#if loading}
@@ -467,26 +504,28 @@
    ```typescript
    // src/lib/shared/utils/offline.utils.ts
    export function initOfflineSupport() {
-     window.addEventListener('online', () => {
-       // Sync offline changes
-     });
+   	window.addEventListener('online', () => {
+   		// Sync offline changes
+   	});
 
-     window.addEventListener('offline', () => {
-       // Show offline notification
-     });
+   	window.addEventListener('offline', () => {
+   		// Show offline notification
+   	});
    }
 
    export function isOnline(): boolean {
-     return navigator.onLine;
+   	return navigator.onLine;
    }
    ```
 
 **Files to Create**:
+
 - `src/routes/+error.svelte`
 - `src/lib/shared/components/ErrorBoundary.svelte`
 - `src/lib/shared/utils/offline.utils.ts`
 
 **Files to Modify**:
+
 - `src/routes/+layout.svelte` (init offline support)
 
 ## Production Checklist
@@ -513,6 +552,7 @@ Before deploying to production, ensure:
 ## Monitoring & Alerting Recommendations
 
 ### Key Metrics to Monitor
+
 - **Error Rate**: JavaScript errors, API failures
 - **Performance**: LCP < 2.5s, FID < 100ms, CLS < 0.1
 - **User Engagement**: Session duration, page views per session
@@ -521,6 +561,7 @@ Before deploying to production, ensure:
 - **Bundle Size**: Initial load size, chunk sizes
 
 ### Alert Thresholds (Example)
+
 - Error rate > 1% for 5 minutes
 - LCP > 4s for 10% of users
 - API failure rate > 5% for 5 minutes
@@ -528,6 +569,7 @@ Before deploying to production, ensure:
 - New error introduced in production
 
 ### Recommended Tools
+
 - **Error Tracking**: Sentry, LogRocket, Bugsnag
 - **Performance Monitoring**: Google Analytics Web Vitals, Lighthouse CI
 - **User Analytics**: Google Analytics 4, Mixpanel, Amplitude

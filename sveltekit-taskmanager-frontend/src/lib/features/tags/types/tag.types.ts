@@ -19,7 +19,7 @@ export interface Tag {
  */
 export interface TagState {
 	tags: Tag[];
-	currentTag: Tag | null;
+	currentTag: null | Tag;
 	isLoading: boolean;
-	error: string | null;
+	error: null | string;
 }

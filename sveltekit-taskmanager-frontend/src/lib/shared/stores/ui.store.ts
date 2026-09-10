@@ -3,16 +3,7 @@
  * Manages loading states, notifications, and modals
  */
 
-import type { Notification, Modal, LoadingState, NotificationType } from '../types/ui.types';
-
-/**
- * UI store state interface
- */
-interface UIState {
-	loading: LoadingState;
-	notifications: Notification[];
-	modals: Modal[];
-}
+import type { LoadingState, Modal, Notification, NotificationType } from '../types/ui.types';
 
 /**
  * Options for adding notifications
@@ -31,6 +22,15 @@ interface OpenModalOptions {
 }
 
 /**
+ * UI store state interface
+ */
+interface UIState {
+	loading: LoadingState;
+	notifications: Notification[];
+	modals: Modal[];
+}
+
+/**
  * Create UI store with Svelte 5 runes
  */
 function createUIStore() {
@@ -39,8 +39,8 @@ function createUIStore() {
 			isLoading: false,
 			message: undefined
 		},
-		notifications: [],
-		modals: []
+		modals: [],
+		notifications: []
 	});
 
 	/**
@@ -68,13 +68,13 @@ function createUIStore() {
 	): string {
 		const id = Date.now().toString();
 		const notification: Notification = {
-			id,
-			type,
-			title,
-			message,
+			createdAt: Date.now(),
 			duration: options?.duration || 5000,
+			id,
 			isPersistent: options?.isPersistent || false,
-			createdAt: Date.now()
+			message,
+			title,
+			type
 		};
 
 		state.notifications = [...state.notifications, notification];
@@ -93,7 +93,7 @@ function createUIStore() {
 	 * Remove notification by ID
 	 */
 	function removeNotification(id: string): void {
-		state.notifications = state.notifications.filter((n) => n.id !== id);
+		state.notifications = state.notifications.filter(n => n.id !== id);
 	}
 
 	/**
@@ -150,13 +150,13 @@ function createUIStore() {
 	 * Close modal by ID
 	 */
 	function closeModal(id: string): void {
-		state.modals = state.modals.map((modal) =>
+		state.modals = state.modals.map(modal =>
 			modal.id === id ? { ...modal, isOpen: false } : modal
 		);
 
 		// Remove modal after animation
 		setTimeout(() => {
-			state.modals = state.modals.filter((modal) => modal.id !== id);
+			state.modals = state.modals.filter(modal => modal.id !== id);
 		}, 300);
 	}
 
@@ -164,7 +164,7 @@ function createUIStore() {
 	 * Close all modals
 	 */
 	function closeAllModals(): void {
-		state.modals = state.modals.map((modal) => ({ ...modal, isOpen: false }));
+		state.modals = state.modals.map(modal => ({ ...modal, isOpen: false }));
 
 		// Remove all modals after animation
 		setTimeout(() => {
@@ -178,17 +178,17 @@ function createUIStore() {
 	function confirm(
 		title: string,
 		message?: string,
-		onConfirm?: () => void | Promise<void>,
+		onConfirm?: () => Promise<void> | void,
 		options?: OpenModalOptions
 	): string {
 		return openModal({
-			type: 'confirm',
-			title,
+			cancelText: options?.cancelText || 'Cancel',
+			confirmText: options?.confirmText || 'Confirm',
 			message,
 			onConfirm,
-			confirmText: options?.confirmText || 'Confirm',
-			cancelText: options?.cancelText || 'Cancel',
-			showCancel: true
+			showCancel: true,
+			title,
+			type: 'confirm'
 		});
 	}
 
@@ -197,11 +197,11 @@ function createUIStore() {
 	 */
 	function alert(title: string, message?: string, options?: OpenModalOptions): string {
 		return openModal({
-			type: 'alert',
-			title,
-			message,
 			confirmText: options?.confirmText || 'OK',
-			showCancel: false
+			message,
+			showCancel: false,
+			title,
+			type: 'alert'
 		});
 	}
 
@@ -215,24 +215,24 @@ function createUIStore() {
 	}
 
 	return {
+		addNotification,
+		alert,
+		clearLoading,
+		clearNotifications,
+		closeAllModals,
+		closeModal,
+		confirm,
+		error,
+		info,
+		openModal,
+		removeNotification,
+		reset,
+		setLoading,
 		get state() {
 			return state;
 		},
-		setLoading,
-		clearLoading,
-		addNotification,
-		removeNotification,
-		clearNotifications,
 		success,
-		error,
-		warning,
-		info,
-		openModal,
-		closeModal,
-		closeAllModals,
-		confirm,
-		alert,
-		reset
+		warning
 	};
 }
 
@@ -240,7 +240,7 @@ function createUIStore() {
  * Export UI store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let uiStoreInstance: ReturnType<typeof createUIStore> | null = null;
+let uiStoreInstance: null | ReturnType<typeof createUIStore> = null;
 
 export const uiStore = new Proxy({} as ReturnType<typeof createUIStore>, {
 	get(_target, prop) {

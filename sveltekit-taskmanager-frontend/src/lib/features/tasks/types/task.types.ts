@@ -3,14 +3,55 @@
  */
 
 /**
- * Task priority levels
+ * Activity log interface
  */
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export interface Activity {
+	id: string;
+	taskId: string;
+	type: ActivityType;
+	description: string;
+	userId: string;
+	userName?: string;
+	changes?: Record<string, { new: unknown; old: unknown }>;
+	createdAt: string;
+}
 
 /**
- * Task status
+ * Activity filter options
  */
-export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'cancelled' | 'deleted';
+export interface ActivityFilters {
+	taskId?: string;
+	type?: ActivityType;
+	userId?: string;
+	dateFrom?: string;
+	dateTo?: string;
+}
+
+/**
+ * Activity store state interface
+ */
+export interface ActivityState {
+	activities: Activity[];
+	isLoading: boolean;
+	error: null | string;
+}
+
+/**
+ * Activity types
+ */
+export type ActivityType =
+	| 'category_assigned'
+	| 'priority_changed'
+	| 'status_changed'
+	| 'subtask_added'
+	| 'subtask_completed'
+	| 'subtask_deleted'
+	| 'tag_added'
+	| 'tag_removed'
+	| 'task_completed'
+	| 'task_created'
+	| 'task_deleted'
+	| 'task_updated';
 
 /**
  * Subtask interface
@@ -58,62 +99,16 @@ export interface TaskFilters {
 }
 
 /**
+ * Task priority levels
+ */
+export type TaskPriority = 'high' | 'low' | 'medium' | 'urgent';
+
+/**
  * Task sort options
  */
 export interface TaskSort {
-	field: 'title' | 'dueDate' | 'priority' | 'createdAt' | 'updatedAt';
+	field: 'createdAt' | 'dueDate' | 'priority' | 'title' | 'updatedAt';
 	order: 'asc' | 'desc';
-}
-
-/**
- * Activity types
- */
-export type ActivityType =
-	| 'task_created'
-	| 'task_updated'
-	| 'task_deleted'
-	| 'task_completed'
-	| 'subtask_added'
-	| 'subtask_completed'
-	| 'subtask_deleted'
-	| 'category_assigned'
-	| 'tag_added'
-	| 'tag_removed'
-	| 'status_changed'
-	| 'priority_changed';
-
-/**
- * Activity log interface
- */
-export interface Activity {
-	id: string;
-	taskId: string;
-	type: ActivityType;
-	description: string;
-	userId: string;
-	userName?: string;
-	changes?: Record<string, { old: unknown; new: unknown }>;
-	createdAt: string;
-}
-
-/**
- * Activity filter options
- */
-export interface ActivityFilters {
-	taskId?: string;
-	type?: ActivityType;
-	userId?: string;
-	dateFrom?: string;
-	dateTo?: string;
-}
-
-/**
- * Activity store state interface
- */
-export interface ActivityState {
-	activities: Activity[];
-	isLoading: boolean;
-	error: string | null;
 }
 
 /**
@@ -121,15 +116,20 @@ export interface ActivityState {
  */
 export interface TaskState {
 	tasks: Task[];
-	currentTask: Task | null;
+	currentTask: null | Task;
 	filters: TaskFilters;
 	sort: TaskSort;
 	pagination: {
-		page: number;
 		limit: number;
+		page: number;
 		total: number;
 		totalPages: number;
 	};
 	isLoading: boolean;
-	error: string | null;
+	error: null | string;
 }
+
+/**
+ * Task status
+ */
+export type TaskStatus = 'cancelled' | 'completed' | 'deleted' | 'in_progress' | 'todo';

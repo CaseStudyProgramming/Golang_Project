@@ -3,30 +3,33 @@
  * Manages tasks list, filters, and pagination
  */
 
-import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling, ValidationError } from '$lib/shared/utils/error.utils';
-import { createTaskSchema, updateTaskSchema } from '../schemas/task.schemas';
-import type { Task, TaskFilters, TaskSort, TaskState, Subtask } from '../types/task.types';
 import type { PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
+
+import { httpClient } from '$lib/shared/utils/api.utils';
+import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
 import { z } from 'zod';
+
+import type { Subtask, Task, TaskFilters, TaskSort, TaskState } from '../types/task.types';
+
+import { createTaskSchema, updateTaskSchema } from '../schemas/task.schemas';
 
 /**
  * Create task store with Svelte 5 runes
  */
 function createTaskStore() {
 	const state = $state<TaskState>({
-		tasks: [],
 		currentTask: null,
+		error: null,
 		filters: {},
-		sort: { field: 'createdAt', order: 'desc' },
+		isLoading: false,
 		pagination: {
-			page: 1,
 			limit: 10,
+			page: 1,
 			total: 0,
 			totalPages: 0
 		},
-		isLoading: false,
-		error: null
+		sort: { field: 'createdAt', order: 'desc' },
+		tasks: []
 	});
 
 	/**
@@ -39,15 +42,15 @@ function createTaskStore() {
 		try {
 			await withErrorHandling(async () => {
 				const queryParams = new URLSearchParams();
-				
+
 				// Add pagination
 				queryParams.append('page', (params?.page || state.pagination.page).toString());
 				queryParams.append('limit', (params?.limit || state.pagination.limit).toString());
-				
+
 				// Add sort
 				queryParams.append('sort', state.sort.field);
 				queryParams.append('order', state.sort.order);
-				
+
 				// Add filters
 				if (state.filters.status) queryParams.append('status', state.filters.status);
 				if (state.filters.priority) queryParams.append('priority', state.filters.priority);
@@ -56,25 +59,25 @@ function createTaskStore() {
 				if (state.filters.dueDateFrom) queryParams.append('dueDateFrom', state.filters.dueDateFrom);
 				if (state.filters.dueDateTo) queryParams.append('dueDateTo', state.filters.dueDateTo);
 				if (state.filters.tags?.length) {
-					state.filters.tags.forEach((tag) => queryParams.append('tags', tag));
+					state.filters.tags.forEach(tag => queryParams.append('tags', tag));
 				}
 
 				// This would be replaced with actual API call
 				// const response = await httpClient.get<PaginatedResponse<Task>>(`/tasks?${queryParams}`);
-				
+
 				// Mock response for development
 				const mockResponse: PaginatedResponse<Task> = {
 					data: [],
-					total: 0,
-					page: state.pagination.page,
 					limit: state.pagination.limit,
+					page: state.pagination.page,
+					total: 0,
 					totalPages: 0
 				};
 
 				state.tasks = mockResponse.data;
 				state.pagination = {
-					page: mockResponse.page,
 					limit: mockResponse.limit,
+					page: mockResponse.page,
 					total: mockResponse.total,
 					totalPages: mockResponse.totalPages
 				};
@@ -98,14 +101,14 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.get<Task>(`/tasks/${id}`);
-				
+
 				// Mock response for development
 				const mockTask: Task = {
-					id,
-					title: 'Mock Task',
-					status: 'todo',
-					priority: 'medium',
 					createdAt: new Date().toISOString(),
+					id,
+					priority: 'medium',
+					status: 'todo',
+					title: 'Mock Task',
 					updatedAt: new Date().toISOString(),
 					userId: '1'
 				};
@@ -134,18 +137,18 @@ function createTaskStore() {
 			const newTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.post<Task>('/tasks', validatedPayload);
-				
+
 				// Mock response for development
 				const mockTask: Task = {
-					id: Date.now().toString(),
-					title: validatedPayload.title,
-					description: validatedPayload.description,
-					status: 'todo',
-					priority: validatedPayload.priority || 'medium',
-					dueDate: validatedPayload.dueDate,
 					categoryId: validatedPayload.categoryId,
-					tags: validatedPayload.tags,
 					createdAt: new Date().toISOString(),
+					description: validatedPayload.description,
+					dueDate: validatedPayload.dueDate,
+					id: Date.now().toString(),
+					priority: validatedPayload.priority || 'medium',
+					status: 'todo',
+					tags: validatedPayload.tags,
+					title: validatedPayload.title,
 					updatedAt: new Date().toISOString(),
 					userId: '1'
 				};
@@ -183,15 +186,15 @@ function createTaskStore() {
 			const updatedTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.patch<Task>(`/tasks/${id}`, validatedPayload);
-				
+
 				// Mock response for development
 				const mockTask: Task = {
-					...state.tasks.find((t) => t.id === id)!,
+					...state.tasks.find(t => t.id === id)!,
 					...validatedPayload,
 					updatedAt: new Date().toISOString()
 				};
 
-				state.tasks = state.tasks.map((task) => (task.id === id ? mockTask : task));
+				state.tasks = state.tasks.map(task => (task.id === id ? mockTask : task));
 				if (state.currentTask?.id === id) {
 					state.currentTask = mockTask;
 				}
@@ -223,10 +226,12 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call for soft delete
 				// await httpClient.patch(`/tasks/${id}`, { status: 'deleted' });
-				
+
 				// Optimistic update: soft delete by updating status
-				state.tasks = state.tasks.map((task) =>
-					task.id === id ? { ...task, status: 'deleted' as const, updatedAt: new Date().toISOString() } : task
+				state.tasks = state.tasks.map(task =>
+					task.id === id
+						? { ...task, status: 'deleted' as const, updatedAt: new Date().toISOString() }
+						: task
 				);
 				state.pagination.total -= 1;
 
@@ -253,9 +258,11 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.patch(`/tasks/${id}`, { status: 'todo' });
-				
-				state.tasks = state.tasks.map((task) =>
-					task.id === id ? { ...task, status: 'todo' as const, updatedAt: new Date().toISOString() } : task
+
+				state.tasks = state.tasks.map(task =>
+					task.id === id
+						? { ...task, status: 'todo' as const, updatedAt: new Date().toISOString() }
+						: task
 				);
 				state.pagination.total += 1;
 			}, 'Failed to restore task');
@@ -278,8 +285,8 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/tasks/${id}/permanent`);
-				
-				state.tasks = state.tasks.filter((task) => task.id !== id);
+
+				state.tasks = state.tasks.filter(task => task.id !== id);
 				if (state.currentTask?.id === id) {
 					state.currentTask = null;
 				}
@@ -345,23 +352,23 @@ function createTaskStore() {
 			const subtask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.post<Subtask>(`/tasks/${taskId}/subtasks`, { title });
-				
+
 				// Mock response for development
 				const mockSubtask: Subtask = {
+					createdAt: new Date().toISOString(),
 					id: Date.now().toString(),
+					isCompleted: false,
 					taskId,
 					title: title.trim(),
-					isCompleted: false,
-					createdAt: new Date().toISOString(),
 					updatedAt: new Date().toISOString()
 				};
 
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map((task) => {
+				state.tasks = state.tasks.map(task => {
 					if (task.id === taskId) {
 						const updatedSubtasks = [...(task.subtasks || []), mockSubtask];
 						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, subtasks: updatedSubtasks, progress };
+						return { ...task, progress, subtasks: updatedSubtasks };
 					}
 					return task;
 				});
@@ -369,7 +376,7 @@ function createTaskStore() {
 				if (state.currentTask?.id === taskId) {
 					const updatedSubtasks = [...(state.currentTask.subtasks || []), mockSubtask];
 					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
 				}
 
 				return mockSubtask;
@@ -390,29 +397,39 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.patch(`/tasks/${taskId}/subtasks/${subtaskId}`, { isCompleted: !isCompleted });
-				
+
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map((task) => {
+				state.tasks = state.tasks.map(task => {
 					if (task.id === taskId) {
-						const updatedSubtasks = task.subtasks?.map((subtask) =>
-							subtask.id === subtaskId
-								? { ...subtask, isCompleted: !subtask.isCompleted, updatedAt: new Date().toISOString() }
-								: subtask
-						) || [];
+						const updatedSubtasks =
+							task.subtasks?.map(subtask =>
+								subtask.id === subtaskId
+									? {
+											...subtask,
+											isCompleted: !subtask.isCompleted,
+											updatedAt: new Date().toISOString()
+										}
+									: subtask
+							) || [];
 						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, subtasks: updatedSubtasks, progress };
+						return { ...task, progress, subtasks: updatedSubtasks };
 					}
 					return task;
 				});
 
 				if (state.currentTask?.id === taskId) {
-					const updatedSubtasks = state.currentTask.subtasks?.map((subtask) =>
-						subtask.id === subtaskId
-							? { ...subtask, isCompleted: !subtask.isCompleted, updatedAt: new Date().toISOString() }
-							: subtask
-					) || [];
+					const updatedSubtasks =
+						state.currentTask.subtasks?.map(subtask =>
+							subtask.id === subtaskId
+								? {
+										...subtask,
+										isCompleted: !subtask.isCompleted,
+										updatedAt: new Date().toISOString()
+									}
+								: subtask
+						) || [];
 					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
 				}
 			}, 'Failed to toggle subtask');
 		} catch (error) {
@@ -429,21 +446,23 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/tasks/${taskId}/subtasks/${subtaskId}`);
-				
+
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map((task) => {
+				state.tasks = state.tasks.map(task => {
 					if (task.id === taskId) {
-						const updatedSubtasks = task.subtasks?.filter((subtask) => subtask.id !== subtaskId) || [];
+						const updatedSubtasks =
+							task.subtasks?.filter(subtask => subtask.id !== subtaskId) || [];
 						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, subtasks: updatedSubtasks, progress };
+						return { ...task, progress, subtasks: updatedSubtasks };
 					}
 					return task;
 				});
 
 				if (state.currentTask?.id === taskId) {
-					const updatedSubtasks = state.currentTask.subtasks?.filter((subtask) => subtask.id !== subtaskId) || [];
+					const updatedSubtasks =
+						state.currentTask.subtasks?.filter(subtask => subtask.id !== subtaskId) || [];
 					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
 				}
 			}, 'Failed to delete subtask');
 		} catch (error) {
@@ -460,29 +479,31 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.post(`/tasks/${taskId}/subtasks/bulk-complete`, { subtaskIds });
-				
+
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map((task) => {
+				state.tasks = state.tasks.map(task => {
 					if (task.id === taskId) {
-						const updatedSubtasks = task.subtasks?.map((subtask) =>
-							subtaskIds.includes(subtask.id)
-								? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
-								: subtask
-						) || [];
+						const updatedSubtasks =
+							task.subtasks?.map(subtask =>
+								subtaskIds.includes(subtask.id)
+									? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
+									: subtask
+							) || [];
 						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, subtasks: updatedSubtasks, progress };
+						return { ...task, progress, subtasks: updatedSubtasks };
 					}
 					return task;
 				});
 
 				if (state.currentTask?.id === taskId) {
-					const updatedSubtasks = state.currentTask.subtasks?.map((subtask) =>
-						subtaskIds.includes(subtask.id)
-							? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
-							: subtask
-					) || [];
+					const updatedSubtasks =
+						state.currentTask.subtasks?.map(subtask =>
+							subtaskIds.includes(subtask.id)
+								? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
+								: subtask
+						) || [];
 					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
 				}
 			}, 'Failed to bulk complete subtasks');
 		} catch (error) {
@@ -499,21 +520,23 @@ function createTaskStore() {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.post(`/tasks/${taskId}/subtasks/bulk-delete`, { subtaskIds });
-				
+
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map((task) => {
+				state.tasks = state.tasks.map(task => {
 					if (task.id === taskId) {
-						const updatedSubtasks = task.subtasks?.filter((subtask) => !subtaskIds.includes(subtask.id)) || [];
+						const updatedSubtasks =
+							task.subtasks?.filter(subtask => !subtaskIds.includes(subtask.id)) || [];
 						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, subtasks: updatedSubtasks, progress };
+						return { ...task, progress, subtasks: updatedSubtasks };
 					}
 					return task;
 				});
 
 				if (state.currentTask?.id === taskId) {
-					const updatedSubtasks = state.currentTask.subtasks?.filter((subtask) => !subtaskIds.includes(subtask.id)) || [];
+					const updatedSubtasks =
+						state.currentTask.subtasks?.filter(subtask => !subtaskIds.includes(subtask.id)) || [];
 					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, subtasks: updatedSubtasks, progress };
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
 				}
 			}, 'Failed to bulk delete subtasks');
 		} catch (error) {
@@ -527,7 +550,7 @@ function createTaskStore() {
 	 */
 	function calculateProgress(subtasks: Subtask[]): number {
 		if (subtasks.length === 0) return 0;
-		const completed = subtasks.filter((s) => s.isCompleted).length;
+		const completed = subtasks.filter(s => s.isCompleted).length;
 		return Math.round((completed / subtasks.length) * 100);
 	}
 
@@ -540,8 +563,8 @@ function createTaskStore() {
 		state.filters = {};
 		state.sort = { field: 'createdAt', order: 'desc' };
 		state.pagination = {
-			page: 1,
 			limit: 10,
+			page: 1,
 			total: 0,
 			totalPages: 0
 		};
@@ -550,28 +573,28 @@ function createTaskStore() {
 	}
 
 	return {
+		addSubtask,
+		bulkCompleteSubtasks,
+		bulkDeleteSubtasks,
+		clearError,
+		clearFilters,
+		createTask,
+		deleteSubtask,
+		deleteTask,
+		fetchTaskById,
+		fetchTasks,
+		permanentDeleteTask,
+		reset,
+		restoreTask,
+		setFilters,
+		setLimit,
+		setPage,
+		setSort,
 		get state() {
 			return state;
 		},
-		fetchTasks,
-		fetchTaskById,
-		createTask,
-		updateTask,
-		deleteTask,
-		restoreTask,
-		permanentDeleteTask,
-		addSubtask,
 		toggleSubtask,
-		deleteSubtask,
-		bulkCompleteSubtasks,
-		bulkDeleteSubtasks,
-		setFilters,
-		clearFilters,
-		setSort,
-		setPage,
-		setLimit,
-		clearError,
-		reset
+		updateTask
 	};
 }
 
@@ -579,7 +602,7 @@ function createTaskStore() {
  * Export task store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let taskStoreInstance: ReturnType<typeof createTaskStore> | null = null;
+let taskStoreInstance: null | ReturnType<typeof createTaskStore> = null;
 
 export const taskStore = new Proxy({} as ReturnType<typeof createTaskStore>, {
 	get(_target, prop) {

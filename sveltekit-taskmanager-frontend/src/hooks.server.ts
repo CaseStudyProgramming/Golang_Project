@@ -1,6 +1,7 @@
+import type { Handle } from '@sveltejs/kit';
+
 import { serverEnv } from '$lib/server/env';
 import { redirect } from '@sveltejs/kit';
-import type { Handle } from '@sveltejs/kit';
 
 // Import serverEnv at the top to trigger fail-fast validation on app startup
 console.log('Server environment validated successfully', serverEnv);

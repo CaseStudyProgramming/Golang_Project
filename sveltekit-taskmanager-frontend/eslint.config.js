@@ -33,14 +33,7 @@ const config = [
 		}
 	},
 	{
-		ignores: [
-			'.svelte-kit/',
-			'build/',
-			'dist/',
-			'node_modules/',
-			'*.config.js',
-			'*.config.ts'
-		]
+		ignores: ['.svelte-kit/', 'build/', 'dist/', 'node_modules/', '*.config.js', '*.config.ts']
 	}
 ];
 

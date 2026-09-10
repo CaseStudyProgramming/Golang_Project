@@ -1,9 +1,15 @@
+import type { ApiResponse, PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
+
 /**
  * Base API configuration and utilities
  */
 import { publicEnv } from '$lib/env';
-import type { ApiResponse, PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
-import { authRequestInterceptor, authResponseInterceptor, errorLoggingInterceptor } from './auth.interceptors';
+
+import {
+	authRequestInterceptor,
+	authResponseInterceptor,
+	errorLoggingInterceptor
+} from './auth.interceptors';
 import { ApiError } from './error.utils';
 
 const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL;
@@ -19,6 +25,11 @@ interface HttpClientOptions {
 }
 
 /**
+ * Request interceptor function type
+ */
+type RequestInterceptor = (request: RequestInit) => Promise<RequestInit> | RequestInit;
+
+/**
  * Request options for HTTP methods
  */
 interface RequestOptions {
@@ -28,16 +39,10 @@ interface RequestOptions {
 	body?: string;
 }
 
-
-/**
- * Request interceptor function type
- */
-type RequestInterceptor = (request: RequestInit) => RequestInit | Promise<RequestInit>;
-
 /**
  * Response interceptor function type
  */
-type ResponseInterceptor = (response: Response) => Response | Promise<Response>;
+type ResponseInterceptor = (response: Response) => Promise<Response> | Response;
 
 /**
  * HTTP client class with interceptors and retry logic
@@ -73,6 +78,53 @@ export class HttpClient {
 	}
 
 	/**
+	 * DELETE request
+	 */
+	async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+		return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+	}
+
+	/**
+	 * GET request
+	 */
+	async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+		return this.request<T>(endpoint, { ...options, method: 'GET' });
+	}
+
+	/**
+	 * PATCH request
+	 */
+	async patch<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+		return this.request<T>(endpoint, {
+			...options,
+			body: JSON.stringify(data),
+			method: 'PATCH'
+		});
+	}
+
+	/**
+	 * POST request
+	 */
+	async post<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+		return this.request<T>(endpoint, {
+			...options,
+			body: JSON.stringify(data),
+			method: 'POST'
+		});
+	}
+
+	/**
+	 * PUT request
+	 */
+	async put<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+		return this.request<T>(endpoint, {
+			...options,
+			body: JSON.stringify(data),
+			method: 'PUT'
+		});
+	}
+
+	/**
 	 * Apply request interceptors
 	 */
 	private async applyRequestInterceptors(options: RequestInit): Promise<RequestInit> {
@@ -104,19 +156,20 @@ export class HttpClient {
 	}
 
 	/**
-	 * Sleep for retry delay
+	 * Parse error data from response
 	 */
-	private async sleep(ms: number): Promise<void> {
-		return new Promise((resolve) => setTimeout(resolve, ms));
+	private async parseErrorData(response: Response): Promise<unknown> {
+		try {
+			return await response.json();
+		} catch {
+			return { message: response.statusText };
+		}
 	}
 
 	/**
 	 * Perform HTTP request with retry logic
 	 */
-	private async request<T>(
-		endpoint: string,
-		options: RequestOptions = {}
-	): Promise<T> {
+	private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
 		const url = `${this.baseUrl}${endpoint}`;
 		const maxRetries = this.defaultOptions.retries || 0;
 		let lastError: Error | null = null;
@@ -129,12 +182,12 @@ export class HttpClient {
 
 				const processedOptions = await this.applyRequestInterceptors({
 					...options,
-					signal: timeoutController.signal,
 					headers: {
 						'Content-Type': 'application/json',
 						...this.defaultOptions.headers,
 						...options.headers
-					}
+					},
+					signal: timeoutController.signal
 				});
 
 				let response = await fetch(url, processedOptions);
@@ -153,7 +206,10 @@ export class HttpClient {
 				if (
 					error instanceof Error &&
 					(error.name === 'AbortError' ||
-						(error instanceof ApiError && error.status >= 400 && error.status < 500 && error.status !== 429))
+						(error instanceof ApiError &&
+							error.status >= 400 &&
+							error.status < 500 &&
+							error.status !== 429))
 				) {
 					break;
 				}
@@ -170,61 +226,10 @@ export class HttpClient {
 	}
 
 	/**
-	 * Parse error data from response
+	 * Sleep for retry delay
 	 */
-	private async parseErrorData(response: Response): Promise<unknown> {
-		try {
-			return await response.json();
-		} catch {
-			return { message: response.statusText };
-		}
-	}
-
-	/**
-	 * GET request
-	 */
-	async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, { ...options, method: 'GET' });
-	}
-
-	/**
-	 * POST request
-	 */
-	async post<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, {
-			...options,
-			method: 'POST',
-			body: JSON.stringify(data)
-		});
-	}
-
-	/**
-	 * PUT request
-	 */
-	async put<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, {
-			...options,
-			method: 'PUT',
-			body: JSON.stringify(data)
-		});
-	}
-
-	/**
-	 * PATCH request
-	 */
-	async patch<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, {
-			...options,
-			method: 'PATCH',
-			body: JSON.stringify(data)
-		});
-	}
-
-	/**
-	 * DELETE request
-	 */
-	async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+	private async sleep(ms: number): Promise<void> {
+		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 }
 
