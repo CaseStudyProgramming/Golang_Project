@@ -11,6 +11,7 @@
 	import ProductivityInsights from '$lib/features/analytics/components/ProductivityInsights.svelte';
 	import TimePeriodSelector from '$lib/features/analytics/components/TimePeriodSelector.svelte';
 	import ChartSkeleton from '$lib/features/analytics/components/ChartSkeleton.svelte';
+	import { EmptyState } from '$lib/shared/components';
 	import type { TimePeriod } from '$lib/features/analytics';
 	import type { TaskStatistics } from '$lib/features/analytics/types/analytics.types';
 	import type { Task } from '$lib/features/tasks/types/task.types';
@@ -96,7 +97,11 @@
 		<ProductivityInsights insights={analyticsStore.state.data.productivityInsights} />
 	</div>
 {:else}
-	<div class="text-center py-8 sm:py-12">
-		<p class="text-gray-500 text-sm sm:text-base">No analytics data available</p>
+	<div class="bg-white rounded-lg shadow">
+		<EmptyState 
+			icon='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>'
+			title="No analytics data"
+			description="Start creating tasks to see your productivity analytics and insights."
+		/>
 	</div>
 {/if}

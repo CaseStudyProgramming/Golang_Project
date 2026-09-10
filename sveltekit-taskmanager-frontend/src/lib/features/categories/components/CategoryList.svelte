@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { categoryStore } from '../stores/category.store';
 	import type { Category } from '../types/category.types';
-	import { LoadingSpinner } from '$lib/shared/components';
+	import { LoadingSpinner, EmptyState } from '$lib/shared/components';
 	import CategoryListSkeleton from './CategoryListSkeleton.svelte';
 
 	let {
@@ -25,12 +25,12 @@
 			<LoadingSpinner text="Loading categories..." />
 		</div>
 	{:else if categories.length === 0}
-		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
-			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-			</svg>
-			<h3 class="mt-2 text-sm font-medium text-gray-900">No categories</h3>
-			<p class="mt-1 text-sm text-gray-500">Get started by creating a new category.</p>
+		<div class="bg-white rounded-lg shadow">
+			<EmptyState 
+				icon='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>'
+				title="No categories"
+				description="Get started by creating a new category to organize your tasks."
+			/>
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

@@ -3,7 +3,7 @@
 	import type { Task } from '../types/task.types';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
-	import { LoadingSpinner, ProgressBar } from '$lib/shared/components';
+	import { LoadingSpinner, ProgressBar, EmptyState } from '$lib/shared/components';
 	import TaskListSkeleton from './TaskListSkeleton.svelte';
 
 	let { 
@@ -95,12 +95,12 @@
 			<LoadingSpinner text="Loading tasks..." />
 		</div>
 	{:else if tasks.length === 0}
-		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
-			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-			</svg>
-			<h3 class="mt-2 text-sm font-medium text-gray-900">No tasks</h3>
-			<p class="mt-1 text-sm text-gray-500">Get started by creating a new task.</p>
+		<div class="bg-white rounded-lg shadow">
+			<EmptyState 
+				icon='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>'
+				title="No tasks"
+				description="Get started by creating a new task to organize your work."
+			/>
 		</div>
 	{:else}
 		<div class="space-y-3">
