@@ -2,6 +2,7 @@
 	import { categoryStore } from '../stores/category.store';
 	import type { Category } from '../types/category.types';
 	import { LoadingSpinner, EmptyState } from '$lib/shared/components';
+	import { confirmStore, toastStore } from '$lib/shared/stores';
 	import CategoryListSkeleton from './CategoryListSkeleton.svelte';
 
 	let {
@@ -17,6 +18,23 @@
 		onDeleteCategory?: (category: Category) => void;
 		onSelectCategory?: (category: Category) => void;
 	} = $props();
+
+	/**
+	 * Handle delete category with confirmation
+	 */
+	async function handleDeleteCategory(category: Category) {
+		const confirmed = await confirmStore.showConfirm({
+			title: 'Delete Category',
+			message: `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
+			confirmText: 'Delete',
+			cancelText: 'Cancel',
+			type: 'danger'
+		});
+
+		if (confirmed && onDeleteCategory) {
+			onDeleteCategory(category);
+		}
+	}
 </script>
 
 <div class="space-y-3 sm:space-y-4">
@@ -63,7 +81,7 @@
 										e.stopPropagation();
 										onEditCategory(category);
 									}}
-									class="p-2 sm:p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-colors min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0"
+									class="p-2 sm:p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
 									title="Edit category"
 									aria-label="Edit category"
 								>
@@ -76,9 +94,9 @@
 								<button
 									onclick={(e) => {
 										e.stopPropagation();
-										onDeleteCategory(category);
+										handleDeleteCategory(category);
 									}}
-									class="p-2 sm:p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0"
+									class="p-2 sm:p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
 									title="Delete category"
 									aria-label="Delete category"
 								>
