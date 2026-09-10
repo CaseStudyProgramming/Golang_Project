@@ -139,3 +139,10 @@ function executeErrorHandlers(error: Error): void {
 		}
 	});
 }
+
+/**
+ * Clear all registered error handlers (for testing)
+ */
+export function clearErrorHandlers(): void {
+	errorHandlers.length = 0;
+}
