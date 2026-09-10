@@ -238,8 +238,8 @@ describe('API Integration', () => {
 		});
 
 		it('builds pagination query parameters', () => {
-			const params = { page: 2, limit: 25 };
-			const queryString = new URLSearchParams(params as Record<string, string>).toString();
+			const params = { page: '2', limit: '25' };
+			const queryString = new URLSearchParams(params).toString();
 
 			expect(queryString).toBe('page=2&limit=25');
 		});

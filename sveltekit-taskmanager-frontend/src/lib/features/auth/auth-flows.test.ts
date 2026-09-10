@@ -85,7 +85,12 @@ describe('Authentication Flows', () => {
 
 	describe('Logout Flow', () => {
 		it('clears authentication state on logout', () => {
-			let authState = {
+			type AuthState = {
+				isAuthenticated: boolean;
+				token: string | null;
+				user: { id: string; email: string } | null;
+			};
+			let authState: AuthState = {
 				isAuthenticated: true,
 				token: 'auth-token',
 				user: { id: '1', email: 'test@example.com' }
@@ -104,8 +109,8 @@ describe('Authentication Flows', () => {
 		});
 
 		it('clears stored tokens on logout', () => {
-			let storedToken = 'auth-token';
-			let storedRefreshToken = 'refresh-token';
+			let storedToken: string | null = 'auth-token';
+			let storedRefreshToken: string | null = 'refresh-token';
 
 			// Simulate token cleanup
 			storedToken = null;
@@ -130,11 +135,11 @@ describe('Authentication Flows', () => {
 		});
 
 		it('handles invalid refresh token', async () => {
-			const invalidRefreshToken = 'invalid-refresh-token';
-			
+			const invalidRefreshToken: string = 'invalid-refresh-token';
+
 			// Simulate failed refresh
 			const refreshSuccess = invalidRefreshToken === 'valid-refresh-token';
-			
+
 			expect(refreshSuccess).toBe(false);
 		});
 
@@ -242,10 +247,10 @@ describe('Authentication Flows', () => {
 
 		it('redirects to login on unauthorized access', () => {
 			const isAuthenticated = false;
-			const currentRoute = '/dashboard';
-			
+			const currentRoute: string = '/dashboard';
+
 			const shouldRedirect = !isAuthenticated && currentRoute !== '/login';
-			
+
 			expect(shouldRedirect).toBe(true);
 		});
 	});

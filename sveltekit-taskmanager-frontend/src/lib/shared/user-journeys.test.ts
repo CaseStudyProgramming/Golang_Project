@@ -98,7 +98,8 @@ describe('Critical User Journeys', () => {
 
 		it('handles task delegation workflow', async () => {
 			// Step 1: User creates task
-			const task = {
+			type Task = { id: string; title: string; assigneeId: string | null };
+			const task: Task = {
 				id: '1',
 				title: 'Review PR',
 				assigneeId: null
@@ -294,7 +295,12 @@ describe('Critical User Journeys', () => {
 
 		it('uses subtasks for task breakdown', async () => {
 			// Step 1: User creates main task
-			const mainTask = {
+			type MainTask = {
+				id: string;
+				title: string;
+				subtasks: Array<{ id: string; title: string; isCompleted: boolean }>;
+			};
+			const mainTask: MainTask = {
 				id: '1',
 				title: 'Complete project',
 				subtasks: []

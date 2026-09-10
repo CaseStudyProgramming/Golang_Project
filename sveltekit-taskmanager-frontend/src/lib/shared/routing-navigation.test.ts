@@ -41,7 +41,7 @@ describe('Routing and Navigation', () => {
 	describe('Navigation Guards', () => {
 		it('prevents access to protected routes without authentication', () => {
 			const isAuthenticated = false;
-			const currentRoute = '/dashboard';
+			const currentRoute: string = '/dashboard';
 
 			const canAccess = isAuthenticated || currentRoute === '/login';
 
@@ -59,8 +59,8 @@ describe('Routing and Navigation', () => {
 
 		it('redirects unauthenticated users to login', () => {
 			const isAuthenticated = false;
-			const currentRoute = '/dashboard';
-			const loginRoute = '/login';
+			const currentRoute: string = '/dashboard';
+			const loginRoute: string = '/login';
 
 			const shouldRedirect = !isAuthenticated && currentRoute !== loginRoute;
 
@@ -68,8 +68,8 @@ describe('Routing and Navigation', () => {
 		});
 
 		it('preserves redirect URL for post-login navigation', () => {
-			const currentRoute = '/dashboard/tasks/123';
-			const loginRoute = '/login';
+			const currentRoute: string = '/dashboard/tasks/123';
+			const loginRoute: string = '/login';
 
 			const redirectUrl = currentRoute !== loginRoute ? currentRoute : '/dashboard';
 
@@ -188,7 +188,7 @@ describe('Routing and Navigation', () => {
 
 	describe('Error Routes', () => {
 		it('handles 404 not found routes', () => {
-			const currentRoute = '/nonexistent-page';
+			const currentRoute: string = '/nonexistent-page';
 			const validRoutes = ['/dashboard', '/tasks', '/login'];
 
 			const isValid = validRoutes.includes(currentRoute);
@@ -265,11 +265,12 @@ describe('Routing and Navigation', () => {
 		});
 
 		it('handles missing route metadata', () => {
-			const routeMetadata = {
+			type RouteMetadata = Record<string, { title: string }>;
+			const routeMetadata: RouteMetadata = {
 				'/dashboard': { title: 'Dashboard' }
 			};
 
-			const currentRoute = '/nonexistent';
+			const currentRoute: string = '/nonexistent';
 			const pageTitle = routeMetadata[currentRoute]?.title;
 
 			expect(pageTitle).toBeUndefined();

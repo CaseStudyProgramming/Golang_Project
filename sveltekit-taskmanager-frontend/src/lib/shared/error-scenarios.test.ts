@@ -4,12 +4,12 @@ describe('Error Scenarios', () => {
 	describe('Network Errors', () => {
 		it('handles network timeout errors', async () => {
 			const mockFetch = vi.fn(() =>
-				new Promise((_, reject) =>
+				new Promise<Response>((_, reject) =>
 					setTimeout(() => reject(new Error('Network timeout')), 100)
 				)
 			);
 
-			globalThis.fetch = mockFetch;
+			globalThis.fetch = mockFetch as unknown as typeof fetch;
 
 			let errorOccurred = false;
 			try {
@@ -23,10 +23,10 @@ describe('Error Scenarios', () => {
 
 		it('handles connection refused errors', async () => {
 			const mockFetch = vi.fn(() =>
-				Promise.reject(new Error('Connection refused'))
+				Promise.reject<Response>(new Error('Connection refused'))
 			);
 
-			globalThis.fetch = mockFetch;
+			globalThis.fetch = mockFetch as unknown as typeof fetch;
 
 			let errorOccurred = false;
 			try {
