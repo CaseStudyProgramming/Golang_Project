@@ -253,3 +253,8 @@ export const uiStore = new Proxy({} as ReturnType<typeof createUIStore>, {
 		return uiStoreInstance[prop as keyof ReturnType<typeof createUIStore>];
 	}
 });
+
+/**
+ * Export store creator for testing
+ */
+export { createUIStore };

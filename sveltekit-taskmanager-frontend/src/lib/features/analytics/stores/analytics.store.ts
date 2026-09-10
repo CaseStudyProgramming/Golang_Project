@@ -304,3 +304,8 @@ export const analyticsStore = new Proxy({} as ReturnType<typeof createAnalyticsS
 		return analyticsStoreInstance[prop as keyof ReturnType<typeof createAnalyticsStore>];
 	}
 });
+
+/**
+ * Export store creator for testing
+ */
+export { createAnalyticsStore };
