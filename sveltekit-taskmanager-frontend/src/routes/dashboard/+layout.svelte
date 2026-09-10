@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/features/auth';
 	import { LoadingSpinner } from '$lib/shared/components';
+	import { toastStore } from '$lib/shared/stores';
 
 	let { children } = $props();
 	let isLoggingOut = $state(false);
@@ -11,9 +12,11 @@
 		isLoggingOut = true;
 		try {
 			await authStore.logout();
+			toastStore.success('Logged out', 'You have been logged out successfully');
 			goto('/auth/login');
 		} catch (error) {
 			console.error('Logout failed:', error);
+			toastStore.error('Logout failed', error instanceof Error ? error.message : 'An unexpected error occurred');
 		} finally {
 			isLoggingOut = false;
 		}

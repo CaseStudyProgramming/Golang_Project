@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tagStore } from '../stores/tag.store';
 	import type { Tag } from '../types/tag.types';
+	import { toastStore } from '$lib/shared/stores';
 
 	let {
 		selectedTags = $bindable([]),
@@ -71,10 +72,12 @@
 		isLoading = true;
 		try {
 			await onCreateTag(input.trim());
+			toastStore.success('Tag created', `Tag "${input.trim()}" has been created successfully`);
 			input = '';
 			isOpen = false;
 		} catch (error) {
 			console.error('Failed to create tag:', error);
+			toastStore.error('Failed to create tag', error instanceof Error ? error.message : 'An unexpected error occurred');
 		} finally {
 			isLoading = false;
 		}

@@ -6,6 +6,7 @@
 	import { tagStore } from '$lib/features/tags';
 	import { TagInput } from '$lib/features/tags';
 	import { LoadingSpinner } from '$lib/shared/components';
+	import { toastStore } from '$lib/shared/stores';
 	import type { Category } from '$lib/features/categories';
 
 	let {
@@ -127,6 +128,12 @@
 				await taskStore.createTask(payload);
 			}
 
+			// Show success toast
+			toastStore.success(
+				mode === 'create' ? 'Task created' : 'Task updated',
+				mode === 'create' ? 'Your task has been created successfully' : 'Your task has been updated successfully'
+			);
+
 			// Reset form on success
 			if (mode === 'create') {
 				title = '';
@@ -138,6 +145,10 @@
 			}
 		} catch (error) {
 			console.error('Failed to submit task:', error);
+			toastStore.error(
+				mode === 'create' ? 'Failed to create task' : 'Failed to update task',
+				error instanceof Error ? error.message : 'An unexpected error occurred'
+			);
 		} finally {
 			isSubmitting = false;
 		}

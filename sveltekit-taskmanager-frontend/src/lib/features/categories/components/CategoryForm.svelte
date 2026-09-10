@@ -2,6 +2,7 @@
 	import { categoryStore } from '../stores/category.store';
 	import type { Category } from '../types/category.types';
 	import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas';
+	import { toastStore } from '$lib/shared/stores';
 
 	let {
 		initialData,
@@ -78,6 +79,12 @@
 				}
 			}
 
+			// Show success toast
+			toastStore.success(
+				initialData ? 'Category updated' : 'Category created',
+				initialData ? 'Your category has been updated successfully' : 'Your category has been created successfully'
+			);
+
 			// Reset form if creating new category
 			if (!initialData) {
 				name = '';
@@ -87,6 +94,10 @@
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to save category';
+			toastStore.error(
+				initialData ? 'Failed to update category' : 'Failed to create category',
+				error
+			);
 		} finally {
 			isSubmitting = false;
 		}
