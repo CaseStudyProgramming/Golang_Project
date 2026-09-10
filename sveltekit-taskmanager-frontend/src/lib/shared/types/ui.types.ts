@@ -3,9 +3,34 @@
  */
 
 /**
- * Notification type
+ * Loading state interface
  */
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+export interface LoadingState {
+	isLoading: boolean;
+	message?: string;
+}
+
+/**
+ * Modal interface
+ */
+export interface Modal {
+	id: string;
+	type: ModalType;
+	title: string;
+	message?: string;
+	content?: string;
+	isOpen: boolean;
+	onConfirm?: () => Promise<void> | void;
+	onCancel?: () => void;
+	confirmText?: string;
+	cancelText?: string;
+	showCancel?: boolean;
+}
+
+/**
+ * Modal type
+ */
+export type ModalType = 'alert' | 'confirm' | 'custom' | 'prompt';
 
 /**
  * Notification interface
@@ -21,31 +46,6 @@ export interface Notification {
 }
 
 /**
- * Modal type
+ * Notification type
  */
-export type ModalType = 'confirm' | 'alert' | 'prompt' | 'custom';
-
-/**
- * Modal interface
- */
-export interface Modal {
-	id: string;
-	type: ModalType;
-	title: string;
-	message?: string;
-	content?: string;
-	isOpen: boolean;
-	onConfirm?: () => void | Promise<void>;
-	onCancel?: () => void;
-	confirmText?: string;
-	cancelText?: string;
-	showCancel?: boolean;
-}
-
-/**
- * Loading state interface
- */
-export interface LoadingState {
-	isLoading: boolean;
-	message?: string;
-}
+export type NotificationType = 'error' | 'info' | 'success' | 'warning';

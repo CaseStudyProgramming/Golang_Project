@@ -4,7 +4,23 @@
  */
 
 import { httpClient } from '$lib/shared/utils/api.utils';
+
 import type { User } from '../types/auth.types';
+
+/**
+ * Forgot password request interface
+ */
+interface ForgotPasswordRequest {
+	email: string;
+}
+
+/**
+ * Login credentials interface
+ */
+interface LoginCredentials {
+	email: string;
+	password: string;
+}
 
 /**
  * Login response interface
@@ -27,27 +43,12 @@ interface RegisterResponse {
 }
 
 /**
- * Login credentials interface
- */
-interface LoginCredentials {
-	email: string;
-	password: string;
-}
-
-/**
  * Registration data interface
  */
 interface RegistrationData {
 	email: string;
 	password: string;
 	name?: string;
-}
-
-/**
- * Forgot password request interface
- */
-interface ForgotPasswordRequest {
-	email: string;
 }
 
 /**
@@ -64,17 +65,24 @@ interface ResetPasswordRequest {
  */
 export const authApi = {
 	/**
+	 * Request password reset
+	 */
+	async forgotPassword(data: ForgotPasswordRequest): Promise<{ message: string }> {
+		return httpClient.post<{ message: string }>('/auth/forgot-password', data);
+	},
+
+	/**
+	 * Get current user
+	 */
+	async getCurrentUser(): Promise<User> {
+		return httpClient.get<User>('/auth/me');
+	},
+
+	/**
 	 * Login user with credentials
 	 */
 	async login(credentials: LoginCredentials): Promise<LoginResponse> {
 		return httpClient.post<LoginResponse>('/auth/login', credentials);
-	},
-
-	/**
-	 * Register new user
-	 */
-	async register(data: RegistrationData): Promise<RegisterResponse> {
-		return httpClient.post<RegisterResponse>('/auth/register', data);
 	},
 
 	/**
@@ -87,22 +95,20 @@ export const authApi = {
 	/**
 	 * Refresh JWT token
 	 */
-	async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken?: string; expiresIn?: number }> {
-		return httpClient.post<{ token: string; refreshToken?: string; expiresIn?: number }>('/auth/refresh', { refreshToken });
+	async refreshToken(
+		refreshToken: string
+	): Promise<{ expiresIn?: number; refreshToken?: string; token: string }> {
+		return httpClient.post<{ expiresIn?: number; refreshToken?: string; token: string }>(
+			'/auth/refresh',
+			{ refreshToken }
+		);
 	},
 
 	/**
-	 * Get current user
+	 * Register new user
 	 */
-	async getCurrentUser(): Promise<User> {
-		return httpClient.get<User>('/auth/me');
-	},
-
-	/**
-	 * Request password reset
-	 */
-	async forgotPassword(data: ForgotPasswordRequest): Promise<{ message: string }> {
-		return httpClient.post<{ message: string }>('/auth/forgot-password', data);
+	async register(data: RegistrationData): Promise<RegisterResponse> {
+		return httpClient.post<RegisterResponse>('/auth/register', data);
 	},
 
 	/**

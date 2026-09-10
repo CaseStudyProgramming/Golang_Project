@@ -9,7 +9,7 @@ describe('TagInput accessibility', () => {
 		// - aria-controls attribute pointing to the listbox
 		// - aria-haspopup="listbox"
 		// - aria-autocomplete="list"
-		
+
 		const requiredAttributes = [
 			'role="combobox"',
 			'aria-expanded',
@@ -28,12 +28,8 @@ describe('TagInput accessibility', () => {
 		// - role="option"
 		// - aria-selected attribute
 		// - tabindex={-1}
-		
-		const requiredAttributes = [
-			'role="option"',
-			'aria-selected',
-			'tabindex'
-		];
+
+		const requiredAttributes = ['role="option"', 'aria-selected', 'tabindex'];
 
 		requiredAttributes.forEach(attr => {
 			expect(attr).toBeDefined();
@@ -43,7 +39,7 @@ describe('TagInput accessibility', () => {
 	it('ensures listbox has id for combobox aria-controls', () => {
 		// The listbox should have an id that matches the combobox aria-controls
 		// This allows screen readers to associate the input with its dropdown
-		
+
 		const listboxId = 'tag-listbox';
 		expect(listboxId).toBe('tag-listbox');
 	});

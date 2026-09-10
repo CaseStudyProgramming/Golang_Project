@@ -5,6 +5,7 @@
 
 import { httpClient } from '$lib/shared/utils/api.utils';
 import { withErrorHandling } from '$lib/shared/utils/error.utils';
+
 import type { Activity, ActivityFilters, ActivityState } from '../types/task.types';
 
 /**
@@ -13,8 +14,8 @@ import type { Activity, ActivityFilters, ActivityState } from '../types/task.typ
 function createActivityStore() {
 	const state = $state<ActivityState>({
 		activities: [],
-		isLoading: false,
-		error: null
+		error: null,
+		isLoading: false
 	});
 
 	/**
@@ -34,7 +35,7 @@ function createActivityStore() {
 				// if (filters?.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
 				// if (filters?.dateTo) queryParams.append('dateTo', filters.dateTo);
 				// const response = await httpClient.get<Activity[]>(`/activities?${queryParams}`);
-				
+
 				// Mock response for development
 				const mockActivities: Activity[] = [];
 
@@ -51,17 +52,17 @@ function createActivityStore() {
 	/**
 	 * Add new activity
 	 */
-	async function addActivity(activity: Omit<Activity, 'id' | 'createdAt'>): Promise<Activity> {
+	async function addActivity(activity: Omit<Activity, 'createdAt' | 'id'>): Promise<Activity> {
 		try {
 			const newActivity = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// const response = await httpClient.post<Activity>('/activities', activity);
-				
+
 				// Mock response for development
 				const mockActivity: Activity = {
 					...activity,
-					id: Date.now().toString(),
-					createdAt: new Date().toISOString()
+					createdAt: new Date().toISOString(),
+					id: Date.now().toString()
 				};
 
 				state.activities = [mockActivity, ...state.activities];
@@ -83,15 +84,15 @@ function createActivityStore() {
 		taskId: string,
 		type: Activity['type'],
 		description: string,
-		changes?: Record<string, { old: unknown; new: unknown }>
+		changes?: Record<string, { new: unknown; old: unknown }>
 	): Promise<void> {
 		await addActivity({
+			changes,
+			description,
 			taskId,
 			type,
-			description,
 			userId: '1', // This would come from auth context
-			userName: 'Current User', // This would come from auth context
-			changes
+			userName: 'Current User' // This would come from auth context
 		});
 	}
 
@@ -112,14 +113,14 @@ function createActivityStore() {
 	}
 
 	return {
+		addActivity,
+		clearError,
+		fetchActivities,
+		logTaskActivity,
+		reset,
 		get state() {
 			return state;
-		},
-		fetchActivities,
-		addActivity,
-		logTaskActivity,
-		clearError,
-		reset
+		}
 	};
 }
 
@@ -127,7 +128,7 @@ function createActivityStore() {
  * Export activity store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let activityStoreInstance: ReturnType<typeof createActivityStore> | null = null;
+let activityStoreInstance: null | ReturnType<typeof createActivityStore> = null;
 
 export const activityStore = new Proxy({} as ReturnType<typeof createActivityStore>, {
 	get(_target, prop) {

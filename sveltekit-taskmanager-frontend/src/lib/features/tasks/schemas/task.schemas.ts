@@ -11,7 +11,7 @@ const titleSchema = z
 	.string()
 	.min(1, 'Title is required')
 	.max(200, 'Title is too long')
-	.transform((val) => val.trim());
+	.transform(val => val.trim());
 
 /**
  * Description validation schema
@@ -19,7 +19,7 @@ const titleSchema = z
 const descriptionSchema = z
 	.string()
 	.max(2000, 'Description is too long')
-	.transform((val) => val.trim())
+	.transform(val => val.trim())
 	.optional();
 
 /**
@@ -53,11 +53,11 @@ const statusSchema = z.enum(['todo', 'in_progress', 'completed', 'cancelled', 'd
  * Subtask validation schema
  */
 const subtaskSchema = z.object({
+	createdAt: z.string(),
 	id: idSchema,
+	isCompleted: z.boolean(),
 	taskId: idSchema,
 	title: titleSchema,
-	isCompleted: z.boolean(),
-	createdAt: z.string(),
 	updatedAt: z.string()
 });
 
@@ -65,26 +65,26 @@ const subtaskSchema = z.object({
  * Create task validation schema
  */
 export const createTaskSchema = z.object({
-	title: titleSchema,
-	description: descriptionSchema,
-	priority: prioritySchema.optional(),
-	dueDate: dateSchema,
 	categoryId: idSchema.optional(),
+	description: descriptionSchema,
+	dueDate: dateSchema,
+	priority: prioritySchema.optional(),
+	subtasks: z.array(subtaskSchema).optional(),
 	tags: z.array(z.string()).optional(),
-	subtasks: z.array(subtaskSchema).optional()
+	title: titleSchema
 });
 
 /**
  * Update task validation schema
  */
 export const updateTaskSchema = z.object({
-	title: titleSchema.optional(),
-	description: descriptionSchema,
-	status: statusSchema.optional(),
-	priority: prioritySchema.optional(),
-	dueDate: dateSchema.optional(),
 	categoryId: idSchema.optional(),
-	tags: z.array(z.string()).optional()
+	description: descriptionSchema,
+	dueDate: dateSchema.optional(),
+	priority: prioritySchema.optional(),
+	status: statusSchema.optional(),
+	tags: z.array(z.string()).optional(),
+	title: titleSchema.optional()
 });
 
 /**

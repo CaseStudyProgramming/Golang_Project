@@ -3,6 +3,17 @@
  */
 
 /**
+ * Authentication state interface
+ */
+export interface AuthState {
+	isAuthenticated: boolean;
+	user: null | User;
+	token: null | string;
+	isLoading: boolean;
+	error: null | string;
+}
+
+/**
  * User interface
  */
 export interface User {
@@ -12,15 +23,4 @@ export interface User {
 	role?: string;
 	createdAt?: string;
 	updatedAt?: string;
-}
-
-/**
- * Authentication state interface
- */
-export interface AuthState {
-	isAuthenticated: boolean;
-	user: User | null;
-	token: string | null;
-	isLoading: boolean;
-	error: string | null;
 }

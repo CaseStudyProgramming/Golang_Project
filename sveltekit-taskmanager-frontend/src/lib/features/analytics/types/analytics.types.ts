@@ -3,66 +3,6 @@
  */
 
 /**
- * Time period for analytics
- */
-export type TimePeriod = 'daily' | 'weekly' | 'monthly';
-
-/**
- * Task statistics
- */
-export interface TaskStatistics {
-	total: number;
-	completed: number;
-	inProgress: number;
-	todo: number;
-	overdue: number;
-	cancelled: number;
-	completionRate: number;
-}
-
-/**
- * Priority distribution data
- */
-export interface PriorityDistribution {
-	low: number;
-	medium: number;
-	high: number;
-	urgent: number;
-}
-
-/**
- * Category distribution data
- */
-export interface CategoryDistribution {
-	categoryId: string;
-	categoryName: string;
-	count: number;
-	completed: number;
-}
-
-/**
- * Time-based analytics data
- */
-export interface TimeBasedData {
-	date: string;
-	completed: number;
-	created: number;
-	total: number;
-}
-
-/**
- * Productivity insights
- */
-export interface ProductivityInsights {
-	totalTasksCompleted: number;
-	averageCompletionTime: number; // in hours
-	mostProductiveDay: string;
-	streakDays: number;
-	tasksPerDay: number;
-	onTimeCompletionRate: number;
-}
-
-/**
  * Analytics data aggregate
  */
 export interface AnalyticsData {
@@ -80,6 +20,66 @@ export interface AnalyticsData {
 export interface AnalyticsState {
 	data: AnalyticsData | null;
 	isLoading: boolean;
-	error: string | null;
+	error: null | string;
 	selectedPeriod: TimePeriod;
 }
+
+/**
+ * Category distribution data
+ */
+export interface CategoryDistribution {
+	categoryId: string;
+	categoryName: string;
+	count: number;
+	completed: number;
+}
+
+/**
+ * Priority distribution data
+ */
+export interface PriorityDistribution {
+	low: number;
+	medium: number;
+	high: number;
+	urgent: number;
+}
+
+/**
+ * Productivity insights
+ */
+export interface ProductivityInsights {
+	totalTasksCompleted: number;
+	averageCompletionTime: number; // in hours
+	mostProductiveDay: string;
+	streakDays: number;
+	tasksPerDay: number;
+	onTimeCompletionRate: number;
+}
+
+/**
+ * Task statistics
+ */
+export interface TaskStatistics {
+	total: number;
+	completed: number;
+	inProgress: number;
+	todo: number;
+	overdue: number;
+	cancelled: number;
+	completionRate: number;
+}
+
+/**
+ * Time-based analytics data
+ */
+export interface TimeBasedData {
+	date: string;
+	completed: number;
+	created: number;
+	total: number;
+}
+
+/**
+ * Time period for analytics
+ */
+export type TimePeriod = 'daily' | 'monthly' | 'weekly';

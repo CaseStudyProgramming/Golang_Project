@@ -1,14 +1,15 @@
 # AGENTS.md
 
 ## Core Directives & Priority (Precedence Order)
+
 1. **Security First**: OWASP guidelines override all formatting and style rules.
 2. **Architecture Integrity**: Vertical Slice rules override file-level preferences.
 3. **Functionality > Style**: Working implementation takes priority over code style/refactoring.
 4. **Circuit Breaker**: Stop and ask after 3 consecutive failed test/type-check attempts.
 5. **When in Doubt, Ask**: Stop and request clarification if user instructions contradict these rules or if a requirement is ambiguous.
 
-
 ## Workflow & Task Execution
+
 - **Branch-Based Development**:
   - Always work on a new branch for each sub-issue using git branch standard naming convention (e.g., `feat/setup-sveltekit-frontend`).
 - **Task Breakdown via Checklists / Issues**:
@@ -21,11 +22,12 @@
 - **Rollback Readiness**:
   - Each completed task MUST correspond to a clean, isolated Git commit to allow single-step rollbacks (`git revert`) without losing previous progress.
 
-
 ## Token Efficiency
+
 - Skip recaps and conversational summaries unless the result is ambiguous or requires further input.
 
 ## Principles
+
 - **OWASP Security Standard**: Validate all inputs with Zod/Valibot, prevent XSS/injection, and leverage SvelteKit CSRF/CORS protections, OWASP Top 10
 - **Clarity and Consistency**: Clarity over cleverness. Match existing code patterns. Minimal changes unless refactoring is explicitly requested.
 - **Modularity**: Keep functions under 50 lines and components under 200 lines. Break down when improves readability and structure.
@@ -39,8 +41,8 @@
 - **Function Parameters**: Use an options object for functions with 3+ parameters, optional flags, or ambiguous arguments.
 - **Debugging**: Hypothesis-driven debugging—formulate 1–3 most likely causes first, then validate incrementally.
 
-
 ## System Quality & Reliability (Frontend/Client-Side Scope)
+
 - **System Observability & Incident Response**: Implement client-side error tracking (e.g., Sentry, LogRocket), logging for user actions, and performance monitoring. Ensure auditability of all critical operations in server-side SvelteKit code.
 - **High Availability & Fault Tolerance (HA/FT)**: Implement graceful degradation for API failures, offline support via service workers, and retry mechanisms with exponential backoff for network requests.
 - **API Defensive Design (Defensive Programming) & Code Quality**: Validate all API responses, implement error boundaries, use defensive coding practices. Follow SOLID principles and maintain high code coverage with meaningful tests.
@@ -52,6 +54,7 @@
 **Note**: Infrastructure, database resiliency, traffic control at server level, and data consistency rules apply to backend systems. Frontend should handle UI-level error states and retry logic for API calls.
 
 ## Commands (Bun)
+
 - Always use `bun` as the package manager and test/runtime runner:
   - `bun run dev` - Start dev server
   - `bun run build` - Build for production
@@ -62,12 +65,14 @@
   - `bun test` - Run unit tests with Bun / Vitest
 
 ## Git Commits
+
 - **Conventional Commits**: Format as `type: summary without scope`.
 - Summary must be a short, specific sentence explaining what changed and why.
 - Valid types: `feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`.
 - Include `BREAKING CHANGE:` in the commit footer when applicable.
 
 ## Environment Variables
+
 - **No Direct Reads:** NEVER read `process.env` directly. Do NOT import raw `$env/*` in UI components, routes (`+page.svelte`), or feature modules.
 - **Centralized Validation:** Route all environment variables through Zod validation files before app consumption:
   - **Server Secrets:** Define and validate in `$lib/server/env.ts` using `$env/static/private` (or `$env/dynamic/private` for Docker runtime deployments).
@@ -77,12 +82,14 @@
 - **Consumption Standard:** Always import `serverEnv` or `publicEnv` exported objects in your feature logic.
 
 ## Styling
+
 - Use latest Tailwind CSS utility classes.
 - Reuse shared components (e.g., shadcn-svelte, Bits UI, or custom UI components).
 - Mobile-first, fully responsive design.
 - Avoid redundant, unused, or conflicting utility classes.
 
 ## Architecture & Vertical Slices
+
 - **Vertical Slice Architecture**:
   - Organize code by business domain features (`src/lib/features/`) rather than technical layers.
   - Feature structure: `src/lib/features/{feature}/{api,components,stores,types,index.ts}`.
@@ -100,6 +107,7 @@
   - Handle domain-specific errors inside the slice. Use SvelteKit error boundaries for critical failures.
 
 ## Svelte & SvelteKit
+
 - **Svelte 5 Runes & Reactive State**:
   - Prefer modern Svelte 5 runes (`$state`, `$derived`, `$props`, `$effect`) over legacy reactive statements (`$: ...`).
   - Keep state minimal; compute dependent values using `$derived`.
@@ -113,11 +121,13 @@
   - Use SvelteKit built-in navigation utilities (`goto`, `redirect`, `error`).
 
 ## JSDoc
+
 - Start each block with `/**` directly above the symbol.
 - Write short, sentence-case, present-tense descriptions of intent.
 - Tag order: description → `@param` → `@returns` → `@throws` (only if it can throw).
 
 ## Tests
+
 - Co-locate unit and integration tests (`*.test.ts`) with implementation files.
 - Place Playwright E2E tests (`*.spec.ts` or `*.e2e.ts`) in the `tests/` directory.
 - Test structure: Top `describe` = subject; nested `describe` = scenarios/contexts.

@@ -23,5 +23,5 @@ export interface CategoryState {
 	categories: Category[];
 	currentCategory: Category | null;
 	isLoading: boolean;
-	error: string | null;
+	error: null | string;
 }

@@ -3,18 +3,20 @@
  * Calculates task statistics and analytics
  */
 
+import type { Task } from '$lib/features/tasks/types/task.types';
+
 import { taskStore } from '$lib/features/tasks';
+
 import type {
 	AnalyticsData,
 	AnalyticsState,
-	TaskStatistics,
-	PriorityDistribution,
 	CategoryDistribution,
-	TimeBasedData,
+	PriorityDistribution,
 	ProductivityInsights,
+	TaskStatistics,
+	TimeBasedData,
 	TimePeriod
 } from '../types/analytics.types';
-import type { Task } from '$lib/features/tasks/types/task.types';
 
 /**
  * Create analytics store with Svelte 5 runes
@@ -22,8 +24,8 @@ import type { Task } from '$lib/features/tasks/types/task.types';
 function createAnalyticsStore() {
 	const state = $state<AnalyticsState>({
 		data: null,
-		isLoading: false,
 		error: null,
+		isLoading: false,
 		selectedPeriod: 'weekly'
 	});
 
@@ -32,23 +34,23 @@ function createAnalyticsStore() {
 	 */
 	function calculateStatistics(tasks: Task[]): TaskStatistics {
 		const total = tasks.length;
-		const completed = tasks.filter((t) => t.status === 'completed').length;
-		const inProgress = tasks.filter((t) => t.status === 'in_progress').length;
-		const todo = tasks.filter((t) => t.status === 'todo').length;
+		const completed = tasks.filter(t => t.status === 'completed').length;
+		const inProgress = tasks.filter(t => t.status === 'in_progress').length;
+		const todo = tasks.filter(t => t.status === 'todo').length;
 		const overdue = tasks.filter(
-			(t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
+			t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
 		).length;
-		const cancelled = tasks.filter((t) => t.status === 'cancelled').length;
+		const cancelled = tasks.filter(t => t.status === 'cancelled').length;
 		const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
 		return {
-			total,
-			completed,
-			inProgress,
-			todo,
-			overdue,
 			cancelled,
-			completionRate
+			completed,
+			completionRate,
+			inProgress,
+			overdue,
+			todo,
+			total
 		};
 	}
 
@@ -57,10 +59,10 @@ function createAnalyticsStore() {
 	 */
 	function calculatePriorityDistribution(tasks: Task[]): PriorityDistribution {
 		return {
-			low: tasks.filter((t) => t.priority === 'low').length,
-			medium: tasks.filter((t) => t.priority === 'medium').length,
-			high: tasks.filter((t) => t.priority === 'high').length,
-			urgent: tasks.filter((t) => t.priority === 'urgent').length
+			high: tasks.filter(t => t.priority === 'high').length,
+			low: tasks.filter(t => t.priority === 'low').length,
+			medium: tasks.filter(t => t.priority === 'medium').length,
+			urgent: tasks.filter(t => t.priority === 'urgent').length
 		};
 	}
 
@@ -68,14 +70,14 @@ function createAnalyticsStore() {
 	 * Calculate category distribution
 	 */
 	function calculateCategoryDistribution(tasks: Task[]): CategoryDistribution[] {
-		const categoryMap = new Map<string, { count: number; completed: number }>();
+		const categoryMap = new Map<string, { completed: number; count: number }>();
 
-		tasks.forEach((task) => {
+		tasks.forEach(task => {
 			if (task.categoryId) {
-				const existing = categoryMap.get(task.categoryId) || { count: 0, completed: 0 };
+				const existing = categoryMap.get(task.categoryId) || { completed: 0, count: 0 };
 				categoryMap.set(task.categoryId, {
-					count: existing.count + 1,
-					completed: existing.completed + (task.status === 'completed' ? 1 : 0)
+					completed: existing.completed + (task.status === 'completed' ? 1 : 0),
+					count: existing.count + 1
 				});
 			}
 		});
@@ -83,8 +85,8 @@ function createAnalyticsStore() {
 		return Array.from(categoryMap.entries()).map(([categoryId, data]) => ({
 			categoryId,
 			categoryName: `Category ${categoryId}`, // Would be replaced with actual category name
-			count: data.count,
-			completed: data.completed
+			completed: data.completed,
+			count: data.count
 		}));
 	}
 
@@ -96,7 +98,7 @@ function createAnalyticsStore() {
 		const data: TimeBasedData[] = [];
 		const daysMap = new Map<string, { completed: number; created: number; total: number }>();
 
-		tasks.forEach((task) => {
+		tasks.forEach(task => {
 			const taskDate = new Date(task.createdAt);
 			const dateKey = taskDate.toISOString().split('T')[0];
 
@@ -118,9 +120,9 @@ function createAnalyticsStore() {
 			const dayData = daysMap.get(dateKey) || { completed: 0, created: 0, total: 0 };
 
 			data.push({
-				date: dateKey,
 				completed: dayData.completed,
 				created: dayData.created,
+				date: dateKey,
 				total: dayData.total
 			});
 		}
@@ -132,12 +134,12 @@ function createAnalyticsStore() {
 	 * Calculate productivity insights
 	 */
 	function calculateProductivityInsights(tasks: Task[]): ProductivityInsights {
-		const completedTasks = tasks.filter((t) => t.status === 'completed' && t.completedAt);
+		const completedTasks = tasks.filter(t => t.status === 'completed' && t.completedAt);
 		const totalTasksCompleted = completedTasks.length;
 
 		// Calculate average completion time
 		let totalCompletionTime = 0;
-		completedTasks.forEach((task) => {
+		completedTasks.forEach(task => {
 			if (task.completedAt) {
 				const created = new Date(task.createdAt).getTime();
 				const completed = new Date(task.completedAt).getTime();
@@ -149,7 +151,7 @@ function createAnalyticsStore() {
 
 		// Find most productive day
 		const dayMap = new Map<string, number>();
-		completedTasks.forEach((task) => {
+		completedTasks.forEach(task => {
 			if (task.completedAt) {
 				const day = new Date(task.completedAt).toLocaleDateString('en-US', { weekday: 'long' });
 				dayMap.set(day, (dayMap.get(day) || 0) + 1);
@@ -167,7 +169,7 @@ function createAnalyticsStore() {
 
 		// Calculate streak days
 		const sortedCompletedTasks = completedTasks
-			.filter((t) => t.completedAt)
+			.filter(t => t.completedAt)
 			.sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
 
 		let streakDays = 0;
@@ -179,7 +181,9 @@ function createAnalyticsStore() {
 				const taskDate = new Date(task.completedAt);
 				taskDate.setHours(0, 0, 0, 0);
 
-				const diffDays = Math.floor((currentDate.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24));
+				const diffDays = Math.floor(
+					(currentDate.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24)
+				);
 
 				if (diffDays === streakDays) {
 					streakDays++;
@@ -191,13 +195,12 @@ function createAnalyticsStore() {
 		}
 
 		// Calculate tasks per day
-		const uniqueDays = new Set(
-			completedTasks.map((t) => new Date(t.completedAt!).toDateString())
-		).size;
+		const uniqueDays = new Set(completedTasks.map(t => new Date(t.completedAt!).toDateString()))
+			.size;
 		const tasksPerDay = uniqueDays > 0 ? totalTasksCompleted / uniqueDays : 0;
 
 		// Calculate on-time completion rate
-		const onTimeCompleted = completedTasks.filter((task) => {
+		const onTimeCompleted = completedTasks.filter(task => {
 			if (task.dueDate && task.completedAt) {
 				return new Date(task.completedAt) <= new Date(task.dueDate);
 			}
@@ -207,12 +210,12 @@ function createAnalyticsStore() {
 			totalTasksCompleted > 0 ? Math.round((onTimeCompleted / totalTasksCompleted) * 100) : 0;
 
 		return {
-			totalTasksCompleted,
 			averageCompletionTime: Math.round(averageCompletionTime * 10) / 10,
 			mostProductiveDay,
+			onTimeCompletionRate,
 			streakDays,
 			tasksPerDay: Math.round(tasksPerDay * 10) / 10,
-			onTimeCompletionRate
+			totalTasksCompleted
 		};
 	}
 
@@ -223,12 +226,12 @@ function createAnalyticsStore() {
 		const tasks = taskStore.state.tasks;
 
 		return {
-			statistics: calculateStatistics(tasks),
-			priorityDistribution: calculatePriorityDistribution(tasks),
 			categoryDistribution: calculateCategoryDistribution(tasks),
-			timeBasedData: calculateTimeBasedData(tasks, period),
+			period,
+			priorityDistribution: calculatePriorityDistribution(tasks),
 			productivityInsights: calculateProductivityInsights(tasks),
-			period
+			statistics: calculateStatistics(tasks),
+			timeBasedData: calculateTimeBasedData(tasks, period)
 		};
 	}
 
@@ -275,12 +278,12 @@ function createAnalyticsStore() {
 	}
 
 	return {
+		refreshAnalytics,
+		reset,
+		setPeriod,
 		get state() {
 			return state;
-		},
-		refreshAnalytics,
-		setPeriod,
-		reset
+		}
 	};
 }
 
@@ -288,7 +291,7 @@ function createAnalyticsStore() {
  * Export analytics store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let analyticsStoreInstance: ReturnType<typeof createAnalyticsStore> | null = null;
+let analyticsStoreInstance: null | ReturnType<typeof createAnalyticsStore> = null;
 
 export const analyticsStore = new Proxy({} as ReturnType<typeof createAnalyticsStore>, {
 	get(_target, prop) {
