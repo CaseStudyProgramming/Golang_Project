@@ -62,7 +62,7 @@
 				<div class="md:hidden flex items-center">
 					<button
 						onclick={toggleMobileMenu}
-						class="text-gray-600 hover:text-gray-900 p-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+						class="text-gray-600 hover:text-gray-900 p-3 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 active:bg-gray-100 min-w-[44px] min-h-[44px]"
 						aria-label="Toggle menu"
 						aria-expanded={isMobileMenuOpen}
 					>
@@ -85,14 +85,14 @@
 					<a
 						href="/dashboard"
 						onclick={closeMobileMenu}
-						class="block text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+						class="block text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium min-h-[44px] flex items-center"
 					>
 						Dashboard
 					</a>
 					<a
 						href="/dashboard/tasks"
 						onclick={closeMobileMenu}
-						class="block text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+						class="block text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium min-h-[44px] flex items-center"
 					>
 						Tasks
 					</a>
@@ -102,7 +102,7 @@
 							closeMobileMenu();
 						}}
 						disabled={isLoggingOut}
-						class="w-full text-left text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+						class="w-full text-left text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center"
 					>
 						{isLoggingOut ? 'Logging out...' : 'Logout'}
 					</button>

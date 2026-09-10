@@ -239,7 +239,7 @@
 				type="button"
 				onclick={handleCancel}
 				disabled={isSubmitting}
-				class="w-full sm:w-auto px-4 py-2 sm:px-4 sm:py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+				class="w-full sm:w-auto px-4 py-3 sm:px-4 sm:py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50 transition-colors min-h-[44px]"
 			>
 				Cancel
 			</button>
@@ -247,7 +247,7 @@
 		<button
 			type="submit"
 			disabled={isSubmitting}
-			class="w-full sm:w-auto px-4 py-2 sm:px-4 sm:py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+			class="w-full sm:w-auto px-4 py-3 sm:px-4 sm:py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors min-h-[44px]"
 		>
 			{isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Task' : 'Update Task'}
 		</button>
