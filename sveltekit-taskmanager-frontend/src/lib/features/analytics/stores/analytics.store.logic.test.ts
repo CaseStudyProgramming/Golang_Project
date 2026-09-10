@@ -298,18 +298,25 @@ describe('Analytics Store Logic', () => {
 		});
 
 		it('resets state to initial values', () => {
-			let state = {
+			type TestState = {
+				data: { statistics: { total: number } } | null;
+				error: string | null;
+				isLoading: boolean;
+				selectedPeriod: 'daily' | 'weekly' | 'monthly';
+			};
+
+			let state: TestState = {
 				data: { statistics: { total: 10 } },
 				error: 'Some error',
 				isLoading: true,
-				selectedPeriod: 'monthly' as const
+				selectedPeriod: 'monthly'
 			};
 
 			state = {
 				data: null,
 				error: null,
 				isLoading: false,
-				selectedPeriod: 'weekly' as const
+				selectedPeriod: 'weekly'
 			};
 
 			expect(state.data).toBeNull();
