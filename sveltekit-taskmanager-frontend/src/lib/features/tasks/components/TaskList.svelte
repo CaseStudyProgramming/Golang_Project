@@ -3,6 +3,7 @@
 	import type { Task } from '../types/task.types';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
+	import TaskListSkeleton from './TaskListSkeleton.svelte';
 
 	let { 
 		tasks = $bindable(taskStore.state.tasks),
@@ -89,10 +90,7 @@
 
 <div class="space-y-3 sm:space-y-4">
 	{#if isLoading}
-		<div class="text-center py-8 sm:py-12">
-			<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-			<p class="mt-4 text-gray-500 text-sm sm:text-base">Loading tasks...</p>
-		</div>
+		<TaskListSkeleton />
 	{:else if tasks.length === 0}
 		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
 			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

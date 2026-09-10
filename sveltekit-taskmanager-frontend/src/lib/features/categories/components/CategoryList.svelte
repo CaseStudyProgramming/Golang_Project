@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { categoryStore } from '../stores/category.store';
 	import type { Category } from '../types/category.types';
+	import CategoryListSkeleton from './CategoryListSkeleton.svelte';
 
 	let {
 		categories = $bindable(categoryStore.state.categories),
@@ -19,10 +20,7 @@
 
 <div class="space-y-3 sm:space-y-4">
 	{#if isLoading}
-		<div class="text-center py-8 sm:py-12">
-			<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-			<p class="mt-4 text-gray-500 text-sm sm:text-base">Loading categories...</p>
-		</div>
+		<CategoryListSkeleton />
 	{:else if categories.length === 0}
 		<div class="text-center py-8 sm:py-12 bg-white rounded-lg shadow">
 			<svg class="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

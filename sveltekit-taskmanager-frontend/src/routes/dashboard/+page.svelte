@@ -10,7 +10,9 @@
 	import OverdueTasksSummary from '$lib/features/analytics/components/OverdueTasksSummary.svelte';
 	import ProductivityInsights from '$lib/features/analytics/components/ProductivityInsights.svelte';
 	import TimePeriodSelector from '$lib/features/analytics/components/TimePeriodSelector.svelte';
+	import ChartSkeleton from '$lib/features/analytics/components/ChartSkeleton.svelte';
 	import type { TimePeriod } from '$lib/features/analytics';
+	import type { TaskStatistics } from '$lib/features/analytics/types/analytics.types';
 	import type { Task } from '$lib/features/tasks/types/task.types';
 
 	onMount(async () => {
@@ -31,6 +33,16 @@
 			(t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
 		)
 	);
+
+	const defaultStatistics: TaskStatistics = {
+		total: 0,
+		completed: 0,
+		inProgress: 0,
+		todo: 0,
+		overdue: 0,
+		cancelled: 0,
+		completionRate: 0
+	};
 </script>
 
 <div class="mb-6 sm:mb-8">
@@ -47,9 +59,21 @@
 </div>
 
 {#if analyticsStore.state.isLoading}
-	<div class="text-center py-8 sm:py-12">
-		<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-		<p class="mt-4 text-gray-500 text-sm sm:text-base">Loading analytics...</p>
+	<div class="space-y-4 sm:space-y-6">
+		<!-- Statistics Cards Skeleton -->
+		<StatisticsCards statistics={defaultStatistics} isLoading={true} />
+		
+		<!-- Charts Skeleton -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+			<ChartSkeleton title="Completion Rate" />
+			<ChartSkeleton title="Priority Distribution" />
+		</div>
+		
+		<!-- Additional Charts Skeleton -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+			<ChartSkeleton title="Category Distribution" />
+			<ChartSkeleton title="Overdue Tasks" />
+		</div>
 	</div>
 {:else if analyticsStore.state.data}
 	<div class="space-y-4 sm:space-y-6">
