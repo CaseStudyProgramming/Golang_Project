@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Task } from '$lib/features/tasks/types/task.types';
+// Define inline type for logic-focused testing
+type Task = {
+	id: string;
+	title: string;
+	description: string;
+	status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
+	priority: 'low' | 'medium' | 'high' | 'urgent';
+	dueDate: string | null;
+	createdAt: string;
+	updatedAt: string;
+	completedAt?: string | null;
+	userId: string;
+	categoryId: string | null;
+};
 
 describe('Analytics Store Logic', () => {
 	// Mock task data for testing
@@ -27,6 +40,7 @@ describe('Analytics Store Logic', () => {
 			dueDate: '2024-01-15',
 			createdAt: '2024-01-02T00:00:00Z',
 			updatedAt: '2024-01-06T00:00:00Z',
+			completedAt: null,
 			userId: 'user1',
 			categoryId: 'cat1'
 		},
@@ -39,6 +53,7 @@ describe('Analytics Store Logic', () => {
 			dueDate: '2024-01-20',
 			createdAt: '2024-01-03T00:00:00Z',
 			updatedAt: '2024-01-07T00:00:00Z',
+			completedAt: null,
 			userId: 'user1',
 			categoryId: 'cat2'
 		},
@@ -64,6 +79,7 @@ describe('Analytics Store Logic', () => {
 			dueDate: '2024-01-25',
 			createdAt: '2024-01-05T00:00:00Z',
 			updatedAt: '2024-01-09T00:00:00Z',
+			completedAt: null,
 			userId: 'user1',
 			categoryId: 'cat1'
 		}
