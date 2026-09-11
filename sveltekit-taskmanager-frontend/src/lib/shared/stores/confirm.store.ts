@@ -87,3 +87,8 @@ export const confirmStore = new Proxy({} as ReturnType<typeof createConfirmStore
 		return confirmStoreInstance[prop as keyof ReturnType<typeof createConfirmStore>];
 	}
 });
+
+/**
+ * Export store creator for testing
+ */
+export { createConfirmStore };

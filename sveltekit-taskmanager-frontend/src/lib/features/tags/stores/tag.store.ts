@@ -237,3 +237,8 @@ export const tagStore = new Proxy({} as ReturnType<typeof createTagStore>, {
 		return tagStoreInstance[prop as keyof ReturnType<typeof createTagStore>];
 	}
 });
+
+/**
+ * Export store creator for testing
+ */
+export { createTagStore };
