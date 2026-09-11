@@ -1,0 +1,98 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'sveltekit-taskmanager-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'sveltekit-taskmanager-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
+    - name: Install dependencies
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun install
+      
+    - name: Type check
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun run check
+      
+    - name: Lint
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun run lint
+      
+    - name: Format check
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun run format:check
+      
+    - name: Run unit tests
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun test
+      
+    - name: Run tests with coverage
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun test:coverage
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./sveltekit-taskmanager-frontend/coverage/coverage-final.json
+        flags: frontend
+        name: frontend-coverage
+        fail_ci_if_error: false
+      
+    - name: Build application
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun run build
+      
+    - name: Build Docker image
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: docker build -t taskmanager-frontend:test .
+      
+  e2e:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
+    - name: Install dependencies
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun install
+      
+    - name: Install Playwright browsers
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bunx playwright install --with-deps
+      
+    - name: Run E2E tests
+      working-directory: ./sveltekit-taskmanager-frontend
+      run: bun test:e2e
+      
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: ./sveltekit-taskmanager-frontend/playwright-report/
+        retention-days: 30

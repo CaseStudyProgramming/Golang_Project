@@ -1,0 +1,50 @@
+# Production Configuration
+# IMPORTANT: Do not commit this file to version control
+# Use environment variables or secret management systems for sensitive values
+
+server:
+  port: "8080"
+  # Consider using environment variable: SERVER_PORT
+
+database:
+  host: "your-production-db-host"
+  port: 5432
+  user: "your-production-db-user"
+  password: "your-secure-db-password"
+  dbname: "taskmanager"
+  sslmode: "require"
+  # Or use environment variables:
+  # DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSLMODE
+
+jwt:
+  secret: "your-very-secure-jwt-secret-key-minimum-32-characters-long"
+  # Use environment variable: JWT_SECRET
+  # Generate with: openssl rand -base64 32
+
+cors:
+  allowed_origins:
+    - "https://your-frontend-domain.com"
+    - "https://www.your-frontend-domain.com"
+  # Use environment variable: CORS_ALLOWED_ORIGINS (comma-separated)
+
+logging:
+  level: "info"
+  format: "json"
+  # Use environment variables: LOG_LEVEL, LOG_FORMAT
+
+# Application Settings
+app:
+  env: "production"
+  # Use environment variable: APP_ENV
+  
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 100
+    requests_per_hour: 1000
+    # Use environment variables: RATE_LIMIT_ENABLED, RATE_LIMIT_RPM, RATE_LIMIT_RPH
+  
+  # Session settings
+  session:
+    timeout_hours: 24
+    # Use environment variable: SESSION_TIMEOUT_HOURS
