@@ -6,8 +6,8 @@
 		window.history.back();
 	}
 
-	function goHome() {
-		goto('/');
+	async function goHome() {
+		await goto('/');
 	}
 </script>
 

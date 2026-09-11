@@ -109,12 +109,12 @@ function createAuthStore() {
 	/**
 	 * Perform redirect after authentication
 	 */
-	async function redirectAfterAuth(): Promise<void> {
+	function redirectAfterAuth(): void {
 		const redirectUrl = getRedirectUrl();
 		if (redirectUrl) {
-			await goto(redirectUrl);
+			goto(redirectUrl);
 		} else {
-			await goto('/dashboard');
+			goto('/dashboard');
 		}
 	}
 
@@ -331,7 +331,7 @@ function createSSRAuthStore() {
 		login: async () => { throw new Error('Auth store not available during SSR'); },
 		logout: async () => { throw new Error('Auth store not available during SSR'); },
 		needsTokenRefresh: () => false,
-		redirectAfterAuth: async () => {},
+		redirectAfterAuth: () => {},
 		refreshToken: async () => {},
 		register: async () => { throw new Error('Auth store not available during SSR'); },
 		saveRedirectUrl: () => {},

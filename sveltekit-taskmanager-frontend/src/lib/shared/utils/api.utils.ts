@@ -1,5 +1,3 @@
-import type { ApiResponse, PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
-
 /**
  * Base API configuration and utilities
  */

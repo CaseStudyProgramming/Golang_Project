@@ -3,9 +3,9 @@
 	import { authStore } from '$lib/features/auth';
 	import { onMount } from 'svelte';
 
-	onMount(() => {
+	onMount(async () => {
 		if (authStore.state.isAuthenticated) {
-			goto('/dashboard');
+			await goto('/dashboard');
 		}
 	});
 </script>
@@ -43,12 +43,14 @@
 		<div class="flex flex-col sm:flex-row gap-4 justify-center">
 			<a
 				href="/auth/register"
+				onclick={(e) => { e.preventDefault(); goto('/auth/register'); }}
 				class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
 			>
 				Get Started
 			</a>
 			<a
 				href="/auth/login"
+				onclick={(e) => { e.preventDefault(); goto('/auth/login'); }}
 				class="px-8 py-3 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-lg font-medium"
 			>
 				Sign In

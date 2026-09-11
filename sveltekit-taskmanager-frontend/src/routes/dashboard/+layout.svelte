@@ -27,7 +27,7 @@
 		try {
 			await authStore.logout();
 			toastStore.success('Logged out', 'You have been logged out successfully');
-			goto('/auth/login');
+			await goto('/auth/login');
 		} catch (error) {
 			console.error('Logout failed:', error);
 			toastStore.error('Logout failed', error instanceof Error ? error.message : 'An unexpected error occurred');
@@ -46,19 +46,25 @@
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="flex justify-between h-16">
 				<div class="flex items-center">
-					<a href="/dashboard" class="text-lg sm:text-xl font-bold text-gray-800">Task Manager</a>
+					<a
+						href="/dashboard"
+						onclick={(e) => { e.preventDefault(); goto('/dashboard'); }}
+						class="text-lg sm:text-xl font-bold text-gray-800"
+					>Task Manager</a>
 				</div>
-				
+
 				<!-- Desktop Navigation -->
 				<div class="hidden md:flex items-center space-x-4">
 					<a
 						href="/dashboard"
+						onclick={(e) => { e.preventDefault(); goto('/dashboard'); }}
 						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
 					>
 						Dashboard
 					</a>
 					<a
 						href="/dashboard/tasks"
+						onclick={(e) => { e.preventDefault(); goto('/dashboard/tasks'); }}
 						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
 					>
 						Tasks
@@ -101,14 +107,14 @@
 				<div class="px-4 pt-2 pb-4 space-y-1">
 					<a
 						href="/dashboard"
-						onclick={closeMobileMenu}
+						onclick={(e) => { e.preventDefault(); closeMobileMenu(); goto('/dashboard'); }}
 						class="block text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium min-h-[44px] flex items-center"
 					>
 						Dashboard
 					</a>
 					<a
 						href="/dashboard/tasks"
-						onclick={closeMobileMenu}
+						onclick={(e) => { e.preventDefault(); closeMobileMenu(); goto('/dashboard/tasks'); }}
 						class="block text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium min-h-[44px] flex items-center"
 					>
 						Tasks

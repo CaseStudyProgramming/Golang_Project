@@ -11,7 +11,7 @@
 		// Initialize auth store on client side
 		try {
 			authStore.initialize();
-		} catch (e) {
+		} catch {
 			// Store will initialize on first access
 		}
 	});
@@ -20,7 +20,7 @@
 		// Cleanup auth store when component unmounts
 		try {
 			authStore.cleanup();
-		} catch (e) {
+		} catch {
 			// Ignore cleanup errors
 		}
 	});

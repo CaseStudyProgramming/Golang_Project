@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Task Management E2E Tests', () => {
 	test.beforeEach(async ({ page }) => {
@@ -145,7 +145,7 @@ test.describe('Task Management E2E Tests', () => {
 
 	test('responsive design on mobile', async ({ page }) => {
 		// Set mobile viewport
-		await page.setViewportSize({ width: 375, height: 667 });
+		await page.setViewportSize({ height: 667, width: 375 });
 		
 		// Navigate to tasks page
 		await page.goto('/tasks');

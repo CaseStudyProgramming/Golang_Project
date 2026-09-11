@@ -273,7 +273,7 @@ describe('Error Utils', () => {
 
 			try {
 				await withErrorHandling(fn);
-			} catch (error) {
+			} catch {
 				expect(handler).toHaveBeenCalled();
 			}
 		});

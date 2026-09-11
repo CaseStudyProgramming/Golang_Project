@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 
-	function goHome() {
-		goto('/');
+	async function goHome() {
+		await goto('/');
 	}
 </script>
 
