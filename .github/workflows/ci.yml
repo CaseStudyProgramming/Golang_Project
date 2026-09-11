@@ -1,0 +1,88 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-ci:
+    uses: ./.github/workflows/backend-ci.yml
+    
+  frontend-ci:
+    uses: ./.github/workflows/frontend-ci.yml
+    
+  build-and-push:
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backendGoVanilaTaskmanager
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/taskmanager-backend:latest
+          ${{ secrets.DOCKER_USERNAME }}/taskmanager-backend:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/taskmanager-backend:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/taskmanager-backend:buildcache,mode=max
+        
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./sveltekit-taskmanager-frontend
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/taskmanager-frontend:latest
+          ${{ secrets.DOCKER_USERNAME }}/taskmanager-frontend:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/taskmanager-frontend:buildcache
+        cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/taskmanager-frontend:buildcache,mode=max
+        
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production..."
+        # Add your deployment commands here
+        # For example: kubectl apply -f k8s/
+        # Or: ssh user@server 'docker-compose pull && docker-compose up -d'
+        
+    - name: Run database migrations
+      run: |
+        echo "Running database migrations..."
+        # Add migration commands here
+        
+    - name: Health check
+      run: |
+        echo "Running health checks..."
+        # Add health check commands here
+        
+    - name: Notify deployment
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: 'Deployment to production completed'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
