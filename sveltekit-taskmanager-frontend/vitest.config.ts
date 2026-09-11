@@ -14,7 +14,10 @@ export default defineConfig({
 		globals: true,
 		environment: 'jsdom',
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		exclude: ['tests/e2e/**'],
+		exclude: ['tests/**', 'playwright-tests/**', '**/*.e2e.ts'],
+		typecheck: {
+			tsconfig: './tsconfig.json'
+		},
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'json', 'html', 'lcov'],

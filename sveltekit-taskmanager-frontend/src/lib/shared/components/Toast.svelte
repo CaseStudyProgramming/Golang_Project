@@ -1,9 +1,15 @@
 <script lang="ts">
-	import { toastStore } from '$lib/shared/stores';
+	import { toastStore } from '../stores';
 	import { fly } from 'svelte/transition';
-	import type { Toast as ToastType } from '$lib/shared/stores/toast.store';
+	import type { Toast as ToastType } from '../stores/toast.store';
 
-	let { toast }: { toast: ToastType } = $props();
+	let { 
+		toast,
+		onDismiss
+	}: { 
+		toast: ToastType;
+		onDismiss?: (id: string) => void;
+	} = $props();
 
 	const typeIcons = $derived(() => {
 		switch (toast.type) {
@@ -45,7 +51,11 @@
 	});
 
 	function handleDismiss() {
-		toastStore.removeToast(toast.id);
+		if (onDismiss) {
+			onDismiss(toast.id);
+		} else {
+			toastStore.removeToast(toast.id);
+		}
 	}
 </script>
 
