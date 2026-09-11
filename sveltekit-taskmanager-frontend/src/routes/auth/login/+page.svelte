@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { authStore } from '$lib/features/auth';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { getErrorMessage, isValidationError, isAuthenticationError } from '$lib/shared/utils/error.utils';
+	import { authStore } from '$lib/features/auth';
 	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
+	import { getErrorMessage, isAuthenticationError, isValidationError } from '$lib/shared/utils/error.utils';
 
 	let email = $state('');
 	let password = $state('');
@@ -17,6 +16,10 @@
 		const urlParams = new URLSearchParams($page.url.search);
 		return urlParams.get('redirectTo');
 	};
+
+	function dismissToast() {
+		toastError = '';
+	}
 
 	async function handleLogin(e: Event) {
 		e.preventDefault();
@@ -48,10 +51,6 @@
 		} finally {
 			isLoading = false;
 		}
-	}
-
-	function dismissToast() {
-		toastError = '';
 	}
 </script>
 

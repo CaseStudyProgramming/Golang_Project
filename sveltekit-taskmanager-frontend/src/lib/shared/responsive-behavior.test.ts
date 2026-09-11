@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Responsive Behavior', () => {
 	describe('Viewport Detection', () => {
@@ -25,11 +25,7 @@ describe('Responsive Behavior', () => {
 		});
 
 		it('handles viewport resize events', () => {
-			let currentWidth = 1024;
-			const newWidth = 375;
-
-			// Simulate resize
-			currentWidth = newWidth;
+			const currentWidth = 375;
 
 			const isMobile = currentWidth < 768;
 
@@ -306,7 +302,6 @@ describe('Responsive Behavior', () => {
 
 	describe('Orientation Changes', () => {
 		it('handles portrait orientation', () => {
-			const orientation = 'portrait';
 			const width = 375;
 			const height = 667;
 
@@ -316,7 +311,6 @@ describe('Responsive Behavior', () => {
 		});
 
 		it('handles landscape orientation', () => {
-			const orientation = 'landscape';
 			const width = 667;
 			const height = 375;
 

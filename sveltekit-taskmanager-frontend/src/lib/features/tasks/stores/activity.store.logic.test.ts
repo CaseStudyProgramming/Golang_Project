@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { Activity, ActivityType } from '../types/task.types';
 
@@ -10,14 +10,12 @@ describe('Activity Store Logic', () => {
 		});
 
 		it('sets loading state during fetch', () => {
-			let isLoading = false;
-			isLoading = true;
+			const isLoading = true;
 			expect(isLoading).toBe(true);
 		});
 
 		it('clears loading state after fetch', () => {
-			let isLoading = true;
-			isLoading = false;
+			const isLoading = false;
 			expect(isLoading).toBe(false);
 		});
 	});
@@ -172,34 +170,25 @@ describe('Activity Store Logic', () => {
 
 	describe('Error Handling', () => {
 		it('sets error on failure', () => {
-			let error: null | string = null;
-			error = 'Failed to fetch activities';
+			const error: null | string = 'Failed to fetch activities';
 			expect(error).toBe('Failed to fetch activities');
 		});
 
 		it('clears error state', () => {
-			let error: null | string = 'Some error';
-			error = null;
+			const error: null | string = null;
 			expect(error).toBeNull();
 		});
 	});
 
 	describe('State Reset', () => {
 		it('resets activities array', () => {
-			let activities: Activity[] = [
-				{ createdAt: '2024-01-01T00:00:00Z', description: 'Created', id: '1', taskId: 'task-1', type: 'task_created' as ActivityType, userId: 'user1', userName: 'User' }
-			];
-
-			activities = [];
+			const activities: Activity[] = [];
 			expect(activities).toHaveLength(0);
 		});
 
 		it('resets loading state', () => {
-			let isLoading = true;
-			let error: null | string = 'Some error';
-
-			isLoading = false;
-			error = null;
+			const isLoading = false;
+			const error: null | string = null;
 
 			expect(isLoading).toBe(false);
 			expect(error).toBeNull();

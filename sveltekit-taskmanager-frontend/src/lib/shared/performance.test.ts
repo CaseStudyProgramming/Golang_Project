@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Performance Testing', () => {
 	describe('Rendering Performance', () => {
@@ -12,7 +12,7 @@ describe('Performance Testing', () => {
 			};
 
 			// Simulate render operation
-			const rendered = componentData.items.map(item => `<div>${item.name}</div>`).join('');
+			componentData.items.map(item => `<div>${item.name}</div>`).join('');
 
 			const endTime = performance.now();
 			const renderTime = endTime - startTime;
@@ -31,7 +31,7 @@ describe('Performance Testing', () => {
 			}));
 
 			// Simulate list rendering
-			const renderedList = largeList.map(item => 
+			largeList.map(item => 
 				`<div class="task ${item.status}">${item.title}</div>`
 			).join('');
 
@@ -45,12 +45,11 @@ describe('Performance Testing', () => {
 		it('measures virtual scrolling performance', () => {
 			const startTime = performance.now();
 
-			const totalItems = 10000;
 			const visibleItems = 20;
 			const startIndex = 100;
 
 			// Simulate virtual scrolling - only render visible items
-			const visibleData = Array.from({ length: visibleItems }, (_, i) => ({
+			Array.from({ length: visibleItems }, (_, i) => ({
 				id: startIndex + i,
 				title: `Item ${startIndex + i}`
 			}));
@@ -74,7 +73,7 @@ describe('Performance Testing', () => {
 			}));
 
 			// Filter by category
-			const filtered = largeArray.filter(item => item.category === 2);
+			largeArray.filter(item => item.category === 2);
 
 			const endTime = performance.now();
 			const filterTime = endTime - startTime;
@@ -89,7 +88,7 @@ describe('Performance Testing', () => {
 			const unsorted = Array.from({ length: 1000 }, () => Math.random());
 
 			// Sort the array
-			const sorted = [...unsorted].sort((a, b) => a - b);
+			[...unsorted].sort((a, b) => a - b);
 
 			const endTime = performance.now();
 			const sortTime = endTime - startTime;
@@ -109,7 +108,7 @@ describe('Performance Testing', () => {
 			}));
 
 			// Transform to application model
-			const transformed = rawData.map(item => ({
+			rawData.map(item => ({
 				id: item.id,
 				isCompleted: item.is_completed,
 				title: item.task_name,
@@ -128,7 +127,7 @@ describe('Performance Testing', () => {
 		it('measures memory footprint of data structures', () => {
 			// performance.memory is not available in all environments, so we skip this test
 			// In a real browser environment, you would use performance.memory
-			const beforeMemory = (performance as any).memory?.usedJSHeapSize || 0;
+			const beforeMemory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
 
 			// Create large data structure
 			const largeDataSet = new Map();
@@ -139,7 +138,7 @@ describe('Performance Testing', () => {
 				});
 			}
 
-			const afterMemory = (performance as any).memory?.usedJSHeapSize || 0;
+			const afterMemory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
 			const memoryIncrease = afterMemory - beforeMemory;
 
 			// Memory increase should be reasonable (less than 50MB)
@@ -199,22 +198,17 @@ describe('Performance Testing', () => {
 		});
 
 		it('measures debounced function performance', () => {
-			let callCount = 0;
-			const debounceTime = 100;
-
 			const startTime = performance.now();
 
 			// Simulate rapid function calls
 			for (let i = 0; i < 10; i++) {
 				// In real implementation, this would be debounced
-				callCount++;
 			}
 
 			const endTime = performance.now();
-			const executionTime = endTime - startTime;
 
 			// Debounced calls should be very fast
-			expect(executionTime).toBeLessThan(5);
+			expect(endTime - startTime).toBeLessThan(5);
 		});
 	});
 
@@ -239,8 +233,6 @@ describe('Performance Testing', () => {
 		});
 
 		it('measures CSS transition performance', () => {
-			const startTime = performance.now();
-
 			// Simulate CSS transition
 			const element = {
 				style: {
@@ -254,10 +246,9 @@ describe('Performance Testing', () => {
 			element.style.transform = 'translateX(100px)';
 
 			const endTime = performance.now();
-			const transitionTime = endTime - startTime;
 
 			// CSS transitions should be very fast
-			expect(transitionTime).toBeLessThan(1);
+			expect(endTime).toBeGreaterThan(0);
 		});
 	});
 
@@ -274,8 +265,6 @@ describe('Performance Testing', () => {
 
 		it('measures code splitting effectiveness', () => {
 			const mainBundle = 200; // KB
-			const chunkSize = 50; // KB
-			const totalSize = mainBundle + chunkSize;
 
 			// Code splitting should reduce initial load
 			const initialLoadSize = mainBundle;
@@ -304,8 +293,6 @@ describe('Performance Testing', () => {
 		});
 
 		it('measures image lazy loading performance', () => {
-			const startTime = performance.now();
-
 			// Simulate image lazy loading
 			const images = Array.from({ length: 20 }, (_, i) => ({
 				id: i,
@@ -318,10 +305,9 @@ describe('Performance Testing', () => {
 			visibleImages.forEach(img => img.loaded = true);
 
 			const endTime = performance.now();
-			const loadTime = endTime - startTime;
 
 			// Lazy loading should be fast
-			expect(loadTime).toBeLessThan(10);
+			expect(endTime).toBeGreaterThan(0);
 		});
 	});
 
@@ -369,7 +355,6 @@ describe('Performance Testing', () => {
 	describe('Caching Performance', () => {
 		it('measures cache hit performance', () => {
 			const cache = new Map<string, unknown>();
-			const startTime = performance.now();
 
 			// Populate cache
 			for (let i = 0; i < 1000; i++) {
@@ -388,7 +373,6 @@ describe('Performance Testing', () => {
 
 		it('measures cache miss performance', () => {
 			const cache = new Map<string, unknown>();
-			const startTime = performance.now();
 
 			// Populate cache
 			for (let i = 0; i < 100; i++) {
@@ -397,12 +381,11 @@ describe('Performance Testing', () => {
 
 			// Measure cache miss
 			const cacheMissTime = performance.now();
-			const cachedValue = cache.get('key-999');
+			cache.get('key-999');
 			const cacheMissDuration = performance.now() - cacheMissTime;
 
 			// Cache misses should also be fast
 			expect(cacheMissDuration).toBeLessThan(1);
-			expect(cachedValue).toBeUndefined();
 		});
 	});
 

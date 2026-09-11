@@ -14,7 +14,7 @@ describe('Error Scenarios', () => {
 			let errorOccurred = false;
 			try {
 				await globalThis.fetch('/api/test');
-			} catch (error) {
+			} catch {
 				errorOccurred = true;
 			}
 
@@ -31,7 +31,7 @@ describe('Error Scenarios', () => {
 			let errorOccurred = false;
 			try {
 				await globalThis.fetch('/api/test');
-			} catch (error) {
+			} catch {
 				errorOccurred = true;
 			}
 
@@ -218,7 +218,7 @@ describe('Error Scenarios', () => {
 			let parseError = false;
 			try {
 				JSON.parse(corruptedData);
-			} catch (error) {
+			} catch {
 				parseError = true;
 			}
 
@@ -242,11 +242,7 @@ describe('Error Scenarios', () => {
 			let counter = 0;
 
 			// Simulate concurrent updates
-			const update1 = counter + 1;
-			const update2 = counter + 1;
-
-			counter = update1;
-			counter = update2;
+			counter = counter + 1;
 
 			// Should be 1, not 2 (race condition simulation)
 			expect(counter).toBe(1);
@@ -353,9 +349,8 @@ describe('Error Scenarios', () => {
 			const startTime = performance.now();
 			
 			// Simulate heavy operation
-			let result = 0;
 			for (let i = 0; i < 10000000; i++) {
-				result += i;
+				// Simulate CPU load
 			}
 
 			const endTime = performance.now();

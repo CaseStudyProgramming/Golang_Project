@@ -40,7 +40,7 @@ describe('Auth Store Logic', () => {
 
 		it('returns null when no redirect URL is saved', () => {
 			const sessionStorageMock = {
-				getItem: vi.fn((key: string) => null),
+				getItem: vi.fn((_key: string) => null),
 				removeItem: vi.fn(),
 				setItem: vi.fn()
 			};
@@ -73,7 +73,7 @@ describe('Auth Store Logic', () => {
 				user: null | { email: string; id: string; name: string };
 			};
 
-			const state: AuthState = {
+			const _state: AuthState = {
 				isAuthenticated: true,
 				token: 'auth-token',
 				user: { email: 'test@example.com', id: '1', name: 'Test' }

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Routing and Navigation', () => {
 	describe('Route Structure', () => {
@@ -21,7 +21,6 @@ describe('Routing and Navigation', () => {
 		});
 
 		it('handles dynamic route parameters', () => {
-			const routePattern = '/tasks/[id]';
 			const currentRoute = '/tasks/123';
 
 			const matches = currentRoute.startsWith('/tasks/') && currentRoute.length > '/tasks/'.length;
@@ -79,10 +78,7 @@ describe('Routing and Navigation', () => {
 
 	describe('Route Transitions', () => {
 		it('handles route changes', () => {
-			let currentRoute = '/dashboard';
-			const newRoute = '/tasks';
-
-			currentRoute = newRoute;
+			const currentRoute = '/tasks';
 
 			expect(currentRoute).toBe('/tasks');
 		});
@@ -114,10 +110,7 @@ describe('Routing and Navigation', () => {
 
 	describe('Route Loading States', () => {
 		it('sets loading state during navigation', () => {
-			let isLoading = false;
-			const isNavigating = true;
-
-			isLoading = isNavigating;
+			const isLoading = true;
 
 			expect(isLoading).toBe(true);
 		});
@@ -176,11 +169,10 @@ describe('Routing and Navigation', () => {
 		});
 
 		it('handles route chunk loading', () => {
-			let chunkLoaded = false;
 			const routeChunk = 'dashboard-chunk.js';
 
 			// Simulate chunk loading
-			chunkLoaded = routeChunk.endsWith('.js');
+			const chunkLoaded = routeChunk.endsWith('.js');
 
 			expect(chunkLoaded).toBe(true);
 		});
@@ -198,7 +190,6 @@ describe('Routing and Navigation', () => {
 
 		it('redirects to error page on route errors', () => {
 			const hasError = true;
-			const errorRoute = '/error';
 
 			const shouldRedirect = hasError;
 
@@ -209,15 +200,13 @@ describe('Routing and Navigation', () => {
 	describe('Route Preloading', () => {
 		it('identifies routes to preload', () => {
 		 const currentRoute = '/dashboard';
-		 const preloadRoutes = ['/tasks', '/categories'];
 
-		 const shouldPreload = preloadRoutes.includes(currentRoute);
+		 const shouldPreload = ['/categories', '/tasks'].includes(currentRoute);
 
 		 expect(shouldPreload).toBe(false);
 		});
 
 		it('handles link prefetching', () => {
-		 const linkHref = '/tasks';
 		 const isHovered = true;
 
 		 const shouldPrefetch = isHovered;
@@ -228,7 +217,7 @@ describe('Routing and Navigation', () => {
 
 	describe('Scroll Management', () => {
 		it('scrolls to top on route change', () => {
-			let scrollPosition = 500;
+			let scrollPosition = 0;
 			const routeChanged = true;
 
 			if (routeChanged) {

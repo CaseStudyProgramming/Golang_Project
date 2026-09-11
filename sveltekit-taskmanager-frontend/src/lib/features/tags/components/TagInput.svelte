@@ -1,18 +1,20 @@
 <script lang="ts">
-	import { tagStore } from '../stores/tag.store';
-	import type { Tag } from '../types/tag.types';
 	import { toastStore } from '$lib/shared/stores';
 
+	import type { Tag } from '../types/tag.types';
+
+	import { tagStore } from '../stores/tag.store';
+
 	let {
-		selectedTags = $bindable([]),
 		availableTags = $bindable(tagStore.state.tags),
 		onCreateTag,
-		placeholder = 'Add tags...'
+		placeholder = 'Add tags...',
+		selectedTags = $bindable([])
 	}: {
-		selectedTags?: string[];
 		availableTags?: Tag[];
 		onCreateTag?: (name: string) => Promise<void>;
 		placeholder?: string;
+		selectedTags?: string[];
 	} = $props();
 
 	let input = $state('');
@@ -37,30 +39,13 @@
 	);
 
 	/**
-	 * Handle input change
+	 * Handle blur with delay to allow click events
 	 */
-	function handleInput(e: Event) {
-		input = (e.target as HTMLInputElement).value;
-		isOpen = true;
-		highlightedIndex = -1;
-	}
-
-	/**
-	 * Handle tag selection
-	 */
-	function selectTag(tag: Tag) {
-		if (!selectedTags.includes(tag.id)) {
-			selectedTags = [...selectedTags, tag.id];
-		}
-		input = '';
-		isOpen = false;
-	}
-
-	/**
-	 * Handle tag removal
-	 */
-	function removeTag(tagId: string) {
-		selectedTags = selectedTags.filter((id) => id !== tagId);
+	function handleBlur() {
+		setTimeout(() => {
+			isOpen = false;
+			highlightedIndex = -1;
+		}, 200);
 	}
 
 	/**
@@ -84,6 +69,15 @@
 	}
 
 	/**
+	 * Handle input change
+	 */
+	function handleInput(e: Event) {
+		input = (e.target as HTMLInputElement).value;
+		isOpen = true;
+		highlightedIndex = -1;
+	}
+
+	/**
 	 * Handle keyboard navigation
 	 */
 	function handleKeydown(e: KeyboardEvent) {
@@ -103,6 +97,11 @@
 				e.preventDefault();
 				highlightedIndex = Math.max(highlightedIndex - 1, 0);
 				break;
+			case 'Backspace':
+				if (!input && selectedTags.length > 0) {
+					removeTag(selectedTags[selectedTags.length - 1]);
+				}
+				break;
 			case 'Enter':
 				e.preventDefault();
 				if (highlightedIndex >= 0 && filteredTags[highlightedIndex]) {
@@ -115,11 +114,6 @@
 				isOpen = false;
 				highlightedIndex = -1;
 				break;
-			case 'Backspace':
-				if (!input && selectedTags.length > 0) {
-					removeTag(selectedTags[selectedTags.length - 1]);
-				}
-				break;
 			case 'Tab':
 				isOpen = false;
 				highlightedIndex = -1;
@@ -128,13 +122,21 @@
 	}
 
 	/**
-	 * Handle blur with delay to allow click events
+	 * Handle tag removal
 	 */
-	function handleBlur() {
-		setTimeout(() => {
-			isOpen = false;
-			highlightedIndex = -1;
-		}, 200);
+	function removeTag(tagId: string) {
+		selectedTags = selectedTags.filter((id) => id !== tagId);
+	}
+
+	/**
+	 * Handle tag selection
+	 */
+	function selectTag(tag: Tag) {
+		if (!selectedTags.includes(tag.id)) {
+			selectedTags = [...selectedTags, tag.id];
+		}
+		input = '';
+		isOpen = false;
 	}
 </script>
 
@@ -142,7 +144,7 @@
 	<!-- Selected tags display -->
 	{#if selectedTagObjects.length > 0}
 		<div class="flex flex-wrap gap-2 mb-2" role="list">
-			{#each selectedTagObjects as tag}
+			{#each selectedTagObjects as tag (tag.id)}
 				<div
 					class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm"
 					style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}; border: 1px solid {tag.color || '#3B82F6'}40"
@@ -199,7 +201,7 @@
 	{#if isOpen && (filteredTags.length > 0 || input.trim())}
 		<div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" role="listbox" id="tag-listbox">
 			{#if filteredTags.length > 0}
-				{#each filteredTags as tag, index}
+				{#each filteredTags as tag, index (tag.id)}
 					<button
 						type="button"
 						onclick={() => selectTag(tag)}

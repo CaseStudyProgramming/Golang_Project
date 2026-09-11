@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { authApi } from '$lib/features/auth';
-	import { resetPasswordSchema } from '$lib/features/auth/schemas/auth.schemas';
-	import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils';
-	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
-	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { authApi } from '$lib/features/auth';
+	import { resetPasswordSchema } from '$lib/features/auth/schemas/auth.schemas';
+	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
+	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
+	import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils';
 
 	let password = $state('');
 	let confirmPassword = $state('');
@@ -26,6 +26,10 @@
 		goto('/auth/forgot-password');
 	}
 
+	function dismissToast() {
+		toastError = '';
+	}
+
 	async function handleResetPassword(e: Event) {
 		e.preventDefault();
 		isLoading = true;
@@ -42,15 +46,15 @@
 
 		try {
 			const validatedData = resetPasswordSchema.parse({
-				token: getToken(),
+				confirmPassword,
 				password,
-				confirmPassword
+				token: getToken()
 			});
 			await authApi.resetPassword(validatedData);
 			isSuccess = true;
 		} catch (err) {
 			if (err instanceof Error && err.name === 'ZodError') {
-				const zodError = err as any;
+				const zodError = err as { errors: Array<{ message: string; path: string[] }> };
 				if (zodError.errors && zodError.errors[0]) {
 					const field = zodError.errors[0].path[0] as string;
 					fieldErrors[field] = zodError.errors[0].message;
@@ -66,10 +70,6 @@
 		} finally {
 			isLoading = false;
 		}
-	}
-
-	function dismissToast() {
-		toastError = '';
 	}
 </script>
 

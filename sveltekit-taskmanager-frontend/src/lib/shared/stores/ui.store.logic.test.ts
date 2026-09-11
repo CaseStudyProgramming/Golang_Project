@@ -26,8 +26,7 @@ describe('UI Store Logic', () => {
 
 		it('clears loading state', () => {
 			type LoadingState = { isLoading: boolean; message?: string };
-			let loading: LoadingState = { isLoading: true, message: 'Loading...' };
-			loading = { isLoading: false, message: undefined };
+			const loading: LoadingState = { isLoading: false, message: undefined };
 			expect(loading.isLoading).toBe(false);
 			expect(loading.message).toBeUndefined();
 		});
@@ -86,12 +85,7 @@ describe('UI Store Logic', () => {
 		});
 
 		it('clears all notifications', () => {
-			let notifications = [
-				{ createdAt: Date.now(), duration: 5000, id: '1', isPersistent: false, title: 'Test 1', type: 'success' as const },
-				{ createdAt: Date.now(), duration: 5000, id: '2', isPersistent: false, title: 'Test 2', type: 'error' as const }
-			];
-
-			notifications = [];
+			const notifications: never[] = [];
 			expect(notifications).toHaveLength(0);
 		});
 	});

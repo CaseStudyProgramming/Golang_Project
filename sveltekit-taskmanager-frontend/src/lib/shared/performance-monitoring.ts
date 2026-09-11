@@ -215,7 +215,7 @@ class PerformanceMonitor {
   /**
    * Send metrics to reporting service
    */
-  private sendToReportingService(data: any): void {
+  private sendToReportingService(data: Record<string, unknown>): void {
     if (!this.reportingEndpoint) return;
 
     // Use navigator.sendBeacon for non-blocking requests

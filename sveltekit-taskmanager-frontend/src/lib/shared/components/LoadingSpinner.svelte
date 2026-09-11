@@ -1,20 +1,20 @@
 <script lang="ts">
 	let { 
-		size = 'md',
 		color = 'blue',
+		size = 'md',
 		text = ''
 	}: {
-		size?: 'sm' | 'md' | 'lg';
-		color?: 'blue' | 'white' | 'gray';
+		color?: 'blue' | 'gray' | 'white';
+		size?: 'lg' | 'md' | 'sm';
 		text?: string;
 	} = $props();
 
 	const sizeClasses = $derived(() => {
 		switch (size) {
-			case 'sm':
-				return 'h-4 w-4';
 			case 'lg':
 				return 'h-12 w-12';
+			case 'sm':
+				return 'h-4 w-4';
 			default:
 				return 'h-8 w-8';
 		}
@@ -22,10 +22,10 @@
 
 	const colorClasses = $derived(() => {
 		switch (color) {
-			case 'white':
-				return 'border-white';
 			case 'gray':
 				return 'border-gray-400';
+			case 'white':
+				return 'border-white';
 			default:
 				return 'border-blue-600';
 		}

@@ -5,9 +5,7 @@
 
 import type { PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
 
-import { httpClient } from '$lib/shared/utils/api.utils';
 import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
-import { z } from 'zod';
 
 import type { Subtask, Task, TaskFilters, TaskSort, TaskState } from '../types/task.types';
 

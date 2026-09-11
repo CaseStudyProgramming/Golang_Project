@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { authStore } from '$lib/features/auth';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
-	import { getErrorMessage, isValidationError, isAuthenticationError } from '$lib/shared/utils/error.utils';
+	import { authStore } from '$lib/features/auth';
 	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
+	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
+	import { getErrorMessage, isAuthenticationError, isValidationError } from '$lib/shared/utils/error.utils';
 
 	let name = $state('');
 	let email = $state('');
@@ -20,6 +19,10 @@
 		const urlParams = new URLSearchParams($page.url.search);
 		return urlParams.get('redirectTo');
 	};
+
+	function dismissToast() {
+		toastError = '';
+	}
 
 	async function handleRegister(e: Event) {
 		e.preventDefault();
@@ -42,7 +45,7 @@
 		}
 
 		try {
-			await authStore.register({ email, password, name });
+			await authStore.register({ email, name, password });
 			await authStore.redirectAfterAuth();
 		} catch (err) {
 			if (isValidationError(err)) {
@@ -58,10 +61,6 @@
 		} finally {
 			isLoading = false;
 		}
-	}
-
-	function dismissToast() {
-		toastError = '';
 	}
 </script>
 

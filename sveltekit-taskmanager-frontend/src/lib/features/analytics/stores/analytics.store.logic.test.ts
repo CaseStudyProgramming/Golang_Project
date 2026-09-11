@@ -302,37 +302,21 @@ describe('Analytics Store Logic', () => {
 		});
 
 		it('sets loading state', () => {
-			let isLoading = false;
-			isLoading = true;
+			const isLoading = true;
 			expect(isLoading).toBe(true);
 		});
 
 		it('sets error state', () => {
-			let error: null | string = null;
-			error = 'Failed to load analytics';
+			const error: null | string = 'Failed to load analytics';
 			expect(error).toBe('Failed to load analytics');
 		});
 
 		it('resets state to initial values', () => {
-			type TestState = {
-				data: null | { statistics: { total: number } };
-				error: null | string;
-				isLoading: boolean;
-				selectedPeriod: 'daily' | 'monthly' | 'weekly';
-			};
-
-			let state: TestState = {
-				data: { statistics: { total: 10 } },
-				error: 'Some error',
-				isLoading: true,
-				selectedPeriod: 'monthly'
-			};
-
-			state = {
+			const state = {
 				data: null,
 				error: null,
 				isLoading: false,
-				selectedPeriod: 'weekly'
+				selectedPeriod: 'weekly' as const
 			};
 
 			expect(state.data).toBeNull();

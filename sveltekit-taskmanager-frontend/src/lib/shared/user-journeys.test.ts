@@ -1,11 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Critical User Journeys', () => {
 	describe('New User Onboarding Journey', () => {
 		it('completes full registration flow', async () => {
 			// Step 1: User navigates to registration page
-			let currentRoute = '/home';
-			currentRoute = '/register';
+			let currentRoute = '/register';
 
 			// Step 2: User fills registration form
 			const registrationData = {
@@ -44,13 +43,6 @@ describe('Critical User Journeys', () => {
 			expect(showOnboarding).toBe(true);
 
 			// Step 2: User creates first task
-			const firstTask = {
-				description: 'Getting started with the app',
-				priority: 'medium',
-				title: 'My first task'
-			};
-
-			// Step 3: Task created successfully
 			const taskCreated = true;
 
 			// Step 4: Hide onboarding and show dashboard
@@ -65,25 +57,14 @@ describe('Critical User Journeys', () => {
 	describe('Task Management Journey', () => {
 		it('completes task creation to completion workflow', async () => {
 			// Step 1: User navigates to tasks page
-			const currentRoute = '/tasks';
 
 			// Step 2: User clicks "Create Task" button
-			const showCreateModal = true;
 
-			// Step 3: User fills task form
-			const taskData = {
-				description: 'Write comprehensive documentation',
-				dueDate: '2024-12-31',
-				priority: 'high',
-				status: 'todo',
-				title: 'Complete project documentation'
-			};
-
-			// Step 4: Submit task
+			// Step 3: User fills task form and submits
 			const taskCreated = true;
 
-			// Step 5: Task appears in list
-			const tasks = taskCreated ? [taskData] : [];
+			// Step 4: Task appears in list
+			const tasks = taskCreated ? [{ status: 'todo', title: 'Complete project documentation' }] : [];
 
 			expect(tasks.length).toBe(1);
 
@@ -106,7 +87,6 @@ describe('Critical User Journeys', () => {
 			};
 
 			// Step 2: User opens task details
-			const taskDetailsOpen = true;
 
 			// Step 3: User selects team member
 			const selectedMemberId = 'user-123';
@@ -125,21 +105,14 @@ describe('Critical User Journeys', () => {
 	describe('Dashboard Navigation Journey', () => {
 		it('navigates from dashboard to task details and back', async () => {
 			// Step 1: User is on dashboard
-			let currentRoute = '/dashboard';
 
 			// Step 2: User clicks on a task
 			const taskId = '123';
-			currentRoute = `/tasks/${taskId}`;
+			let currentRoute = `/tasks/${taskId}`;
 
 			expect(currentRoute).toBe('/tasks/123');
 
 			// Step 3: User views task details
-			const taskDetails = {
-				id: taskId,
-				subtasks: [],
-				title: 'Task Details'
-			};
-
 			// Step 4: User clicks back button
 			currentRoute = '/dashboard';
 
@@ -174,7 +147,6 @@ describe('Critical User Journeys', () => {
 	describe('Category Management Journey', () => {
 		it('creates category and assigns tasks to it', async () => {
 			// Step 1: User navigates to categories
-			const currentRoute = '/categories';
 
 			// Step 2: User creates new category
 			const newCategory = {
@@ -221,24 +193,18 @@ describe('Critical User Journeys', () => {
 	describe('Authentication Recovery Journey', () => {
 		it('handles forgot password flow', async () => {
 			// Step 1: User clicks "Forgot Password"
-			let currentRoute = '/forgot-password';
 
 			// Step 2: User enters email
-			const email = 'user@example.com';
 
 			// Step 3: Submit request
-			const resetLinkSent = true;
 
 			// Step 4: User receives email (simulated)
 			const resetToken = 'reset-token-123';
 
 			// Step 5: User clicks reset link
-			currentRoute = `/reset-password?token=${resetToken}`;
+			let currentRoute = `/reset-password?token=${resetToken}`;
 
-			// Step 6: User enters new password
-			const newPassword = 'NewSecurePassword123';
-
-			// Step 7: Submit password reset
+			// Step 6: User enters new password and submits
 			const passwordReset = true;
 
 			// Step 8: Redirect to login
@@ -251,8 +217,7 @@ describe('Critical User Journeys', () => {
 
 		it('handles session expiration gracefully', async () => {
 			// Step 1: User is logged in
-			let isAuthenticated = true;
-			let currentRoute = '/dashboard';
+			let isAuthenticated = false;
 
 			// Step 2: Session expires
 			const isTokenExpired = true;
@@ -263,8 +228,7 @@ describe('Critical User Journeys', () => {
 			}
 
 			// Step 4: Redirect to login with saved URL
-			const redirectUrl = currentRoute;
-			currentRoute = '/login';
+			const currentRoute = '/login';
 
 			expect(isAuthenticated).toBe(false);
 			expect(currentRoute).toBe('/login');
@@ -295,17 +259,7 @@ describe('Critical User Journeys', () => {
 
 		it('uses subtasks for task breakdown', async () => {
 			// Step 1: User creates main task
-			type MainTask = {
-				id: string;
-				subtasks: Array<{ id: string; isCompleted: boolean; title: string; }>;
-				title: string;
-			};
-			const mainTask: MainTask = {
-				id: '1',
-				subtasks: [],
-				title: 'Complete project'
-			};
-
+			const mainTask = { subtasks: [] };
 			// Step 2: User adds subtasks
 			const subtasks = [
 				{ id: 'sub-1', isCompleted: true, title: 'Research' },
@@ -326,7 +280,6 @@ describe('Critical User Journeys', () => {
 	describe('Settings and Preferences Journey', () => {
 		it('updates user preferences', async () => {
 			// Step 1: User navigates to settings
-			const currentRoute = '/settings';
 
 			// Step 2: User changes theme preference
 			const themePreference = 'dark';
@@ -352,11 +305,8 @@ describe('Critical User Journeys', () => {
 			let currentRoute = '/settings/account';
 
 			// Step 2: User requests account deletion
-			const deletionRequested = true;
 
 			// Step 3: Show confirmation dialog
-			const showConfirmation = true;
-
 			// Step 4: User confirms deletion
 			const confirmed = true;
 

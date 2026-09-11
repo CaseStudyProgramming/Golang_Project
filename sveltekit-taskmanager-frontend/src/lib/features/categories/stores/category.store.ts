@@ -2,7 +2,6 @@
  * Category management store using Svelte 5 runes
  */
 
-import { httpClient } from '$lib/shared/utils/api.utils';
 import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
 
 import type { Category, CategoryState } from '../types/category.types';

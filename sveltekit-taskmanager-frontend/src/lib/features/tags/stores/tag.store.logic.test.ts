@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { Tag } from '../types/tag.types';
 
@@ -83,22 +83,11 @@ describe('Tag Store Logic', () => {
 				userId: 'user1'
 			};
 
-			let currentTag: null | Tag = null;
-			currentTag = tag;
-			expect(currentTag).toEqual(tag);
+			expect(tag).toEqual(tag);
 		});
 
 		it('clears current tag', () => {
-			let currentTag: null | Tag = {
-				color: '#8B5CF6',
-				createdAt: '2024-01-01T00:00:00Z',
-				id: '123',
-				name: 'Current',
-				updatedAt: '2024-01-01T00:00:00Z',
-				userId: 'user1'
-			};
-
-			currentTag = null;
+			const currentTag: null | Tag = null;
 			expect(currentTag).toBeNull();
 		});
 
@@ -112,8 +101,6 @@ describe('Tag Store Logic', () => {
 				userId: 'user1'
 			};
 
-			let currentTag: Tag = originalTag;
-
 			const updatedTag: Tag = {
 				...originalTag,
 				color: '#10B981',
@@ -121,70 +108,49 @@ describe('Tag Store Logic', () => {
 				updatedAt: new Date().toISOString()
 			};
 
-			currentTag = updatedTag;
-			expect(currentTag.name).toBe('Updated');
-			expect(currentTag.color).toBe('#10B981');
+			expect(updatedTag.name).toBe('Updated');
+			expect(updatedTag.color).toBe('#10B981');
 		});
 	});
 
 	describe('Error Handling', () => {
 		it('sets error message', () => {
-			let error: null | string = null;
-			error = 'Failed to fetch tags';
+			const error: null | string = 'Failed to fetch tags';
 			expect(error).toBe('Failed to fetch tags');
 		});
 
 		it('clears error state', () => {
-			let error: null | string = 'Some error';
-			error = null;
+			const error: null | string = null;
 			expect(error).toBeNull();
 		});
 	});
 
 	describe('Loading States', () => {
 		it('sets loading state', () => {
-			let isLoading = false;
-			isLoading = true;
+			const isLoading = true;
 			expect(isLoading).toBe(true);
 		});
 
 		it('clears loading state', () => {
-			let isLoading = true;
-			isLoading = false;
+			const isLoading = false;
 			expect(isLoading).toBe(false);
 		});
 	});
 
 	describe('State Reset', () => {
 		it('resets tag list', () => {
-			let tags: Tag[] = [
-				{ color: '#3B82F6', createdAt: '2024-01-01T00:00:00Z', id: '1', name: 'Tag 1', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' }
-			];
-
-			tags = [];
+			const tags: Tag[] = [];
 			expect(tags).toHaveLength(0);
 		});
 
 		it('resets current tag', () => {
-			let currentTag: null | Tag = {
-				color: '#8B5CF6',
-				createdAt: '2024-01-01T00:00:00Z',
-				id: '123',
-				name: 'Current',
-				updatedAt: '2024-01-01T00:00:00Z',
-				userId: 'user1'
-			};
-
-			currentTag = null;
+			const currentTag: null | Tag = null;
 			expect(currentTag).toBeNull();
 		});
 
 		it('resets error state', () => {
-			let error: null | string = 'Some error';
-			let isLoading = true;
-
-			error = null;
-			isLoading = false;
+			const error: null | string = null;
+			const isLoading = false;
 
 			expect(error).toBeNull();
 			expect(isLoading).toBe(false);

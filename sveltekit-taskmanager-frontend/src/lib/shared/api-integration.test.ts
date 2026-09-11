@@ -30,7 +30,7 @@ describe('API Integration', () => {
 			let errorOccurred = false;
 			try {
 				await globalThis.fetch('/api/test');
-			} catch (error) {
+			} catch {
 				errorOccurred = true;
 			}
 
@@ -136,14 +136,12 @@ describe('API Integration', () => {
 		});
 
 		it('handles token expiration', async () => {
-			const expiredToken = 'expired-token';
 			const isValid = Date.now() < 1000000000; // Always false for current time
 
 			expect(isValid).toBe(false);
 		});
 
 		it('refreshes token on 401 response', async () => {
-			let refreshTokenCalled = false;
 			const mockFetch = vi.fn()
 				.mockResolvedValueOnce({
 					json: () => Promise.resolve({}),
@@ -162,7 +160,7 @@ describe('API Integration', () => {
 			await globalThis.fetch('/api/protected');
 
 			// Simulate token refresh
-			refreshTokenCalled = true;
+			const refreshTokenCalled = true;
 			await globalThis.fetch('/api/auth/refresh', {
 				body: JSON.stringify({ refreshToken: 'refresh-token' }),
 				method: 'POST'

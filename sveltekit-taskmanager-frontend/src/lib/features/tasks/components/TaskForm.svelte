@@ -1,24 +1,25 @@
 <script lang="ts">
-	import { taskStore } from '../stores/task.store';
-	import { createTaskSchema, type CreateTaskPayload, type UpdateTaskPayload } from '../schemas/task.schemas';
-	import type { TaskPriority } from '../types/task.types';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
 	import { TagInput } from '$lib/features/tags';
 	import { LoadingSpinner } from '$lib/shared/components';
 	import { toastStore } from '$lib/shared/stores';
-	import type { Category } from '$lib/features/categories';
+
+	import type { TaskPriority } from '../types/task.types';
+
+	import { type CreateTaskPayload, createTaskSchema } from '../schemas/task.schemas';
+	import { taskStore } from '../stores/task.store';
 
 	let {
-		mode = 'create',
 		initialData,
-		onSubmit,
-		onCancel
+		mode = 'create',
+		onCancel,
+		onSubmit
 	}: {
-		mode?: 'create' | 'edit';
 		initialData?: Partial<CreateTaskPayload>;
-		onSubmit?: (data: CreateTaskPayload) => Promise<void>;
+		mode?: 'create' | 'edit';
 		onCancel?: () => void;
+		onSubmit?: (data: CreateTaskPayload) => Promise<void>;
 	} = $props();
 
 	let title = $state('');
@@ -64,6 +65,13 @@
 	});
 
 	/**
+	 * Handle cancel
+	 */
+	function handleCancel(): void {
+		onCancel?.();
+	}
+
+	/**
 	 * Handle creating new tag
 	 */
 	async function handleCreateTag(name: string): Promise<void> {
@@ -72,34 +80,6 @@
 			tags = [...tags, newTag.id];
 		} catch (error) {
 			console.error('Failed to create tag:', error);
-		}
-	}
-
-	/**
-	 * Validate form
-	 */
-	function validateForm(): boolean {
-		try {
-			createTaskSchema.parse({
-				title,
-				description,
-				priority,
-				dueDate: dueDate || undefined,
-				categoryId: categoryId || undefined,
-				tags
-			});
-			errors = {};
-			return true;
-		} catch (error: any) {
-			if (error.name === 'ZodError') {
-				const newErrors: Record<string, string> = {};
-				error.errors.forEach((err: any) => {
-					const path = err.path.join('.');
-					newErrors[path] = err.message;
-				});
-				errors = newErrors;
-			}
-			return false;
 		}
 	}
 
@@ -114,12 +94,12 @@
 		isSubmitting = true;
 		try {
 			const payload: CreateTaskPayload = {
-				title,
-				description,
-				priority,
-				dueDate: dueDate || undefined,
 				categoryId: categoryId || undefined,
-				tags
+				description,
+				dueDate: dueDate || undefined,
+				priority,
+				tags,
+				title
 			};
 
 			if (onSubmit) {
@@ -155,10 +135,32 @@
 	}
 
 	/**
-	 * Handle cancel
+	 * Validate form
 	 */
-	function handleCancel(): void {
-		onCancel?.();
+	function validateForm(): boolean {
+		try {
+			createTaskSchema.parse({
+				categoryId: categoryId || undefined,
+				description,
+				dueDate: dueDate || undefined,
+				priority,
+				tags,
+				title
+			});
+			errors = {};
+			return true;
+		} catch (error: unknown) {
+			if (error instanceof Error && error.name === 'ZodError') {
+				const zodError = error as { errors: Array<{ message: string; path: string[] }> };
+				const newErrors: Record<string, string> = {};
+				zodError.errors.forEach((err) => {
+					const path = err.path.join('.');
+					newErrors[path] = err.message;
+				});
+				errors = newErrors;
+			}
+			return false;
+		}
 	}
 </script>
 
@@ -229,7 +231,7 @@
 			class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
 		>
 			<option value="">No category</option>
-			{#each categories as category}
+			{#each categories as category (category.id)}
 				<option value={category.id}>{category.icon ? category.icon + ' ' : ''}{category.name}</option>
 			{/each}
 		</select>

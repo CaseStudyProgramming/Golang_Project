@@ -1,16 +1,16 @@
 <script lang="ts">
 	let { 
-		icon = '',
-		title = 'No data',
-		description = 'There is no data to display.',
 		actionLabel = '',
-		onAction
+		description = 'There is no data to display.',
+		icon = '',
+		onAction,
+		title = 'No data'
 	}: {
-		icon?: string;
-		title?: string;
-		description?: string;
 		actionLabel?: string;
+		description?: string;
+		icon?: string;
 		onAction?: () => void;
+		title?: string;
 	} = $props();
 </script>
 
@@ -18,6 +18,8 @@
 	{#if icon}
 		<div class="mx-auto h-16 w-16 sm:h-20 sm:w-20 text-gray-400 mb-4 flex items-center justify-center">
 			{#if icon.trim().startsWith('<svg')}
+				<!-- eslint-disable svelte/no-at-html-tags -->
+				<!-- Icon is hardcoded within the component, not user input -->
 				<div class="h-full w-full">
 					{@html icon}
 				</div>

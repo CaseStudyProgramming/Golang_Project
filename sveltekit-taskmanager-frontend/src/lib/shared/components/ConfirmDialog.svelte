@@ -2,23 +2,23 @@
 	import { fly } from 'svelte/transition';
 
 	let {
-		isOpen = false,
-		title = 'Confirm Action',
-		message = 'Are you sure you want to proceed?',
-		confirmText = 'Confirm',
 		cancelText = 'Cancel',
-		type = 'danger',
+		confirmText = 'Confirm',
+		isOpen = false,
+		message = 'Are you sure you want to proceed?',
+		onCancel,
 		onConfirm,
-		onCancel
+		title = 'Confirm Action',
+		type = 'danger'
 	}: {
-		isOpen?: boolean;
-		title?: string;
-		message?: string;
-		confirmText?: string;
 		cancelText?: string;
-		type?: 'danger' | 'warning' | 'info';
-		onConfirm?: () => void | Promise<void>;
+		confirmText?: string;
+		isOpen?: boolean;
+		message?: string;
 		onCancel?: () => void;
+		onConfirm?: () => Promise<void> | void;
+		title?: string;
+		type?: 'danger' | 'info' | 'warning';
 	} = $props();
 
 	let isConfirming = $state(false);
@@ -27,10 +27,10 @@
 		switch (type) {
 			case 'danger':
 				return 'bg-red-50 border-red-200 text-red-800';
-			case 'warning':
-				return 'bg-yellow-50 border-yellow-200 text-yellow-800';
 			case 'info':
 				return 'bg-blue-50 border-blue-200 text-blue-800';
+			case 'warning':
+				return 'bg-yellow-50 border-yellow-200 text-yellow-800';
 		}
 	});
 
@@ -38,12 +38,16 @@
 		switch (type) {
 			case 'danger':
 				return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
-			case 'warning':
-				return 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500';
 			case 'info':
 				return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
+			case 'warning':
+				return 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500';
 		}
 	});
+
+	function handleCancel() {
+		onCancel?.();
+	}
 
 	async function handleConfirm() {
 		isConfirming = true;
@@ -52,10 +56,6 @@
 		} finally {
 			isConfirming = false;
 		}
-	}
-
-	function handleCancel() {
-		onCancel?.();
 	}
 </script>
 
@@ -70,7 +70,7 @@
 		
 		<div 
 			class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 border {typeClasses()}"
-			transition:fly={{ y: 20, duration: 200 }}
+			transition:fly={{ duration: 200, y: 20 }}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="dialog-title"

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Authentication Flows', () => {
 	describe('Login Flow', () => {
@@ -90,14 +90,9 @@ describe('Authentication Flows', () => {
 				token: null | string;
 				user: null | { email: string; id: string; };
 			};
-			let authState: AuthState = {
-				isAuthenticated: true,
-				token: 'auth-token',
-				user: { email: 'test@example.com', id: '1' }
-			};
 
 			// Simulate logout
-			authState = {
+			const authState: AuthState = {
 				isAuthenticated: false,
 				token: null,
 				user: null
@@ -109,12 +104,9 @@ describe('Authentication Flows', () => {
 		});
 
 		it('clears stored tokens on logout', () => {
-			let storedToken: null | string = 'auth-token';
-			let storedRefreshToken: null | string = 'refresh-token';
-
 			// Simulate token cleanup
-			storedToken = null;
-			storedRefreshToken = null;
+			const storedToken: null | string = null;
+			const storedRefreshToken: null | string = null;
 
 			expect(storedToken).toBe(null);
 			expect(storedRefreshToken).toBe(null);
@@ -174,7 +166,7 @@ describe('Authentication Flows', () => {
 				password: 'new-password',
 				token: 'valid-reset-token'
 			};
-			const mockResponse = { message: 'Password reset successful' };
+			const _mockResponse = { message: 'Password reset successful' };
 
 			// Simulate password reset
 			const passwordsMatch = resetData.password === resetData.confirmPassword;

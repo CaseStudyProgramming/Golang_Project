@@ -74,8 +74,10 @@ describe('ProgressBar Component Logic', () => {
 		const shouldShowLabel = showLabel || label;
 		expect(shouldShowLabel).toBeTruthy();
 
-		const shouldNotShowLabel = false || '';
-		expect(shouldNotShowLabel).toBeFalsy();
+		const showLabel2 = false;
+		const label2 = '';
+		const shouldNotShowLabel = showLabel2 || label2;
+		expect(shouldNotShowLabel).toBe('');
 	});
 
 	it('generates correct ARIA values', () => {

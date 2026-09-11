@@ -3,7 +3,6 @@
  * Manages task activity history and filtering
  */
 
-import { httpClient } from '$lib/shared/utils/api.utils';
 import { withErrorHandling } from '$lib/shared/utils/error.utils';
 
 import type { Activity, ActivityFilters, ActivityState } from '../types/task.types';
@@ -21,7 +20,7 @@ function createActivityStore() {
 	/**
 	 * Fetch activities with filters
 	 */
-	async function fetchActivities(filters?: ActivityFilters): Promise<void> {
+	async function fetchActivities(_filters?: ActivityFilters): Promise<void> {
 		state.isLoading = true;
 		state.error = null;
 

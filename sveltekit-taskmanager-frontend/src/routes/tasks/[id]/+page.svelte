@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { taskStore, TaskForm, SubtaskList, ActivityLog } from '$lib/features/tasks';
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { activityStore } from '$lib/features/tasks';
+	import { page } from '$app/stores';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
+	import { ActivityLog, SubtaskList, TaskForm, taskStore } from '$lib/features/tasks';
+	import { activityStore } from '$lib/features/tasks';
+	import { onMount } from 'svelte';
 
 	let taskId = $derived($page.params.id || '');
 	let isEditing = $state(false);
@@ -27,17 +27,62 @@
 	});
 
 	/**
-	 * Handle update task
+	 * Format date for display
 	 */
-	async function handleUpdateTask(data: any): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.updateTask(taskId, data);
-			isEditing = false;
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to update task:', error);
-		}
+	function formatDate(dateString?: string): string {
+		if (!dateString) return 'Not set';
+		return new Date(dateString).toLocaleDateString('en-US', {
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			month: 'long',
+			year: 'numeric'
+		});
+	}
+
+	/**
+	 * Get category object by ID
+	 */
+	function getCategory(categoryId?: string) {
+		if (!categoryId) return null;
+		return categories.find((c) => c.id === categoryId) || null;
+	}
+
+	/**
+	 * Get priority color class
+	 */
+	function getPriorityColor(priority: string): string {
+		const colors = {
+			high: 'bg-orange-100 text-orange-800',
+			low: 'bg-green-100 text-green-800',
+			medium: 'bg-yellow-100 text-yellow-800',
+			urgent: 'bg-red-100 text-red-800'
+		};
+		return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+	}
+
+	/**
+	 * Get status color class
+	 */
+	function getStatusColor(status: string): string {
+		const colors = {
+			cancelled: 'bg-red-100 text-red-800',
+			completed: 'bg-green-100 text-green-800',
+			deleted: 'bg-gray-300 text-gray-600',
+			in_progress: 'bg-blue-100 text-blue-800',
+			todo: 'bg-gray-100 text-gray-800'
+		};
+		return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+	}
+
+	/**
+	 * Get tag objects by IDs
+	 */
+	function getTagObjects(tagIds?: string[]) {
+		if (!tagIds || tagIds.length === 0) return [];
+		return tagIds
+			.map((id) => tags.find((t) => t.id === id))
+			.filter((tag): tag is typeof tags[0] => tag !== undefined);
 	}
 
 	/**
@@ -50,32 +95,6 @@
 			await taskStore.fetchTaskById(taskId);
 		} catch (error) {
 			console.error('Failed to add subtask:', error);
-		}
-	}
-
-	/**
-	 * Handle toggle subtask
-	 */
-	async function handleToggleSubtask(subtaskId: string): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.toggleSubtask(taskId, subtaskId);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to toggle subtask:', error);
-		}
-	}
-
-	/**
-	 * Handle delete subtask
-	 */
-	async function handleDeleteSubtask(subtaskId: string): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.deleteSubtask(taskId, subtaskId);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to delete subtask:', error);
 		}
 	}
 
@@ -106,6 +125,19 @@
 	}
 
 	/**
+	 * Handle delete subtask
+	 */
+	async function handleDeleteSubtask(subtaskId: string): Promise<void> {
+		if (!taskId) return;
+		try {
+			await taskStore.deleteSubtask(taskId, subtaskId);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to delete subtask:', error);
+		}
+	}
+
+	/**
 	 * Handle delete task
 	 */
 	async function handleDeleteTask(): Promise<void> {
@@ -119,62 +151,30 @@
 	}
 
 	/**
-	 * Get priority color class
+	 * Handle toggle subtask
 	 */
-	function getPriorityColor(priority: string): string {
-		const colors = {
-			low: 'bg-green-100 text-green-800',
-			medium: 'bg-yellow-100 text-yellow-800',
-			high: 'bg-orange-100 text-orange-800',
-			urgent: 'bg-red-100 text-red-800'
-		};
-		return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+	async function handleToggleSubtask(subtaskId: string): Promise<void> {
+		if (!taskId) return;
+		try {
+			await taskStore.toggleSubtask(taskId, subtaskId);
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to toggle subtask:', error);
+		}
 	}
 
 	/**
-	 * Get status color class
+	 * Handle update task
 	 */
-	function getStatusColor(status: string): string {
-		const colors = {
-			todo: 'bg-gray-100 text-gray-800',
-			in_progress: 'bg-blue-100 text-blue-800',
-			completed: 'bg-green-100 text-green-800',
-			cancelled: 'bg-red-100 text-red-800',
-			deleted: 'bg-gray-300 text-gray-600'
-		};
-		return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-	}
-
-	/**
-	 * Format date for display
-	 */
-	function formatDate(dateString?: string): string {
-		if (!dateString) return 'Not set';
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
-	/**
-	 * Get category object by ID
-	 */
-	function getCategory(categoryId?: string) {
-		if (!categoryId) return null;
-		return categories.find((c) => c.id === categoryId) || null;
-	}
-
-	/**
-	 * Get tag objects by IDs
-	 */
-	function getTagObjects(tagIds?: string[]) {
-		if (!tagIds || tagIds.length === 0) return [];
-		return tagIds
-			.map((id) => tags.find((t) => t.id === id))
-			.filter((tag): tag is typeof tags[0] => tag !== undefined);
+	async function handleUpdateTask(data: { categoryId?: string; description?: string; dueDate?: string; priority?: string; tags?: string[]; title: string }): Promise<void> {
+		if (!taskId) return;
+		try {
+			await taskStore.updateTask(taskId, data);
+			isEditing = false;
+			await taskStore.fetchTaskById(taskId);
+		} catch (error) {
+			console.error('Failed to update task:', error);
+		}
 	}
 </script>
 
@@ -275,7 +275,7 @@
 						<div class="mb-6">
 							<h2 class="text-sm font-medium text-gray-500 mb-2">Tags</h2>
 							<div class="flex flex-wrap gap-2">
-								{#each getTagObjects(taskStore.state.currentTask.tags) as tag}
+								{#each getTagObjects(taskStore.state.currentTask.tags) as tag (tag.id)}
 									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}">
 										{tag.name}
 									</span>

@@ -1,17 +1,19 @@
 <script lang="ts">
-	import { categoryStore } from '../stores/category.store';
-	import type { Category } from '../types/category.types';
-	import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas';
 	import { toastStore } from '$lib/shared/stores';
+
+	import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas';
+	import type { Category } from '../types/category.types';
+
+	import { categoryStore } from '../stores/category.store';
 
 	let {
 		initialData,
-		onSubmit,
-		onCancel
+		onCancel,
+		onSubmit
 	}: {
 		initialData?: Category;
-		onSubmit?: (data: CreateCategoryPayload | UpdateCategoryPayload) => Promise<void>;
 		onCancel?: () => void;
+		onSubmit?: (data: CreateCategoryPayload | UpdateCategoryPayload) => Promise<void>;
 	} = $props();
 
 	let name = $state('');
@@ -50,6 +52,15 @@
 	];
 
 	/**
+	 * Handle cancel
+	 */
+	function handleCancel() {
+		if (onCancel) {
+			onCancel();
+		}
+	}
+
+	/**
 	 * Handle form submission
 	 */
 	async function handleSubmit() {
@@ -63,10 +74,10 @@
 
 		try {
 			const payload = {
-				name: name.trim(),
-				description: description.trim() || undefined,
 				color: color || undefined,
-				icon: icon.trim() || undefined
+				description: description.trim() || undefined,
+				icon: icon.trim() || undefined,
+				name: name.trim()
 			};
 
 			if (onSubmit) {
@@ -100,15 +111,6 @@
 			);
 		} finally {
 			isSubmitting = false;
-		}
-	}
-
-	/**
-	 * Handle cancel
-	 */
-	function handleCancel() {
-		if (onCancel) {
-			onCancel();
 		}
 	}
 </script>
@@ -160,7 +162,7 @@
 					disabled={isSubmitting}
 				/>
 				<div class="flex gap-2 flex-wrap">
-					{#each predefinedColors as presetColor}
+					{#each predefinedColors as presetColor (presetColor)}
 						<button
 							type="button"
 							onclick={() => (color = presetColor)}

@@ -4,7 +4,7 @@
 		variant = 'default'
 	}: {
 		class?: string;
-		variant?: 'default' | 'circular' | 'text' | 'rectangular';
+		variant?: 'circular' | 'default' | 'rectangular' | 'text';
 	} = $props();
 
 	const baseClasses = 'animate-pulse bg-gray-200';
@@ -13,10 +13,10 @@
 		switch (variant) {
 			case 'circular':
 				return 'rounded-full';
-			case 'text':
-				return 'rounded h-4';
 			case 'rectangular':
 				return 'rounded-md';
+			case 'text':
+				return 'rounded h-4';
 			default:
 				return 'rounded-md';
 		}

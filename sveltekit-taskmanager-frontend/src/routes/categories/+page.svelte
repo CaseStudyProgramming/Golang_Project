@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import type { Category } from '$lib/features/categories';
+
 	import { categoryStore } from '$lib/features/categories';
 	import { CategoryForm, CategoryList } from '$lib/features/categories';
-	import type { Category } from '$lib/features/categories';
+	import { onMount } from 'svelte';
 
 	let categories = $derived(categoryStore.state.categories);
 	let isLoading = $derived(categoryStore.state.isLoading);
@@ -31,18 +32,11 @@
 	}
 
 	/**
-	 * Handle category update
+	 * Handle create button click
 	 */
-	async function handleUpdateCategory(data: unknown): Promise<void> {
-		if (!editingCategory) return;
-
-		try {
-			await categoryStore.updateCategory(editingCategory.id, data);
-			editingCategory = null;
-			showForm = false;
-		} catch (error) {
-			console.error('Failed to update category:', error);
-		}
+	function handleCreateClick(): void {
+		editingCategory = null;
+		showForm = true;
 	}
 
 	/**
@@ -75,11 +69,18 @@
 	}
 
 	/**
-	 * Handle create button click
+	 * Handle category update
 	 */
-	function handleCreateClick(): void {
-		editingCategory = null;
-		showForm = true;
+	async function handleUpdateCategory(data: unknown): Promise<void> {
+		if (!editingCategory) return;
+
+		try {
+			await categoryStore.updateCategory(editingCategory.id, data);
+			editingCategory = null;
+			showForm = false;
+		} catch (error) {
+			console.error('Failed to update category:', error);
+		}
 	}
 </script>
 

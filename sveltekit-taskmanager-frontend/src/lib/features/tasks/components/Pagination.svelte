@@ -1,12 +1,12 @@
 <script lang="ts">
 	let {
 		currentPage = $bindable(1),
-		totalPages,
-		onPageChange
+		onPageChange,
+		totalPages
 	}: {
 		currentPage?: number;
-		totalPages: number;
 		onPageChange?: (page: number) => void;
+		totalPages: number;
 	} = $props();
 
 	/**
@@ -71,7 +71,7 @@
 			Previous
 		</button>
 		<div class="flex items-center gap-1">
-			{#each getPageNumbers() as page}
+			{#each getPageNumbers() as page, index (index)}
 				{#if page === '...'}
 					<span class="px-3 py-2 text-sm text-gray-500">...</span>
 				{:else}

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Toast Store Logic', () => {
 	describe('Toast ID Generation', () => {
@@ -46,11 +46,6 @@ describe('Toast Store Logic', () => {
 		});
 
 		it('clears all toasts', () => {
-			const toasts = [
-				{ id: 'toast-1', title: 'Test 1', type: 'info' },
-				{ id: 'toast-2', title: 'Test 2', type: 'info' }
-			];
-
 			const cleared: never[] = [];
 
 			expect(cleared.length).toBe(0);

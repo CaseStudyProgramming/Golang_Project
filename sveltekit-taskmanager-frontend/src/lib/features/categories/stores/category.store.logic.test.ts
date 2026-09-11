@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Category Store Logic', () => {
 	describe('Category CRUD Operations', () => {
@@ -126,7 +126,7 @@ describe('Category Store Logic', () => {
 
 	describe('State Reset', () => {
 		it('resets store to initial state', () => {
-			const state = {
+			const _state = {
 				categories: [{ id: '1', name: 'Category 1' }],
 				currentCategory: { id: '1', name: 'Category 1' },
 				error: 'Test error',

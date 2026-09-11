@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { taskStore, TaskForm } from '$lib/features/tasks';
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { TaskForm, taskStore } from '$lib/features/tasks';
+	import { onMount } from 'svelte';
 
 	let taskId = $derived($page.params.id || '');
 
@@ -16,9 +16,16 @@
 	});
 
 	/**
+	 * Handle cancel
+	 */
+	function handleCancel(): void {
+		goto(`/tasks/${taskId}`);
+	}
+
+	/**
 	 * Handle update task
 	 */
-	async function handleUpdateTask(data: any): Promise<void> {
+	async function handleUpdateTask(data: { categoryId?: string; description?: string; dueDate?: string; priority?: string; tags?: string[]; title: string }): Promise<void> {
 		if (!taskId) return;
 		try {
 			await taskStore.updateTask(taskId, data);
@@ -26,13 +33,6 @@
 		} catch (error) {
 			console.error('Failed to update task:', error);
 		}
-	}
-
-	/**
-	 * Handle cancel
-	 */
-	function handleCancel(): void {
-		goto(`/tasks/${taskId}`);
 	}
 </script>
 

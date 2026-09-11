@@ -1,35 +1,34 @@
 <script lang="ts">
-	import { activityStore } from '../stores/activity.store';
 	import type { Activity, ActivityFilters, ActivityType } from '../types/task.types';
 
+	import { activityStore } from '../stores/activity.store';
+
 	let {
-		taskId,
 		activities = $bindable(activityStore.state.activities),
 		isLoading = $bindable(activityStore.state.isLoading),
-		showTimeline = true
+		taskId
 	}: {
-		taskId?: string;
 		activities?: Activity[];
 		isLoading?: boolean;
-		showTimeline?: boolean;
+		taskId?: string;
 	} = $props();
 
 	let filters = $state<ActivityFilters>({});
 	let selectedType = $state<ActivityType | undefined>(undefined);
 
-	const activityTypes: { value: ActivityType; label: string }[] = [
-		{ value: 'task_created', label: 'Task Created' },
-		{ value: 'task_updated', label: 'Task Updated' },
-		{ value: 'task_deleted', label: 'Task Deleted' },
-		{ value: 'task_completed', label: 'Task Completed' },
-		{ value: 'subtask_added', label: 'Subtask Added' },
-		{ value: 'subtask_completed', label: 'Subtask Completed' },
-		{ value: 'subtask_deleted', label: 'Subtask Deleted' },
-		{ value: 'category_assigned', label: 'Category Assigned' },
-		{ value: 'tag_added', label: 'Tag Added' },
-		{ value: 'tag_removed', label: 'Tag Removed' },
-		{ value: 'status_changed', label: 'Status Changed' },
-		{ value: 'priority_changed', label: 'Priority Changed' }
+	const activityTypes: { label: string; value: ActivityType; }[] = [
+		{ label: 'Task Created', value: 'task_created' },
+		{ label: 'Task Updated', value: 'task_updated' },
+		{ label: 'Task Deleted', value: 'task_deleted' },
+		{ label: 'Task Completed', value: 'task_completed' },
+		{ label: 'Subtask Added', value: 'subtask_added' },
+		{ label: 'Subtask Completed', value: 'subtask_completed' },
+		{ label: 'Subtask Deleted', value: 'subtask_deleted' },
+		{ label: 'Category Assigned', value: 'category_assigned' },
+		{ label: 'Tag Added', value: 'tag_added' },
+		{ label: 'Tag Removed', value: 'tag_removed' },
+		{ label: 'Status Changed', value: 'status_changed' },
+		{ label: 'Priority Changed', value: 'priority_changed' }
 	];
 
 	/**
@@ -58,24 +57,11 @@
 	});
 
 	/**
-	 * Get activity icon based on type
+	 * Clear all filters
 	 */
-	function getActivityIcon(type: ActivityType): string {
-		const icons: Record<ActivityType, string> = {
-			task_created: '✨',
-			task_updated: '✏️',
-			task_deleted: '🗑️',
-			task_completed: '✅',
-			subtask_added: '➕',
-			subtask_completed: '☑️',
-			subtask_deleted: '❌',
-			category_assigned: '📁',
-			tag_added: '🏷️',
-			tag_removed: '🏷️',
-			status_changed: '🔄',
-			priority_changed: '⚡'
-		};
-		return icons[type] || '📝';
+	function clearFilters(): void {
+		selectedType = undefined;
+		filters = {};
 	}
 
 	/**
@@ -97,6 +83,27 @@
 	}
 
 	/**
+	 * Get activity icon based on type
+	 */
+	function getActivityIcon(type: ActivityType): string {
+		const icons: Record<ActivityType, string> = {
+			category_assigned: '📁',
+			priority_changed: '⚡',
+			status_changed: '🔄',
+			subtask_added: '➕',
+			subtask_completed: '☑️',
+			subtask_deleted: '❌',
+			tag_added: '🏷️',
+			tag_removed: '🏷️',
+			task_completed: '✅',
+			task_created: '✨',
+			task_deleted: '🗑️',
+			task_updated: '✏️'
+		};
+		return icons[type] || '📝';
+	}
+
+	/**
 	 * Handle type filter change
 	 */
 	function handleTypeFilterChange(event: Event): void {
@@ -104,25 +111,6 @@
 		const value = target.value as ActivityType | undefined;
 		selectedType = value;
 		filters = { ...filters, type: value };
-	}
-
-	/**
-	 * Clear all filters
-	 */
-	function clearFilters(): void {
-		selectedType = undefined;
-		filters = {};
-	}
-
-	/**
-	 * Load activities
-	 */
-	async function loadActivities(): Promise<void> {
-		if (taskId) {
-			await activityStore.fetchActivities({ taskId });
-		} else {
-			await activityStore.fetchActivities(filters);
-		}
 	}
 </script>
 
@@ -149,7 +137,7 @@
 			class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 		>
 			<option value={undefined}>All Types</option>
-			{#each activityTypes as type}
+			{#each activityTypes as type (type.value)}
 				<option value={type.value}>{type.label}</option>
 			{/each}
 		</select>
@@ -190,7 +178,7 @@
 						</div>
 						{#if activity.changes && Object.keys(activity.changes).length > 0}
 							<div class="mt-2 text-xs">
-								{#each Object.entries(activity.changes) as [field, change]}
+								{#each Object.entries(activity.changes) as [field, change] (field)}
 									<div class="flex items-center gap-2">
 										<span class="text-gray-600">{field}:</span>
 										<span class="text-red-600 line-through">{String(change.old)}</span>

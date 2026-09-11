@@ -12,40 +12,40 @@
 
 	const insightCards: InsightCard[] = $derived([
 		{
-			label: 'Total Completed',
-			value: insights.totalTasksCompleted.toString(),
 			description: 'Tasks completed',
-			icon: '🏆'
+			icon: '🏆',
+			label: 'Total Completed',
+			value: insights.totalTasksCompleted.toString()
 		},
 		{
-			label: 'Avg. Completion Time',
-			value: `${insights.averageCompletionTime}h`,
 			description: 'Time to complete tasks',
-			icon: '⏱️'
+			icon: '⏱️',
+			label: 'Avg. Completion Time',
+			value: `${insights.averageCompletionTime}h`
 		},
 		{
-			label: 'Most Productive Day',
-			value: insights.mostProductiveDay,
 			description: 'Day with most completions',
-			icon: '📅'
+			icon: '📅',
+			label: 'Most Productive Day',
+			value: insights.mostProductiveDay
 		},
 		{
-			label: 'Current Streak',
-			value: `${insights.streakDays} days`,
 			description: 'Consecutive days of activity',
-			icon: '🔥'
+			icon: '🔥',
+			label: 'Current Streak',
+			value: `${insights.streakDays} days`
 		},
 		{
-			label: 'Tasks per Day',
-			value: insights.tasksPerDay.toFixed(1),
 			description: 'Average daily completions',
-			icon: '📈'
+			icon: '📈',
+			label: 'Tasks per Day',
+			value: insights.tasksPerDay.toFixed(1)
 		},
 		{
-			label: 'On-Time Rate',
-			value: `${insights.onTimeCompletionRate}%`,
 			description: 'Tasks completed by due date',
-			icon: '✅'
+			icon: '✅',
+			label: 'On-Time Rate',
+			value: `${insights.onTimeCompletionRate}%`
 		}
 	]);
 </script>
@@ -53,7 +53,7 @@
 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
 	<h3 class="text-lg font-semibold text-gray-800 mb-4">Productivity Insights</h3>
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-		{#each insightCards as card}
+		{#each insightCards as card (card.label)}
 			<div class="p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-100">
 				<div class="flex items-start gap-3">
 					<div class="text-2xl">{card.icon}</div>

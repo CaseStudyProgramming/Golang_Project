@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { taskStore, TaskList, Pagination, TaskSearch, TaskFilters } from '$lib/features/tasks';
+	import { goto } from '$app/navigation';
+	import { Pagination, TaskFilters, TaskList, TaskSearch, taskStore } from '$lib/features/tasks';
 	import { TaskForm } from '$lib/features/tasks';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 
 	let showCreateModal = $state(false);
 	let searchQuery = $state('');
@@ -16,23 +16,6 @@
 	});
 
 	/**
-	 * Handle search
-	 */
-	function handleSearch(query: string): void {
-		searchQuery = query;
-		taskStore.setFilters({ search: query || undefined });
-		taskStore.fetchTasks();
-	}
-
-	/**
-	 * Handle filter change
-	 */
-	function handleFilterChange(filters: typeof taskStore.state.filters): void {
-		taskStore.setFilters(filters);
-		taskStore.fetchTasks();
-	}
-
-	/**
 	 * Handle clear filters
 	 */
 	function handleClearFilters(): void {
@@ -41,25 +24,16 @@
 	}
 
 	/**
-	 * Handle page change
+	 * Handle create task
 	 */
-	function handlePageChange(page: number): void {
-		taskStore.setPage(page);
-		taskStore.fetchTasks();
-	}
-
-	/**
-	 * Handle view task
-	 */
-	function handleViewTask(task: typeof taskStore.state.tasks[0]): void {
-		goto(`/tasks/${task.id}`);
-	}
-
-	/**
-	 * Handle edit task
-	 */
-	function handleEditTask(task: typeof taskStore.state.tasks[0]): void {
-		goto(`/tasks/${task.id}/edit`);
+	async function handleCreateTask(data: { categoryId?: string; description?: string; dueDate?: string; priority?: string; tags?: string[]; title: string }): Promise<void> {
+		try {
+			await taskStore.createTask(data);
+			showCreateModal = false;
+			await taskStore.fetchTasks();
+		} catch (error) {
+			console.error('Failed to create task:', error);
+		}
 	}
 
 	/**
@@ -76,16 +50,42 @@
 	}
 
 	/**
-	 * Handle create task
+	 * Handle edit task
 	 */
-	async function handleCreateTask(data: any): Promise<void> {
-		try {
-			await taskStore.createTask(data);
-			showCreateModal = false;
-			await taskStore.fetchTasks();
-		} catch (error) {
-			console.error('Failed to create task:', error);
-		}
+	function handleEditTask(task: typeof taskStore.state.tasks[0]): void {
+		goto(`/tasks/${task.id}/edit`);
+	}
+
+	/**
+	 * Handle filter change
+	 */
+	function handleFilterChange(filters: typeof taskStore.state.filters): void {
+		taskStore.setFilters(filters);
+		taskStore.fetchTasks();
+	}
+
+	/**
+	 * Handle page change
+	 */
+	function handlePageChange(page: number): void {
+		taskStore.setPage(page);
+		taskStore.fetchTasks();
+	}
+
+	/**
+	 * Handle search
+	 */
+	function handleSearch(query: string): void {
+		searchQuery = query;
+		taskStore.setFilters({ search: query || undefined });
+		taskStore.fetchTasks();
+	}
+
+	/**
+	 * Handle view task
+	 */
+	function handleViewTask(task: typeof taskStore.state.tasks[0]): void {
+		goto(`/tasks/${task.id}`);
 	}
 </script>
 

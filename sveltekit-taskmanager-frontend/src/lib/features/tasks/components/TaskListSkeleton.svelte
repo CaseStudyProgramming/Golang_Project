@@ -3,7 +3,7 @@
 </script>
 
 <div class="space-y-3">
-	{#each Array(3) as _}
+	{#each Array(3) as _, index (index)}
 		<div class="bg-white rounded-lg shadow p-3 sm:p-4">
 			<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
 				<div class="flex-1 min-w-0 space-y-3">

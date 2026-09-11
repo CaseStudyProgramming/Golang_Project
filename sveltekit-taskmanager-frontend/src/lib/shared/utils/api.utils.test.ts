@@ -162,9 +162,9 @@ describe('HttpClient', () => {
 			} as Response) as typeof globalThis.fetch;
 
 		const client = new HttpClient('http://localhost:8080', { retries: 1, retryDelay: 0, timeout: 1000 });
-		
+
 		// Mock the sleep function to avoid actual delays
-		vi.spyOn(client as any, 'sleep').mockImplementation(() => Promise.resolve());
+		vi.spyOn(client as unknown as { sleep: () => Promise<void> }, 'sleep').mockImplementation(() => Promise.resolve());
 
 		const result = await client.get<{ data: string }>('/test');
 
@@ -203,9 +203,9 @@ describe('HttpClient', () => {
 			} as Response) as typeof globalThis.fetch;
 
 		const client = new HttpClient('http://localhost:8080', { retries: 1, retryDelay: 0, timeout: 1000 });
-		
+
 		// Mock the sleep function to avoid actual delays
-		vi.spyOn(client as any, 'sleep').mockImplementation(() => Promise.resolve());
+		vi.spyOn(client as unknown as { sleep: () => Promise<void> }, 'sleep').mockImplementation(() => Promise.resolve());
 
 		const result = await client.get<{ data: string }>('/test');
 

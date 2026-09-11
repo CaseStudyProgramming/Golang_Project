@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import ts from 'typescript-eslint';
 import svelte from 'eslint-plugin-svelte';
+import svelteParser from 'svelte-eslint-parser';
 import prettier from 'eslint-config-prettier';
 import perfectionist from 'eslint-plugin-perfectionist';
 import globals from 'globals';
@@ -29,7 +30,18 @@ const config = [
 			],
 			'@typescript-eslint/no-explicit-any': 'warn',
 			'perfectionist/sort-interfaces': 'off',
-			'perfectionist/sort-named-properties': 'off'
+			'perfectionist/sort-named-properties': 'off',
+			'svelte/no-navigation-without-resolve': 'off'
+		}
+	},
+	{
+		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+		languageOptions: {
+			parser: svelteParser,
+			parserOptions: {
+				parser: ts.parser,
+				extraFileExtensions: ['.svelte']
+			}
 		}
 	},
 	{

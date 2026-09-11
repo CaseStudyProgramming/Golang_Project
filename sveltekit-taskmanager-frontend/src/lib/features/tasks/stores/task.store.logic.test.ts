@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('Task Store Logic', () => {
 	describe('Task CRUD Operations', () => {
@@ -245,7 +245,7 @@ describe('Task Store Logic', () => {
 
 	describe('State Reset', () => {
 		it('resets store to initial state', () => {
-			const state = {
+			const _state = {
 				currentTask: { id: '1', title: 'Task 1' },
 				error: 'Test error',
 				filters: { status: 'completed' },

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Chart } from 'chart.js/auto';
+	import { onMount } from 'svelte';
+
 	import type { PriorityDistribution } from '../types/analytics.types';
 
 	let { distribution }: { distribution: PriorityDistribution } = $props();
@@ -12,31 +13,31 @@
 			const ctx = canvasElement.getContext('2d');
 			if (ctx) {
 				chart = new Chart(ctx, {
-					type: 'doughnut',
 					data: {
-						labels: ['Low', 'Medium', 'High', 'Urgent'],
 						datasets: [
 							{
-								data: [distribution.low, distribution.medium, distribution.high, distribution.urgent],
 								backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#7C3AED'],
-								borderWidth: 0
+								borderWidth: 0,
+								data: [distribution.low, distribution.medium, distribution.high, distribution.urgent]
 							}
-						]
+						],
+						labels: ['Low', 'Medium', 'High', 'Urgent']
 					},
 					options: {
-						responsive: true,
+						cutout: '60%',
 						maintainAspectRatio: false,
 						plugins: {
 							legend: {
-								position: 'bottom',
 								labels: {
 									padding: 20,
 									usePointStyle: true
-								}
+								},
+								position: 'bottom'
 							}
 						},
-						cutout: '60%'
-					}
+						responsive: true
+					},
+					type: 'doughnut'
 				});
 			}
 		}

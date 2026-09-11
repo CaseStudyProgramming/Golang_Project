@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Chart } from 'chart.js/auto';
+	import { onMount } from 'svelte';
+
 	import type { CategoryDistribution } from '../types/analytics.types';
 
 	let { categoryDistribution }: { categoryDistribution: CategoryDistribution[] } = $props();
@@ -22,36 +23,35 @@
 				];
 
 				chart = new Chart(ctx, {
-					type: 'bar',
 					data: {
-						labels: categoryDistribution.map((c) => c.categoryName),
 						datasets: [
 							{
-								label: 'Total',
-								data: categoryDistribution.map((c) => c.count),
 								backgroundColor: colors,
-								borderRadius: 4
+								borderRadius: 4,
+								data: categoryDistribution.map((c) => c.count),
+								label: 'Total'
 							},
 							{
-								label: 'Completed',
-								data: categoryDistribution.map((c) => c.completed),
 								backgroundColor: colors.map((c) => c + '80'),
-								borderRadius: 4
+								borderRadius: 4,
+								data: categoryDistribution.map((c) => c.completed),
+								label: 'Completed'
 							}
-						]
+						],
+						labels: categoryDistribution.map((c) => c.categoryName)
 					},
 					options: {
-						responsive: true,
 						maintainAspectRatio: false,
 						plugins: {
 							legend: {
-								position: 'top',
 								labels: {
 									padding: 20,
 									usePointStyle: true
-								}
+								},
+								position: 'top'
 							}
 						},
+						responsive: true,
 						scales: {
 							y: {
 								beginAtZero: true,
@@ -60,7 +60,8 @@
 								}
 							}
 						}
-					}
+					},
+					type: 'bar'
 				});
 			}
 		}

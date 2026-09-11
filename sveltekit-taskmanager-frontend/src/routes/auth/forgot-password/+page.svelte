@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { authApi } from '$lib/features/auth';
 	import { forgotPasswordSchema } from '$lib/features/auth/schemas/auth.schemas';
-	import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils';
 	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
-	import { goto } from '$app/navigation';
+	import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils';
 
 	let email = $state('');
 	let isLoading = $state(false);
@@ -11,6 +10,10 @@
 	let error = $state('');
 	let fieldErrors = $state<Record<string, string>>({});
 	let toastError = $state('');
+
+	function dismissToast() {
+		toastError = '';
+	}
 
 	async function handleForgotPassword(e: Event) {
 		e.preventDefault();
@@ -25,7 +28,7 @@
 			isSuccess = true;
 		} catch (err) {
 			if (err instanceof Error && err.name === 'ZodError') {
-				const zodError = err as any;
+				const zodError = err as { errors: Array<{ message: string }> };
 				if (zodError.errors && zodError.errors[0]) {
 					fieldErrors.email = zodError.errors[0].message;
 					error = 'Please fix the errors below.';
@@ -40,10 +43,6 @@
 		} finally {
 			isLoading = false;
 		}
-	}
-
-	function dismissToast() {
-		toastError = '';
 	}
 </script>
 

@@ -72,8 +72,7 @@ describe('Confirm Store Logic', () => {
 		});
 
 		it('clears dialog by setting to null', () => {
-			let dialog: null | { id: string } = { id: 'test-id' };
-			dialog = null;
+			const dialog: null | { id: string } = null;
 			expect(dialog).toBeNull();
 		});
 	});

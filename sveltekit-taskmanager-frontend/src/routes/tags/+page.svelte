@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { tagStore } from '$lib/features/tags';
 	import type { Tag } from '$lib/features/tags';
+
+	import { tagStore } from '$lib/features/tags';
+	import { onMount } from 'svelte';
 
 	let tags = $derived(tagStore.state.tags);
 	let isLoading = $derived(tagStore.state.isLoading);
 	let error = $derived(tagStore.state.error);
 
 	let showForm = $state(false);
-	let editingTag = $state<Tag | null>(null);
+	let editingTag = $state<null | Tag>(null);
 	let name = $state('');
 	let color = $state('#3B82F6');
 	let isSubmitting = $state(false);
@@ -32,6 +33,16 @@
 	});
 
 	/**
+	 * Handle create button click
+	 */
+	function handleCreateClick(): void {
+		editingTag = null;
+		name = '';
+		color = '#3B82F6';
+		showForm = true;
+	}
+
+	/**
 	 * Handle tag creation
 	 */
 	async function handleCreateTag(): Promise<void> {
@@ -39,32 +50,12 @@
 
 		isSubmitting = true;
 		try {
-			await tagStore.createTag({ name: name.trim(), color });
+			await tagStore.createTag({ color, name: name.trim() });
 			name = '';
 			color = '#3B82F6';
 			showForm = false;
 		} catch (error) {
 			console.error('Failed to create tag:', error);
-		} finally {
-			isSubmitting = false;
-		}
-	}
-
-	/**
-	 * Handle tag update
-	 */
-	async function handleUpdateTag(): Promise<void> {
-		if (!editingTag || !name.trim()) return;
-
-		isSubmitting = true;
-		try {
-			await tagStore.updateTag(editingTag.id, { name: name.trim(), color });
-			editingTag = null;
-			showForm = false;
-			name = '';
-			color = '#3B82F6';
-		} catch (error) {
-			console.error('Failed to update tag:', error);
 		} finally {
 			isSubmitting = false;
 		}
@@ -104,13 +95,23 @@
 	}
 
 	/**
-	 * Handle create button click
+	 * Handle tag update
 	 */
-	function handleCreateClick(): void {
-		editingTag = null;
-		name = '';
-		color = '#3B82F6';
-		showForm = true;
+	async function handleUpdateTag(): Promise<void> {
+		if (!editingTag || !name.trim()) return;
+
+		isSubmitting = true;
+		try {
+			await tagStore.updateTag(editingTag.id, { color, name: name.trim() });
+			editingTag = null;
+			showForm = false;
+			name = '';
+			color = '#3B82F6';
+		} catch (error) {
+			console.error('Failed to update tag:', error);
+		} finally {
+			isSubmitting = false;
+		}
 	}
 </script>
 
@@ -166,7 +167,7 @@
 							disabled={isSubmitting}
 						/>
 						<div class="flex gap-2 flex-wrap">
-							{#each predefinedColors as presetColor}
+							{#each predefinedColors as presetColor (presetColor)}
 								<button
 									type="button"
 									onclick={() => (color = presetColor)}
@@ -217,7 +218,7 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each tags as tag}
+			{#each tags as tag (tag.id)}
 				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 border-l-4" style:border-left-color={tag.color || '#3B82F6'}>
 					<div class="flex items-start justify-between mb-2">
 						<div class="flex items-center gap-2">

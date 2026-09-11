@@ -3,7 +3,7 @@
 </script>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-	{#each Array(6) as _}
+	{#each Array(6) as _, index (index)}
 		<div class="bg-white rounded-lg shadow p-4 sm:p-6">
 			<Skeleton variant="text" class="w-1/2 h-4 mb-2" />
 			<Skeleton variant="text" class="w-1/3 h-8" />

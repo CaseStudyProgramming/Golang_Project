@@ -1,18 +1,18 @@
 <script lang="ts">
-	import type { TaskFilters, TaskStatus, TaskPriority } from '../types/task.types';
 	import { categoryStore } from '$lib/features/categories';
 	import { tagStore } from '$lib/features/tags';
 	import { TagInput } from '$lib/features/tags';
-	import type { Category } from '$lib/features/categories';
+
+	import type { TaskFilters, TaskPriority, TaskStatus } from '../types/task.types';
 
 	let {
 		filters = $bindable({}),
-		onFilterChange,
-		onClearFilters
+		onClearFilters,
+		onFilterChange
 	}: {
 		filters?: TaskFilters;
-		onFilterChange?: (filters: TaskFilters) => void;
 		onClearFilters?: () => void;
+		onFilterChange?: (filters: TaskFilters) => void;
 	} = $props();
 
 	let categories = $derived(categoryStore.state.categories);
@@ -26,18 +26,18 @@
 		tagStore.fetchTags();
 	});
 
-	const statusOptions: { value: TaskStatus; label: string }[] = [
-		{ value: 'todo', label: 'To Do' },
-		{ value: 'in_progress', label: 'In Progress' },
-		{ value: 'completed', label: 'Completed' },
-		{ value: 'cancelled', label: 'Cancelled' }
+	const statusOptions: { label: string; value: TaskStatus; }[] = [
+		{ label: 'To Do', value: 'todo' },
+		{ label: 'In Progress', value: 'in_progress' },
+		{ label: 'Completed', value: 'completed' },
+		{ label: 'Cancelled', value: 'cancelled' }
 	];
 
-	const priorityOptions: { value: TaskPriority; label: string }[] = [
-		{ value: 'low', label: 'Low' },
-		{ value: 'medium', label: 'Medium' },
-		{ value: 'high', label: 'High' },
-		{ value: 'urgent', label: 'Urgent' }
+	const priorityOptions: { label: string; value: TaskPriority; }[] = [
+		{ label: 'Low', value: 'low' },
+		{ label: 'Medium', value: 'medium' },
+		{ label: 'High', value: 'high' },
+		{ label: 'Urgent', value: 'urgent' }
 	];
 
 	/**
@@ -119,7 +119,7 @@
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			>
 				<option value="">All Statuses</option>
-				{#each statusOptions as option}
+				{#each statusOptions as option (option.value)}
 					<option value={option.value}>{option.label}</option>
 				{/each}
 			</select>
@@ -134,7 +134,7 @@
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			>
 				<option value="">All Priorities</option>
-				{#each priorityOptions as option}
+				{#each priorityOptions as option (option.value)}
 					<option value={option.value}>{option.label}</option>
 				{/each}
 			</select>
@@ -149,7 +149,7 @@
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			>
 				<option value="">All Categories</option>
-				{#each categories as category}
+				{#each categories as category (category.id)}
 					<option value={category.id}>{category.icon ? category.icon + ' ' : ''}{category.name}</option>
 				{/each}
 			</select>

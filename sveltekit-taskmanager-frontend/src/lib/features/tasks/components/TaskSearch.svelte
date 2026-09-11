@@ -1,17 +1,25 @@
 <script lang="ts">
 	let {
-		searchQuery = $bindable(''),
+		debounceMs = 300,
 		onSearch,
 		placeholder = 'Search tasks...',
-		debounceMs = 300
+		searchQuery = $bindable('')
 	}: {
-		searchQuery?: string;
+		debounceMs?: number;
 		onSearch?: (query: string) => void;
 		placeholder?: string;
-		debounceMs?: number;
+		searchQuery?: string;
 	} = $props();
 
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let debounceTimer: null | ReturnType<typeof setTimeout> = null;
+
+	/**
+	 * Clear search
+	 */
+	function clearSearch(): void {
+		searchQuery = '';
+		onSearch?.('');
+	}
 
 	/**
 	 * Handle search input with debouncing
@@ -27,14 +35,6 @@
 		debounceTimer = setTimeout(() => {
 			onSearch?.(searchQuery);
 		}, debounceMs);
-	}
-
-	/**
-	 * Clear search
-	 */
-	function clearSearch(): void {
-		searchQuery = '';
-		onSearch?.('');
 	}
 </script>
 

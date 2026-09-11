@@ -4,6 +4,8 @@ import '@testing-library/jest-dom';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
+ 
+
 // Setup Testing Library cleanup
 afterEach(() => {
 	cleanup();
@@ -53,16 +55,16 @@ if (!globalThis.window?.location) {
 
 // Mock Svelte 5 runes for testing (simplified version)
 // Note: Using type casting to avoid TypeScript errors with Svelte 5 rune types
-(globalThis as any).$state = function <T>(initial: T): T {
+(globalThis as unknown as { $state: <T>(initial: T) => T }).$state = function <T>(initial: T): T {
 	return initial;
 };
-(globalThis as any).$derived = function <T>(fn: () => T): T {
+(globalThis as unknown as { $derived: <T>(fn: () => T) => T }).$derived = function <T>(fn: () => T): T {
 	return fn();
 };
-(globalThis as any).$props = function <T extends Record<string, unknown>>(): T {
+(globalThis as unknown as { $props: <T extends Record<string, unknown>>() => T }).$props = function <T extends Record<string, unknown>>(): T {
 	return {} as T;
 };
-(globalThis as any).$effect = function (fn: () => void): void {
+(globalThis as unknown as { $effect: (_fn: () => void) => void }).$effect = function (_fn: () => void): void {
 	// No-op for tests
 };
 
