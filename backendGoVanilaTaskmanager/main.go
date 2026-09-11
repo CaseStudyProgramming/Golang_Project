@@ -18,6 +18,12 @@ import (
 	"taskmanager/utils"
 )
 
+// Build information (set by Makefile)
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+)
+
 func main() {
 	cfg, err := config.LoadConfig("env/config.yaml")
 	if err != nil {
