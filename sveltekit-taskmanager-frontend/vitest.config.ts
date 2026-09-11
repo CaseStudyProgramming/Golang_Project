@@ -4,7 +4,6 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 export default defineConfig({
 	plugins: [
 		svelte({
-			hot: !process.env.VITEST,
 			compilerOptions: {
 				runes: true
 			}
@@ -29,11 +28,12 @@ export default defineConfig({
 				'vitest.config.ts',
 				'svelte.config.js'
 			],
-			all: true,
-			lines: 80,
-			functions: 80,
-			branches: 80,
-			statements: 80
+			thresholds: {
+				lines: 80,
+				functions: 80,
+				branches: 80,
+				statements: 80
+			}
 		},
 		setupFiles: ['./tests/setup.ts']
 	}
