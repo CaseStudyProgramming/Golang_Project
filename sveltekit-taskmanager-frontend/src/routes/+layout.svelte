@@ -9,12 +9,20 @@
 
 	onMount(() => {
 		// Initialize auth store on client side
-		authStore.initialize();
+		try {
+			authStore.initialize();
+		} catch (e) {
+			// Store will initialize on first access
+		}
 	});
 
 	onDestroy(() => {
 		// Cleanup auth store when component unmounts
-		authStore.cleanup();
+		try {
+			authStore.cleanup();
+		} catch (e) {
+			// Ignore cleanup errors
+		}
 	});
 </script>
 

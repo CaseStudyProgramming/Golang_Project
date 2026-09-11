@@ -11,6 +11,7 @@ on:
     paths:
       - 'backendGoVanilaTaskmanager/**'
       - '.github/workflows/backend-ci.yml'
+  workflow_call:
 
 defaults:
   run:
@@ -21,6 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    
     - name: Checkout code
       uses: actions/checkout@v4
       

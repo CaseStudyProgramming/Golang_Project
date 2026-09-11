@@ -311,15 +311,48 @@ function createAuthStore() {
  */
 let authStoreInstance: null | ReturnType<typeof createAuthStore> = null;
 
+// Create a safe SSR-compatible default store
+function createSSRAuthStore() {
+	const state: AuthState = {
+		isAuthenticated: false,
+		user: null,
+		token: null,
+		isLoading: false,
+		error: null
+	};
+
+	return {
+		login: async () => { throw new Error('Auth store not available during SSR'); },
+		logout: async () => { throw new Error('Auth store not available during SSR'); },
+		register: async () => { throw new Error('Auth store not available during SSR'); },
+		initialize: () => {},
+		cleanup: () => {},
+		clearError: () => {},
+		ensureValidToken: async () => {},
+		fetchCurrentUser: async () => {},
+		getRedirectUrl: () => null,
+		needsTokenRefresh: () => false,
+		redirectAfterAuth: async () => {},
+		refreshToken: async () => {},
+		saveRedirectUrl: () => {},
+		updateUser: () => {},
+		get state() {
+			return state;
+		}
+	};
+}
+
 export const authStore = new Proxy({} as ReturnType<typeof createAuthStore>, {
 	get(_target, prop) {
 		if (!authStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('authStore can only be accessed on the client side');
+				// Return safe SSR-compatible store during server-side rendering
+				authStoreInstance = createSSRAuthStore();
+			} else {
+				authStoreInstance = createAuthStore();
+				authStoreInstance.initialize();
 			}
-			authStoreInstance = createAuthStore();
-			authStoreInstance.initialize();
 		}
-		return authStoreInstance[prop as keyof ReturnType<typeof createAuthStore>];
+		return authStoreInstance![prop as keyof ReturnType<typeof createAuthStore>];
 	}
 });

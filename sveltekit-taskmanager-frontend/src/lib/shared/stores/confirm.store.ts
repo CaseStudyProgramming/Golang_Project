@@ -76,13 +76,30 @@ function createConfirmStore() {
  */
 let confirmStoreInstance: null | ReturnType<typeof createConfirmStore> = null;
 
+// Create a safe SSR-compatible default store
+function createSSRConfirmStore() {
+	const state: ConfirmState = {
+		dialog: null
+	};
+
+	return {
+		showConfirm: async () => false,
+		closeConfirm: () => {},
+		get state() {
+			return state;
+		}
+	};
+}
+
 export const confirmStore = new Proxy({} as ReturnType<typeof createConfirmStore>, {
 	get(_target, prop) {
 		if (!confirmStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('confirmStore can only be accessed on the client side');
+				// Return safe SSR-compatible store during server-side rendering
+				confirmStoreInstance = createSSRConfirmStore();
+			} else {
+				confirmStoreInstance = createConfirmStore();
 			}
-			confirmStoreInstance = createConfirmStore();
 		}
 		return confirmStoreInstance[prop as keyof ReturnType<typeof createConfirmStore>];
 	}
