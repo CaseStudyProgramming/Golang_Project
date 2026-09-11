@@ -1,52 +1,53 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Toast as ToastType } from '../stores/toast.store';
 
+// Helper functions to test the logic without type narrowing issues
+function getTypeColors(type: ToastType['type']): string {
+	return type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-blue-50 border-blue-200 text-blue-800';
+}
+
+function getIconColors(type: ToastType['type']): string {
+	return type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+}
+
 describe('Toast Component Logic', () => {
 	it('calculates correct type colors for success', () => {
-		const type = 'success' as ToastType['type'];
-		const typeColors = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-blue-50 border-blue-200 text-blue-800';
+		const typeColors = getTypeColors('success');
 		expect(typeColors).toBe('bg-green-50 border-green-200 text-green-800');
 	});
 
 	it('calculates correct type colors for error', () => {
-		const type = 'error' as ToastType['type'];
-		const typeColors = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-blue-50 border-blue-200 text-blue-800';
+		const typeColors = getTypeColors('error');
 		expect(typeColors).toBe('bg-red-50 border-red-200 text-red-800');
 	});
 
 	it('calculates correct type colors for warning', () => {
-		const type = 'warning' as ToastType['type'];
-		const typeColors = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-blue-50 border-blue-200 text-blue-800';
+		const typeColors = getTypeColors('warning');
 		expect(typeColors).toBe('bg-yellow-50 border-yellow-200 text-yellow-800');
 	});
 
 	it('calculates correct type colors for info', () => {
-		const type = 'info' as ToastType['type'];
-		const typeColors = type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-blue-50 border-blue-200 text-blue-800';
+		const typeColors = getTypeColors('info');
 		expect(typeColors).toBe('bg-blue-50 border-blue-200 text-blue-800');
 	});
 
 	it('calculates correct icon colors for success', () => {
-		const type = 'success' as ToastType['type'];
-		const iconColors = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+		const iconColors = getIconColors('success');
 		expect(iconColors).toBe('text-green-500');
 	});
 
 	it('calculates correct icon colors for error', () => {
-		const type = 'error' as ToastType['type'];
-		const iconColors = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+		const iconColors = getIconColors('error');
 		expect(iconColors).toBe('text-red-500');
 	});
 
 	it('calculates correct icon colors for warning', () => {
-		const type = 'warning' as ToastType['type'];
-		const iconColors = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+		const iconColors = getIconColors('warning');
 		expect(iconColors).toBe('text-yellow-500');
 	});
 
 	it('calculates correct icon colors for info', () => {
-		const type = 'info' as ToastType['type'];
-		const iconColors = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+		const iconColors = getIconColors('info');
 		expect(iconColors).toBe('text-blue-500');
 	});
 

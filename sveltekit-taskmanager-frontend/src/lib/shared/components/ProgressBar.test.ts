@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+// Helper functions to test the logic without type narrowing issues
+function getSizeClasses(size: 'sm' | 'md' | 'lg'): string {
+	return size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-4' : 'h-2.5';
+}
+
+function getColorClasses(color: 'blue' | 'green' | 'orange' | 'red' | 'purple'): string {
+	return color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+}
+
 describe('ProgressBar Component Logic', () => {
 	it('clamps progress to minimum 0', () => {
 		const progress = -10;
@@ -20,50 +29,42 @@ describe('ProgressBar Component Logic', () => {
 	});
 
 	it('calculates correct size classes for sm size', () => {
-		const size = 'sm' as 'sm' | 'md' | 'lg';
-		const sizeClasses = size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-4' : 'h-2.5';
+		const sizeClasses = getSizeClasses('sm');
 		expect(sizeClasses).toBe('h-1.5');
 	});
 
 	it('calculates correct size classes for md size', () => {
-		const size = 'md' as 'sm' | 'md' | 'lg';
-		const sizeClasses = size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-4' : 'h-2.5';
+		const sizeClasses = getSizeClasses('md');
 		expect(sizeClasses).toBe('h-2.5');
 	});
 
 	it('calculates correct size classes for lg size', () => {
-		const size = 'lg' as 'sm' | 'md' | 'lg';
-		const sizeClasses = size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-4' : 'h-2.5';
+		const sizeClasses = getSizeClasses('lg');
 		expect(sizeClasses).toBe('h-4');
 	});
 
 	it('calculates correct color classes for blue', () => {
-		const color = 'blue' as 'blue' | 'green' | 'orange' | 'red' | 'purple';
-		const colorClasses = color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+		const colorClasses = getColorClasses('blue');
 		expect(colorClasses).toBe('bg-blue-600');
 	});
 
 	it('calculates correct color classes for green', () => {
-		const color = 'green' as 'blue' | 'green' | 'orange' | 'red' | 'purple';
-		const colorClasses = color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+		const colorClasses = getColorClasses('green');
 		expect(colorClasses).toBe('bg-green-600');
 	});
 
 	it('calculates correct color classes for orange', () => {
-		const color = 'orange' as 'blue' | 'green' | 'orange' | 'red' | 'purple';
-		const colorClasses = color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+		const colorClasses = getColorClasses('orange');
 		expect(colorClasses).toBe('bg-orange-600');
 	});
 
 	it('calculates correct color classes for red', () => {
-		const color = 'red' as 'blue' | 'green' | 'orange' | 'red' | 'purple';
-		const colorClasses = color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+		const colorClasses = getColorClasses('red');
 		expect(colorClasses).toBe('bg-red-600');
 	});
 
 	it('calculates correct color classes for purple', () => {
-		const color = 'purple' as 'blue' | 'green' | 'orange' | 'red' | 'purple';
-		const colorClasses = color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+		const colorClasses = getColorClasses('purple');
 		expect(colorClasses).toBe('bg-purple-600');
 	});
 
