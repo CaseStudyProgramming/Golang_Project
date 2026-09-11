@@ -348,8 +348,8 @@ describe('Error Scenarios', () => {
 			// Simulate performance check with a known slow operation
 			const startTime = performance.now();
 			
-			// Simulate heavy operation
-			for (let i = 0; i < 10000000; i++) {
+			// Simulate heavy operation with more iterations
+			for (let i = 0; i < 100000000; i++) {
 				// Simulate CPU load
 			}
 

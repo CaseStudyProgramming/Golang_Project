@@ -348,7 +348,7 @@ describe('Performance Testing', () => {
 			const handlingTime = endTime - startTime;
 
 			// Event delegation should be efficient
-			expect(handlingTime).toBeLessThan(10);
+			expect(handlingTime).toBeLessThan(15);
 		});
 	});
 

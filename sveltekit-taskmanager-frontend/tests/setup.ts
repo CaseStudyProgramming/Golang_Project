@@ -18,6 +18,13 @@ vi.mock('$env/static/public', () => ({
 
 vi.mock('$env/static/private', () => ({}));
 
+// Mock $lib/env
+vi.mock('$lib/env', () => ({
+	publicEnv: {
+		PUBLIC_API_BASE_URL: 'http://localhost:8080'
+	}
+}));
+
 // Mock localStorage
 const localStorageMock = {
 	clear: vi.fn(),

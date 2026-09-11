@@ -28,7 +28,7 @@
 			isSuccess = true;
 		} catch (err) {
 			if (err instanceof Error && err.name === 'ZodError') {
-				const zodError = err as { errors: Array<{ message: string }> };
+				const zodError = err as unknown as { errors: Array<{ message: string }> };
 				if (zodError.errors && zodError.errors[0]) {
 					fieldErrors.email = zodError.errors[0].message;
 					error = 'Please fix the errors below.';

@@ -151,7 +151,7 @@
 			return true;
 		} catch (error: unknown) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				const zodError = error as { errors: Array<{ message: string; path: string[] }> };
+				const zodError = error as unknown as { errors: Array<{ message: string; path: string[] }> };
 				const newErrors: Record<string, string> = {};
 				zodError.errors.forEach((err) => {
 					const path = err.path.join('.');

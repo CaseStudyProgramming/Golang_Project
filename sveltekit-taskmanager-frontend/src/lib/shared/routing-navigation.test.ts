@@ -145,7 +145,7 @@ describe('Routing and Navigation', () => {
 			const params = { filter: 'active', limit: '10', page: '2' };
 			const queryString = new URLSearchParams(params).toString();
 
-			expect(queryString).toBe('page=2&limit=10&filter=active');
+			expect(queryString).toBe('filter=active&limit=10&page=2');
 		});
 
 		it('handles missing query parameters', () => {

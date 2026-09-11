@@ -34,7 +34,7 @@ describe('Activity Store Logic', () => {
 
 			expect(activity.id).toBe('123');
 			expect(activity.taskId).toBe('task-1');
-			expect(activity.type).toBe('status_change');
+			expect(activity.type).toBe('status_changed');
 			expect(activity.description).toBe('Task status changed to in_progress');
 		});
 

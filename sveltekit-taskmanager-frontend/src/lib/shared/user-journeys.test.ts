@@ -259,7 +259,7 @@ describe('Critical User Journeys', () => {
 
 		it('uses subtasks for task breakdown', async () => {
 			// Step 1: User creates main task
-			const mainTask = { subtasks: [] };
+			const mainTask: { subtasks: Array<{ id: string; isCompleted: boolean; title: string }> } = { subtasks: [] };
 			// Step 2: User adds subtasks
 			const subtasks = [
 				{ id: 'sub-1', isCompleted: true, title: 'Research' },

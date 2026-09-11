@@ -54,7 +54,7 @@
 			isSuccess = true;
 		} catch (err) {
 			if (err instanceof Error && err.name === 'ZodError') {
-				const zodError = err as { errors: Array<{ message: string; path: string[] }> };
+				const zodError = err as unknown as { errors: Array<{ message: string; path: string[] }> };
 				if (zodError.errors && zodError.errors[0]) {
 					const field = zodError.errors[0].path[0] as string;
 					fieldErrors[field] = zodError.errors[0].message;

@@ -311,7 +311,6 @@
 					<div class="mt-6">
 						<SubtaskList
 							bind:subtasks={taskStore.state.currentTask.subtasks}
-							taskId={taskId}
 							onAddSubtask={handleAddSubtask}
 							onToggleSubtask={handleToggleSubtask}
 							onDeleteSubtask={handleDeleteSubtask}

@@ -239,7 +239,7 @@ describe('API Integration', () => {
 			const params = { limit: '25', page: '2' };
 			const queryString = new URLSearchParams(params).toString();
 
-			expect(queryString).toBe('page=2&limit=25');
+			expect(queryString).toBe('limit=25&page=2');
 		});
 	});
 
