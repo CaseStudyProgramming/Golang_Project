@@ -197,12 +197,13 @@
   - Type safety provides compile-time guardrails; runtime validation (Zod) provides business logic guardrails
   - Type safety does NOT prevent random testing - it ensures random data is type-valid while still allowing variation
 - **Data Generators for Mock Data**:
-  - Use factory functions and data generators to create complex mock objects instead of manual construction
-  - Implement patterns like `createMockUser(overrides)` for consistent, type-safe test data generation
-  - Factory patterns support negative testing scenarios (e.g., `userFactory.underage()`, `userFactory.withInvalidEmail()`)
-  - This approach maintains type safety while reducing boilerplate in test setup
+  - **Trigger Condition**: Create data generators/factories ONLY when an entity is used in >5 different test files AND has >5 properties
+  - **Implementation Options**: Use Fishery (Factory pattern), @faker-js/faker, or custom Data Generator/Factory based on team preference
+  - **Gradual Migration**: Do not migrate all entities at once—prioritize entities that change most frequently
+  - **Manual Construction**: For entities below threshold, continue using manual mock construction
+  - **Benefits**: Reduces boilerplate, ensures consistency, easier to update when entity structure changes
 - **Comprehensive Testing Approach**:
-  - Type Safety + Test Helpers + Data Generators = Type-safe comprehensive testing with negative case coverage
+  - Type Safety + Test Helpers + Negative Testing + (Conditional Data Generators) = Type-safe comprehensive testing with negative case coverage
   - This combination ensures compile-time type safety, runtime validation, comprehensive edge case coverage, and maintainable test code
 - **Vitest Integration**: Run `bun test` to execute tests with integrated type checking. Type errors in tests will fail the test suite.
 
