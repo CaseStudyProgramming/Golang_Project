@@ -110,13 +110,35 @@ function createToastStore() {
  */
 let toastStoreInstance: null | ReturnType<typeof createToastStore> = null;
 
+// Create a safe SSR-compatible default store
+function createSSRToastStore() {
+	const state: ToastState = {
+		toasts: []
+	};
+
+	return {
+		addToast: () => 'ssr-toast-id',
+		clearToasts: () => {},
+		error: () => 'ssr-toast-id',
+		info: () => 'ssr-toast-id',
+		removeToast: () => {},
+		success: () => 'ssr-toast-id',
+		warning: () => 'ssr-toast-id',
+		get state() {
+			return state;
+		}
+	};
+}
+
 export const toastStore = new Proxy({} as ReturnType<typeof createToastStore>, {
 	get(_target, prop) {
 		if (!toastStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('toastStore can only be accessed on the client side');
+				// Return safe SSR-compatible store during server-side rendering
+				toastStoreInstance = createSSRToastStore();
+			} else {
+				toastStoreInstance = createToastStore();
 			}
-			toastStoreInstance = createToastStore();
 		}
 		return toastStoreInstance[prop as keyof ReturnType<typeof createToastStore>];
 	}

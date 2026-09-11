@@ -11,12 +11,18 @@ on:
     paths:
       - 'sveltekit-taskmanager-frontend/**'
       - '.github/workflows/frontend-ci.yml'
+  workflow_call:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -69,6 +75,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    
     - name: Checkout code
       uses: actions/checkout@v4
       

@@ -12,7 +12,8 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"incremental": true,
-		"tsBuildInfoFile": ".tsbuildinfo"
+		"tsBuildInfoFile": ".tsbuildinfo",
+		"types": ["node"]
 	},
 	"exclude": [
 		"node_modules",
