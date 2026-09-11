@@ -14,19 +14,19 @@ type PerformanceMetrics struct {
 	mu sync.RWMutex
 
 	// API metrics
-	APICallCount    map[string]int64
+	APICallCount   map[string]int64
 	APIDuration    map[string][]time.Duration
 	APIDurationSum map[string]time.Duration
 
 	// System metrics
-	MemoryStats     runtime.MemStats
-	GoroutineCount  int
-	RequestCount    int64
-	ErrorCount      int64
+	MemoryStats    runtime.MemStats
+	GoroutineCount int
+	RequestCount   int64
+	ErrorCount     int64
 
 	// Timing
-	StartTime       time.Time
-	LastUpdated     time.Time
+	StartTime   time.Time
+	LastUpdated time.Time
 }
 
 // PerformanceMonitor manages performance monitoring
@@ -38,7 +38,7 @@ type PerformanceMonitor struct {
 func NewPerformanceMonitor() *PerformanceMonitor {
 	return &PerformanceMonitor{
 		metrics: &PerformanceMetrics{
-			APICallCount:    make(map[string]int64),
+			APICallCount:   make(map[string]int64),
 			APIDuration:    make(map[string][]time.Duration),
 			APIDurationSum: make(map[string]time.Duration),
 			StartTime:      time.Now(),
@@ -120,23 +120,23 @@ func (pm *PerformanceMonitor) GetMetrics() map[string]interface{} {
 			"total_requests": pm.metrics.RequestCount,
 		},
 		"system_metrics": map[string]interface{}{
-			"goroutines":       pm.metrics.GoroutineCount,
-			"memory_alloc":     pm.metrics.MemoryStats.Alloc,
+			"goroutines":         pm.metrics.GoroutineCount,
+			"memory_alloc":       pm.metrics.MemoryStats.Alloc,
 			"memory_total_alloc": pm.metrics.MemoryStats.TotalAlloc,
-			"memory_sys":       pm.metrics.MemoryStats.Sys,
-			"memory_heap_alloc": pm.metrics.MemoryStats.HeapAlloc,
-			"memory_heap_sys":  pm.metrics.MemoryStats.HeapSys,
-			"gc_pause_total":   pm.metrics.MemoryStats.PauseTotalNs,
-			"gc_pause_count":   pm.metrics.MemoryStats.NumGC,
+			"memory_sys":         pm.metrics.MemoryStats.Sys,
+			"memory_heap_alloc":  pm.metrics.MemoryStats.HeapAlloc,
+			"memory_heap_sys":    pm.metrics.MemoryStats.HeapSys,
+			"gc_pause_total":     pm.metrics.MemoryStats.PauseTotalNs,
+			"gc_pause_count":     pm.metrics.MemoryStats.NumGC,
 		},
 		"error_metrics": map[string]interface{}{
 			"error_count": pm.metrics.ErrorCount,
 			"error_rate":  float64(pm.metrics.ErrorCount) / float64(pm.metrics.RequestCount) * 100,
 		},
 		"timing": map[string]interface{}{
-			"start_time":  pm.metrics.StartTime,
+			"start_time":   pm.metrics.StartTime,
 			"last_updated": pm.metrics.LastUpdated,
-			"uptime":      time.Since(pm.metrics.StartTime).String(),
+			"uptime":       time.Since(pm.metrics.StartTime).String(),
 		},
 	}
 }
@@ -186,9 +186,9 @@ func (pm *PerformanceMonitor) ResetMetrics() {
 func (pm *PerformanceMonitor) MetricsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pm.UpdateSystemMetrics()
-		
+
 		metrics := pm.GetMetrics()
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(metrics); err != nil {
 			http.Error(w, "Failed to encode metrics", http.StatusInternalServerError)
@@ -201,19 +201,19 @@ func (pm *PerformanceMonitor) MetricsHandler() http.HandlerFunc {
 func (pm *PerformanceMonitor) HealthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pm.UpdateSystemMetrics()
-		
+
 		health := map[string]interface{}{
 			"status":    "healthy",
 			"timestamp": time.Now(),
 			"uptime":    time.Since(pm.metrics.StartTime).String(),
 			"metrics": map[string]interface{}{
 				"goroutines": pm.metrics.GoroutineCount,
-				"memory":    pm.metrics.MemoryStats.Alloc,
-				"requests":  pm.metrics.RequestCount,
-				"errors":    pm.metrics.ErrorCount,
+				"memory":     pm.metrics.MemoryStats.Alloc,
+				"requests":   pm.metrics.RequestCount,
+				"errors":     pm.metrics.ErrorCount,
 			},
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(health); err != nil {
 			http.Error(w, "Failed to encode health status", http.StatusInternalServerError)
@@ -226,15 +226,15 @@ func (pm *PerformanceMonitor) HealthHandler() http.HandlerFunc {
 func (pm *PerformanceMonitor) Middleware(endpoint string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		// Wrap response writer to capture status code
 		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		
+
 		next(rw, r)
-		
+
 		duration := time.Since(start)
 		pm.RecordAPICall(endpoint, duration)
-		
+
 		if rw.statusCode >= 400 {
 			pm.RecordError()
 		}
