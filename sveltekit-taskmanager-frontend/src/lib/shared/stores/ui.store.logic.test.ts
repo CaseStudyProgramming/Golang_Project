@@ -36,13 +36,13 @@ describe('UI Store Logic', () => {
 	describe('Notification Management', () => {
 		it('creates notification with required fields', () => {
 			const notification = {
-				id: '123',
-				type: 'success' as const,
-				title: 'Success!',
-				message: 'Operation completed',
 				createdAt: Date.now(),
 				duration: 5000,
-				isPersistent: false
+				id: '123',
+				isPersistent: false,
+				message: 'Operation completed',
+				title: 'Success!',
+				type: 'success' as const
 			};
 
 			expect(notification.id).toBe('123');
@@ -55,13 +55,13 @@ describe('UI Store Logic', () => {
 
 		it('creates notification with custom duration', () => {
 			const notification = {
-				id: '123',
-				type: 'error' as const,
-				title: 'Error',
-				message: 'Something went wrong',
 				createdAt: Date.now(),
 				duration: 10000,
-				isPersistent: true
+				id: '123',
+				isPersistent: true,
+				message: 'Something went wrong',
+				title: 'Error',
+				type: 'error' as const
 			};
 
 			expect(notification.duration).toBe(10000);
@@ -76,8 +76,8 @@ describe('UI Store Logic', () => {
 
 		it('removes notification by ID', () => {
 			const notifications = [
-				{ id: '1', type: 'success' as const, title: 'Test 1', createdAt: Date.now(), duration: 5000, isPersistent: false },
-				{ id: '2', type: 'error' as const, title: 'Test 2', createdAt: Date.now(), duration: 5000, isPersistent: false }
+				{ createdAt: Date.now(), duration: 5000, id: '1', isPersistent: false, title: 'Test 1', type: 'success' as const },
+				{ createdAt: Date.now(), duration: 5000, id: '2', isPersistent: false, title: 'Test 2', type: 'error' as const }
 			];
 
 			const filtered = notifications.filter(n => n.id !== '1');
@@ -87,8 +87,8 @@ describe('UI Store Logic', () => {
 
 		it('clears all notifications', () => {
 			let notifications = [
-				{ id: '1', type: 'success' as const, title: 'Test 1', createdAt: Date.now(), duration: 5000, isPersistent: false },
-				{ id: '2', type: 'error' as const, title: 'Test 2', createdAt: Date.now(), duration: 5000, isPersistent: false }
+				{ createdAt: Date.now(), duration: 5000, id: '1', isPersistent: false, title: 'Test 1', type: 'success' as const },
+				{ createdAt: Date.now(), duration: 5000, id: '2', isPersistent: false, title: 'Test 2', type: 'error' as const }
 			];
 
 			notifications = [];
@@ -99,13 +99,13 @@ describe('UI Store Logic', () => {
 	describe('Notification Type Helpers', () => {
 		it('creates success notification', () => {
 			const notification = {
-				id: '123',
-				type: 'success' as const,
-				title: 'Success!',
-				message: 'Operation completed',
 				createdAt: Date.now(),
 				duration: 5000,
-				isPersistent: false
+				id: '123',
+				isPersistent: false,
+				message: 'Operation completed',
+				title: 'Success!',
+				type: 'success' as const
 			};
 
 			expect(notification.type).toBe('success');
@@ -113,13 +113,13 @@ describe('UI Store Logic', () => {
 
 		it('creates error notification as persistent', () => {
 			const notification = {
-				id: '123',
-				type: 'error' as const,
-				title: 'Error!',
-				message: 'Something went wrong',
 				createdAt: Date.now(),
 				duration: 5000,
-				isPersistent: true
+				id: '123',
+				isPersistent: true,
+				message: 'Something went wrong',
+				title: 'Error!',
+				type: 'error' as const
 			};
 
 			expect(notification.type).toBe('error');
@@ -128,13 +128,13 @@ describe('UI Store Logic', () => {
 
 		it('creates warning notification', () => {
 			const notification = {
-				id: '123',
-				type: 'warning' as const,
-				title: 'Warning!',
-				message: 'Be careful',
 				createdAt: Date.now(),
 				duration: 5000,
-				isPersistent: false
+				id: '123',
+				isPersistent: false,
+				message: 'Be careful',
+				title: 'Warning!',
+				type: 'warning' as const
 			};
 
 			expect(notification.type).toBe('warning');
@@ -142,13 +142,13 @@ describe('UI Store Logic', () => {
 
 		it('creates info notification', () => {
 			const notification = {
-				id: '123',
-				type: 'info' as const,
-				title: 'Info!',
-				message: 'Some information',
 				createdAt: Date.now(),
 				duration: 5000,
-				isPersistent: false
+				id: '123',
+				isPersistent: false,
+				message: 'Some information',
+				title: 'Info!',
+				type: 'info' as const
 			};
 
 			expect(notification.type).toBe('info');
@@ -158,14 +158,14 @@ describe('UI Store Logic', () => {
 	describe('Modal Management', () => {
 		it('creates modal with required fields', () => {
 			const modal = {
-				id: '123',
-				title: 'Test Modal',
+				cancelText: 'Cancel',
+				confirmText: 'Confirm',
 				content: 'Modal content',
+				id: '123',
 				isOpen: true,
 				showCancel: true,
-				type: 'confirm' as const,
-				confirmText: 'Confirm',
-				cancelText: 'Cancel'
+				title: 'Test Modal',
+				type: 'confirm' as const
 			};
 
 			expect(modal.id).toBe('123');
@@ -177,14 +177,14 @@ describe('UI Store Logic', () => {
 
 		it('creates modal without cancel button', () => {
 			const modal = {
-				id: '123',
-				title: 'Alert Modal',
+				cancelText: '',
+				confirmText: 'OK',
 				content: 'Alert content',
+				id: '123',
 				isOpen: true,
 				showCancel: false,
-				type: 'alert' as const,
-				confirmText: 'OK',
-				cancelText: ''
+				title: 'Alert Modal',
+				type: 'alert' as const
 			};
 
 			expect(modal.showCancel).toBe(false);
@@ -199,14 +199,14 @@ describe('UI Store Logic', () => {
 
 		it('closes modal by setting isOpen to false', () => {
 			const modal = {
-				id: '123',
-				title: 'Test',
+				cancelText: 'Cancel',
+				confirmText: 'Confirm',
 				content: 'Content',
+				id: '123',
 				isOpen: true,
 				showCancel: true,
-				type: 'confirm' as const,
-				confirmText: 'Confirm',
-				cancelText: 'Cancel'
+				title: 'Test',
+				type: 'confirm' as const
 			};
 
 			modal.isOpen = false;
@@ -215,8 +215,8 @@ describe('UI Store Logic', () => {
 
 		it('removes modal from array', () => {
 			const modals = [
-				{ id: '1', title: 'Modal 1', content: 'Content 1', isOpen: true, showCancel: true, type: 'confirm' as const, confirmText: 'Confirm', cancelText: 'Cancel' },
-				{ id: '2', title: 'Modal 2', content: 'Content 2', isOpen: true, showCancel: true, type: 'confirm' as const, confirmText: 'Confirm', cancelText: 'Cancel' }
+				{ cancelText: 'Cancel', confirmText: 'Confirm', content: 'Content 1', id: '1', isOpen: true, showCancel: true, title: 'Modal 1', type: 'confirm' as const },
+				{ cancelText: 'Cancel', confirmText: 'Confirm', content: 'Content 2', id: '2', isOpen: true, showCancel: true, title: 'Modal 2', type: 'confirm' as const }
 			];
 
 			const filtered = modals.filter(m => m.id !== '1');
@@ -230,13 +230,13 @@ describe('UI Store Logic', () => {
 			type LoadingState = { isLoading: boolean; message?: string };
 			type UIState = {
 				loading: LoadingState;
-				notifications: unknown[];
 				modals: unknown[];
+				notifications: unknown[];
 			};
-			let state: UIState = {
+			const state: UIState = {
 				loading: { isLoading: true, message: 'Loading...' },
-				notifications: [],
-				modals: []
+				modals: [],
+				notifications: []
 			};
 
 			state.loading = { isLoading: false, message: undefined };
@@ -245,10 +245,10 @@ describe('UI Store Logic', () => {
 		});
 
 		it('resets notifications array', () => {
-			let state = {
+			const state = {
 				loading: { isLoading: false, message: undefined },
-				notifications: [{ id: '1', type: 'success' as const, title: 'Test', createdAt: Date.now(), duration: 5000, isPersistent: false }],
-				modals: []
+				modals: [],
+				notifications: [{ createdAt: Date.now(), duration: 5000, id: '1', isPersistent: false, title: 'Test', type: 'success' as const }]
 			};
 
 			state.notifications = [];
@@ -256,10 +256,10 @@ describe('UI Store Logic', () => {
 		});
 
 		it('resets modals array', () => {
-			let state = {
+			const state = {
 				loading: { isLoading: false, message: undefined },
-				notifications: [],
-				modals: [{ id: '1', title: 'Test', content: 'Content', isOpen: true, showCancel: true, type: 'confirm' as const, confirmText: 'Confirm', cancelText: 'Cancel' }]
+				modals: [{ cancelText: 'Cancel', confirmText: 'Confirm', content: 'Content', id: '1', isOpen: true, showCancel: true, title: 'Test', type: 'confirm' as const }],
+				notifications: []
 			};
 
 			state.modals = [];

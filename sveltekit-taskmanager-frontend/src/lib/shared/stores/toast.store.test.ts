@@ -34,9 +34,9 @@ describe('Toast Store Logic', () => {
 	describe('Toast Removal Logic', () => {
 		it('removes toast by ID from array', () => {
 			const toasts = [
-				{ id: 'toast-1', type: 'info', title: 'Test 1' },
-				{ id: 'toast-2', type: 'info', title: 'Test 2' },
-				{ id: 'toast-3', type: 'info', title: 'Test 3' }
+				{ id: 'toast-1', title: 'Test 1', type: 'info' },
+				{ id: 'toast-2', title: 'Test 2', type: 'info' },
+				{ id: 'toast-3', title: 'Test 3', type: 'info' }
 			];
 
 			const filtered = toasts.filter(toast => toast.id !== 'toast-2');
@@ -47,8 +47,8 @@ describe('Toast Store Logic', () => {
 
 		it('clears all toasts', () => {
 			const toasts = [
-				{ id: 'toast-1', type: 'info', title: 'Test 1' },
-				{ id: 'toast-2', type: 'info', title: 'Test 2' }
+				{ id: 'toast-1', title: 'Test 1', type: 'info' },
+				{ id: 'toast-2', title: 'Test 2', type: 'info' }
 			];
 
 			const cleared: never[] = [];
@@ -59,7 +59,7 @@ describe('Toast Store Logic', () => {
 
 	describe('Toast Type Validation', () => {
 		it('accepts valid toast types', () => {
-			const validTypes: Array<'success' | 'error' | 'warning' | 'info'> = ['success', 'error', 'warning', 'info'];
+			const validTypes: Array<'error' | 'info' | 'success' | 'warning'> = ['success', 'error', 'warning', 'info'];
 
 			validTypes.forEach(type => {
 				expect(['success', 'error', 'warning', 'info']).toContain(type);

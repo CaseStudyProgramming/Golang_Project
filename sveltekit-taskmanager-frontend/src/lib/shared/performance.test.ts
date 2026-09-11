@@ -7,8 +7,8 @@ describe('Performance Testing', () => {
 
 			// Simulate component rendering
 			const componentData = {
-				title: 'Test Component',
-				items: Array.from({ length: 100 }, (_, i) => ({ id: i, name: `Item ${i}` }))
+				items: Array.from({ length: 100 }, (_, i) => ({ id: i, name: `Item ${i}` })),
+				title: 'Test Component'
 			};
 
 			// Simulate render operation
@@ -26,8 +26,8 @@ describe('Performance Testing', () => {
 
 			const largeList = Array.from({ length: 1000 }, (_, i) => ({
 				id: i,
-				title: `Task ${i}`,
-				status: i % 2 === 0 ? 'completed' : 'todo'
+				status: i % 2 === 0 ? 'completed' : 'todo',
+				title: `Task ${i}`
 			}));
 
 			// Simulate list rendering
@@ -68,9 +68,9 @@ describe('Performance Testing', () => {
 			const startTime = performance.now();
 
 			const largeArray = Array.from({ length: 10000 }, (_, i) => ({
+				category: i % 5,
 				id: i,
-				value: i % 100,
-				category: i % 5
+				value: i % 100
 			}));
 
 			// Filter by category
@@ -103,17 +103,17 @@ describe('Performance Testing', () => {
 
 			const rawData = Array.from({ length: 5000 }, (_, i) => ({
 				id: i,
-				user_id: i % 100,
+				is_completed: i % 3 === 0,
 				task_name: `Task ${i}`,
-				is_completed: i % 3 === 0
+				user_id: i % 100
 			}));
 
 			// Transform to application model
 			const transformed = rawData.map(item => ({
 				id: item.id,
-				userId: item.user_id,
+				isCompleted: item.is_completed,
 				title: item.task_name,
-				isCompleted: item.is_completed
+				userId: item.user_id
 			}));
 
 			const endTime = performance.now();
@@ -134,8 +134,8 @@ describe('Performance Testing', () => {
 			const largeDataSet = new Map();
 			for (let i = 0; i < 10000; i++) {
 				largeDataSet.set(i, {
-					id: i,
-					data: new Array(100).fill('sample data')
+					data: new Array(100).fill('sample data'),
+					id: i
 				});
 			}
 
@@ -149,7 +149,7 @@ describe('Performance Testing', () => {
 		it('tests memory cleanup after data removal', () => {
 			let largeDataSet = new Map();
 			for (let i = 0; i < 5000; i++) {
-				largeDataSet.set(i, { id: i, data: new Array(50).fill('data') });
+				largeDataSet.set(i, { data: new Array(50).fill('data'), id: i });
 			}
 
 			// Clear the data
@@ -309,8 +309,8 @@ describe('Performance Testing', () => {
 			// Simulate image lazy loading
 			const images = Array.from({ length: 20 }, (_, i) => ({
 				id: i,
-				src: `image-${i}.jpg`,
-				loaded: false
+				loaded: false,
+				src: `image-${i}.jpg`
 			}));
 
 			// Simulate loading images in viewport

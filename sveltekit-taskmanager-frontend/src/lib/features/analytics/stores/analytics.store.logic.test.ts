@@ -2,86 +2,86 @@ import { describe, expect, it } from 'vitest';
 
 // Define inline type for logic-focused testing
 type Task = {
-	id: string;
-	title: string;
-	description: string;
-	status: 'todo' | 'in_progress' | 'completed' | 'cancelled';
-	priority: 'low' | 'medium' | 'high' | 'urgent';
-	dueDate: string | null;
+	categoryId: null | string;
+	completedAt?: null | string;
 	createdAt: string;
+	description: string;
+	dueDate: null | string;
+	id: string;
+	priority: 'high' | 'low' | 'medium' | 'urgent';
+	status: 'cancelled' | 'completed' | 'in_progress' | 'todo';
+	title: string;
 	updatedAt: string;
-	completedAt?: string | null;
 	userId: string;
-	categoryId: string | null;
 };
 
 describe('Analytics Store Logic', () => {
 	// Mock task data for testing
 	const mockTasks: Task[] = [
 		{
-			id: '1',
-			title: 'Task 1',
-			description: 'Description 1',
-			status: 'completed',
-			priority: 'high',
-			dueDate: '2024-01-10',
-			createdAt: '2024-01-01T00:00:00Z',
-			updatedAt: '2024-01-05T00:00:00Z',
+			categoryId: 'cat1',
 			completedAt: '2024-01-05T00:00:00Z',
-			userId: 'user1',
-			categoryId: 'cat1'
-		},
-		{
-			id: '2',
-			title: 'Task 2',
-			description: 'Description 2',
-			status: 'in_progress',
-			priority: 'medium',
-			dueDate: '2024-01-15',
-			createdAt: '2024-01-02T00:00:00Z',
-			updatedAt: '2024-01-06T00:00:00Z',
-			completedAt: null,
-			userId: 'user1',
-			categoryId: 'cat1'
-		},
-		{
-			id: '3',
-			title: 'Task 3',
-			description: 'Description 3',
-			status: 'todo',
-			priority: 'low',
-			dueDate: '2024-01-20',
-			createdAt: '2024-01-03T00:00:00Z',
-			updatedAt: '2024-01-07T00:00:00Z',
-			completedAt: null,
-			userId: 'user1',
-			categoryId: 'cat2'
-		},
-		{
-			id: '4',
-			title: 'Task 4',
-			description: 'Description 4',
-			status: 'completed',
-			priority: 'urgent',
-			dueDate: '2024-01-08',
-			createdAt: '2024-01-04T00:00:00Z',
-			updatedAt: '2024-01-08T00:00:00Z',
-			completedAt: '2024-01-08T00:00:00Z',
-			userId: 'user1',
-			categoryId: 'cat2'
-		},
-		{
-			id: '5',
-			title: 'Task 5',
-			description: 'Description 5',
-			status: 'cancelled',
+			createdAt: '2024-01-01T00:00:00Z',
+			description: 'Description 1',
+			dueDate: '2024-01-10',
+			id: '1',
 			priority: 'high',
-			dueDate: '2024-01-25',
-			createdAt: '2024-01-05T00:00:00Z',
-			updatedAt: '2024-01-09T00:00:00Z',
+			status: 'completed',
+			title: 'Task 1',
+			updatedAt: '2024-01-05T00:00:00Z',
+			userId: 'user1'
+		},
+		{
+			categoryId: 'cat1',
 			completedAt: null,
-			userId: 'user1',
-			categoryId: 'cat1'
+			createdAt: '2024-01-02T00:00:00Z',
+			description: 'Description 2',
+			dueDate: '2024-01-15',
+			id: '2',
+			priority: 'medium',
+			status: 'in_progress',
+			title: 'Task 2',
+			updatedAt: '2024-01-06T00:00:00Z',
+			userId: 'user1'
+		},
+		{
+			categoryId: 'cat2',
+			completedAt: null,
+			createdAt: '2024-01-03T00:00:00Z',
+			description: 'Description 3',
+			dueDate: '2024-01-20',
+			id: '3',
+			priority: 'low',
+			status: 'todo',
+			title: 'Task 3',
+			updatedAt: '2024-01-07T00:00:00Z',
+			userId: 'user1'
+		},
+		{
+			categoryId: 'cat2',
+			completedAt: '2024-01-08T00:00:00Z',
+			createdAt: '2024-01-04T00:00:00Z',
+			description: 'Description 4',
+			dueDate: '2024-01-08',
+			id: '4',
+			priority: 'urgent',
+			status: 'completed',
+			title: 'Task 4',
+			updatedAt: '2024-01-08T00:00:00Z',
+			userId: 'user1'
+		},
+		{
+			categoryId: 'cat1',
+			completedAt: null,
+			createdAt: '2024-01-05T00:00:00Z',
+			description: 'Description 5',
+			dueDate: '2024-01-25',
+			id: '5',
+			priority: 'high',
+			status: 'cancelled',
+			title: 'Task 5',
+			updatedAt: '2024-01-09T00:00:00Z',
+			userId: 'user1'
 		}
 	];
 
@@ -308,17 +308,17 @@ describe('Analytics Store Logic', () => {
 		});
 
 		it('sets error state', () => {
-			let error: string | null = null;
+			let error: null | string = null;
 			error = 'Failed to load analytics';
 			expect(error).toBe('Failed to load analytics');
 		});
 
 		it('resets state to initial values', () => {
 			type TestState = {
-				data: { statistics: { total: number } } | null;
-				error: string | null;
+				data: null | { statistics: { total: number } };
+				error: null | string;
 				isLoading: boolean;
-				selectedPeriod: 'daily' | 'weekly' | 'monthly';
+				selectedPeriod: 'daily' | 'monthly' | 'weekly';
 			};
 
 			let state: TestState = {

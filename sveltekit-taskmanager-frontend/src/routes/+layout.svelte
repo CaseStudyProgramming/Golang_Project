@@ -2,8 +2,8 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { authStore } from '$lib/features/auth';
+	import { ConfirmDialogContainer, ToastContainer } from '$lib/shared/components';
 	import { onDestroy, onMount } from 'svelte';
-	import { ToastContainer, ConfirmDialogContainer } from '$lib/shared/components';
 
 	let { children } = $props();
 

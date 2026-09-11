@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-// Helper functions to test the logic without type narrowing issues
-function getSizeClasses(size: 'sm' | 'md' | 'lg'): string {
-	return size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-4' : 'h-2.5';
+function getColorClasses(color: 'blue' | 'green' | 'orange' | 'purple' | 'red'): string {
+	return color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
 }
 
-function getColorClasses(color: 'blue' | 'green' | 'orange' | 'red' | 'purple'): string {
-	return color === 'green' ? 'bg-green-600' : color === 'orange' ? 'bg-orange-600' : color === 'red' ? 'bg-red-600' : color === 'purple' ? 'bg-purple-600' : 'bg-blue-600';
+// Helper functions to test the logic without type narrowing issues
+function getSizeClasses(size: 'lg' | 'md' | 'sm'): string {
+	return size === 'sm' ? 'h-1.5' : size === 'lg' ? 'h-4' : 'h-2.5';
 }
 
 describe('ProgressBar Component Logic', () => {

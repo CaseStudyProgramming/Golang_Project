@@ -10,8 +10,8 @@ describe('Critical User Journeys', () => {
 			// Step 2: User fills registration form
 			const registrationData = {
 				email: 'newuser@example.com',
-				password: 'SecurePassword123',
-				name: 'New User'
+				name: 'New User',
+				password: 'SecurePassword123'
 			};
 
 			// Step 3: Form validation
@@ -45,9 +45,9 @@ describe('Critical User Journeys', () => {
 
 			// Step 2: User creates first task
 			const firstTask = {
-				title: 'My first task',
 				description: 'Getting started with the app',
-				priority: 'medium'
+				priority: 'medium',
+				title: 'My first task'
 			};
 
 			// Step 3: Task created successfully
@@ -65,18 +65,18 @@ describe('Critical User Journeys', () => {
 	describe('Task Management Journey', () => {
 		it('completes task creation to completion workflow', async () => {
 			// Step 1: User navigates to tasks page
-			let currentRoute = '/tasks';
+			const currentRoute = '/tasks';
 
 			// Step 2: User clicks "Create Task" button
 			const showCreateModal = true;
 
 			// Step 3: User fills task form
 			const taskData = {
-				title: 'Complete project documentation',
 				description: 'Write comprehensive documentation',
-				priority: 'high',
 				dueDate: '2024-12-31',
-				status: 'todo'
+				priority: 'high',
+				status: 'todo',
+				title: 'Complete project documentation'
 			};
 
 			// Step 4: Submit task
@@ -98,11 +98,11 @@ describe('Critical User Journeys', () => {
 
 		it('handles task delegation workflow', async () => {
 			// Step 1: User creates task
-			type Task = { id: string; title: string; assigneeId: string | null };
+			type Task = { assigneeId: null | string; id: string; title: string; };
 			const task: Task = {
+				assigneeId: null,
 				id: '1',
-				title: 'Review PR',
-				assigneeId: null
+				title: 'Review PR'
 			};
 
 			// Step 2: User opens task details
@@ -136,8 +136,8 @@ describe('Critical User Journeys', () => {
 			// Step 3: User views task details
 			const taskDetails = {
 				id: taskId,
-				title: 'Task Details',
-				subtasks: []
+				subtasks: [],
+				title: 'Task Details'
 			};
 
 			// Step 4: User clicks back button
@@ -149,9 +149,9 @@ describe('Critical User Journeys', () => {
 		it('filters and searches tasks from dashboard', async () => {
 			// Step 1: User is on dashboard
 			const allTasks = [
-				{ id: '1', title: 'Task 1', status: 'todo', priority: 'high' },
-				{ id: '2', title: 'Task 2', status: 'completed', priority: 'low' },
-				{ id: '3', title: 'Task 3', status: 'todo', priority: 'medium' }
+				{ id: '1', priority: 'high', status: 'todo', title: 'Task 1' },
+				{ id: '2', priority: 'low', status: 'completed', title: 'Task 2' },
+				{ id: '3', priority: 'medium', status: 'todo', title: 'Task 3' }
 			];
 
 			// Step 2: User applies status filter
@@ -174,13 +174,13 @@ describe('Critical User Journeys', () => {
 	describe('Category Management Journey', () => {
 		it('creates category and assigns tasks to it', async () => {
 			// Step 1: User navigates to categories
-			let currentRoute = '/categories';
+			const currentRoute = '/categories';
 
 			// Step 2: User creates new category
 			const newCategory = {
+				color: '#3B82F6',
 				id: 'cat-1',
-				name: 'Work Projects',
-				color: '#3B82F6'
+				name: 'Work Projects'
 			};
 
 			// Step 3: Category created
@@ -188,9 +188,9 @@ describe('Critical User Journeys', () => {
 
 			// Step 4: User creates task and assigns category
 			const task = {
+				categoryId: newCategory.id,
 				id: 'task-1',
-				title: 'Complete report',
-				categoryId: newCategory.id
+				title: 'Complete report'
 			};
 
 			// Step 5: Verify assignment
@@ -202,8 +202,8 @@ describe('Critical User Journeys', () => {
 		it('reorganizes tasks between categories', async () => {
 			// Step 1: User has tasks in different categories
 			const tasks = [
-				{ id: '1', title: 'Task 1', categoryId: 'cat-1' },
-				{ id: '2', title: 'Task 2', categoryId: 'cat-2' }
+				{ categoryId: 'cat-1', id: '1', title: 'Task 1' },
+				{ categoryId: 'cat-2', id: '2', title: 'Task 2' }
 			];
 
 			// Step 2: User moves task to different category
@@ -275,9 +275,9 @@ describe('Critical User Journeys', () => {
 		it('uses task filtering and sorting for productivity', async () => {
 			// Step 1: User has many tasks
 			const tasks = [
-				{ id: '1', title: 'Urgent Task', priority: 'high', dueDate: '2024-12-01' },
-				{ id: '2', title: 'Normal Task', priority: 'medium', dueDate: '2024-12-15' },
-				{ id: '3', title: 'Low Priority', priority: 'low', dueDate: '2024-12-31' }
+				{ dueDate: '2024-12-01', id: '1', priority: 'high', title: 'Urgent Task' },
+				{ dueDate: '2024-12-15', id: '2', priority: 'medium', title: 'Normal Task' },
+				{ dueDate: '2024-12-31', id: '3', priority: 'low', title: 'Low Priority' }
 			];
 
 			// Step 2: User sorts by due date
@@ -297,20 +297,20 @@ describe('Critical User Journeys', () => {
 			// Step 1: User creates main task
 			type MainTask = {
 				id: string;
+				subtasks: Array<{ id: string; isCompleted: boolean; title: string; }>;
 				title: string;
-				subtasks: Array<{ id: string; title: string; isCompleted: boolean }>;
 			};
 			const mainTask: MainTask = {
 				id: '1',
-				title: 'Complete project',
-				subtasks: []
+				subtasks: [],
+				title: 'Complete project'
 			};
 
 			// Step 2: User adds subtasks
 			const subtasks = [
-				{ id: 'sub-1', title: 'Research', isCompleted: true },
-				{ id: 'sub-2', title: 'Draft', isCompleted: false },
-				{ id: 'sub-3', title: 'Review', isCompleted: false }
+				{ id: 'sub-1', isCompleted: true, title: 'Research' },
+				{ id: 'sub-2', isCompleted: false, title: 'Draft' },
+				{ id: 'sub-3', isCompleted: false, title: 'Review' }
 			];
 
 			mainTask.subtasks = subtasks;
@@ -326,7 +326,7 @@ describe('Critical User Journeys', () => {
 	describe('Settings and Preferences Journey', () => {
 		it('updates user preferences', async () => {
 			// Step 1: User navigates to settings
-			let currentRoute = '/settings';
+			const currentRoute = '/settings';
 
 			// Step 2: User changes theme preference
 			const themePreference = 'dark';
@@ -336,8 +336,8 @@ describe('Critical User Journeys', () => {
 
 			// Step 4: Save preferences
 			const preferences = {
-				theme: themePreference,
-				notifications: notificationsEnabled
+				notifications: notificationsEnabled,
+				theme: themePreference
 			};
 
 			// Step 5: Preferences applied

@@ -5,10 +5,10 @@ describe('API Integration', () => {
 		it('handles complete request lifecycle', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ data: 'success' }),
 					ok: true,
 					status: 200,
-					statusText: 'OK',
-					json: () => Promise.resolve({ data: 'success' })
+					statusText: 'OK'
 				} as Response)
 			);
 
@@ -38,11 +38,11 @@ describe('API Integration', () => {
 		});
 
 		it('parses JSON responses correctly', async () => {
-			const mockData = { message: 'Success', count: 42 };
+			const mockData = { count: 42, message: 'Success' };
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
-					ok: true,
-					json: () => Promise.resolve(mockData)
+					json: () => Promise.resolve(mockData),
+					ok: true
 				} as Response)
 			);
 
@@ -60,10 +60,10 @@ describe('API Integration', () => {
 		it('handles 404 Not Found responses', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Resource not found' }),
 					ok: false,
 					status: 404,
-					statusText: 'Not Found',
-					json: () => Promise.resolve({ error: 'Resource not found' })
+					statusText: 'Not Found'
 				} as Response)
 			);
 
@@ -78,10 +78,10 @@ describe('API Integration', () => {
 		it('handles 500 Internal Server Error', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Server error' }),
 					ok: false,
 					status: 500,
-					statusText: 'Internal Server Error',
-					json: () => Promise.resolve({ error: 'Server error' })
+					statusText: 'Internal Server Error'
 				} as Response)
 			);
 
@@ -95,10 +95,10 @@ describe('API Integration', () => {
 		it('handles rate limiting (429)', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Rate limit exceeded' }),
 					ok: false,
 					status: 429,
-					statusText: 'Too Many Requests',
-					json: () => Promise.resolve({ error: 'Rate limit exceeded' })
+					statusText: 'Too Many Requests'
 				} as Response)
 			);
 
@@ -114,8 +114,8 @@ describe('API Integration', () => {
 		it('includes auth headers in requests', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
-					ok: true,
-					json: () => Promise.resolve({})
+					json: () => Promise.resolve({}),
+					ok: true
 				} as Response)
 			);
 
@@ -146,14 +146,14 @@ describe('API Integration', () => {
 			let refreshTokenCalled = false;
 			const mockFetch = vi.fn()
 				.mockResolvedValueOnce({
+					json: () => Promise.resolve({}),
 					ok: false,
 					status: 401,
-					statusText: 'Unauthorized',
-					json: () => Promise.resolve({})
+					statusText: 'Unauthorized'
 				} as Response)
 				.mockResolvedValueOnce({
-					ok: true,
-					json: () => Promise.resolve({ token: 'new-token' })
+					json: () => Promise.resolve({ token: 'new-token' }),
+					ok: true
 				} as Response);
 
 			globalThis.fetch = mockFetch;
@@ -164,8 +164,8 @@ describe('API Integration', () => {
 			// Simulate token refresh
 			refreshTokenCalled = true;
 			await globalThis.fetch('/api/auth/refresh', {
-				method: 'POST',
-				body: JSON.stringify({ refreshToken: 'refresh-token' })
+				body: JSON.stringify({ refreshToken: 'refresh-token' }),
+				method: 'POST'
 			});
 
 			expect(refreshTokenCalled).toBe(true);
@@ -175,18 +175,18 @@ describe('API Integration', () => {
 	describe('Data Transformation', () => {
 		it('transforms API responses to application models', () => {
 			const apiResponse = {
+				created_at: '2024-01-01T00:00:00Z',
 				id: '1',
-				title: 'Task Title',
 				is_completed: false,
-				created_at: '2024-01-01T00:00:00Z'
+				title: 'Task Title'
 			};
 
 			// Transform to application model
 			const appModel = {
+				createdAt: apiResponse.created_at,
 				id: apiResponse.id,
-				title: apiResponse.title,
 				isCompleted: apiResponse.is_completed,
-				createdAt: apiResponse.created_at
+				title: apiResponse.title
 			};
 
 			expect(appModel.isCompleted).toBe(false);
@@ -206,10 +206,10 @@ describe('API Integration', () => {
 			};
 
 			const flattened = {
-				userId: apiResponse.user.id,
-				userName: apiResponse.user.name,
 				userAvatar: apiResponse.user.profile.avatar,
-				userBio: apiResponse.user.profile.bio
+				userBio: apiResponse.user.profile.bio,
+				userId: apiResponse.user.id,
+				userName: apiResponse.user.name
 			};
 
 			expect(flattened.userId).toBe('1');
@@ -224,8 +224,8 @@ describe('API Integration', () => {
 					{ id: '1', title: 'Task 1' },
 					{ id: '2', title: 'Task 2' }
 				],
-				page: 1,
 				limit: 10,
+				page: 1,
 				total: 20,
 				totalPages: 2
 			};
@@ -238,7 +238,7 @@ describe('API Integration', () => {
 		});
 
 		it('builds pagination query parameters', () => {
-			const params = { page: '2', limit: '25' };
+			const params = { limit: '25', page: '2' };
 			const queryString = new URLSearchParams(params).toString();
 
 			expect(queryString).toBe('page=2&limit=25');
@@ -278,8 +278,8 @@ describe('API Integration', () => {
 		it('handles multiple simultaneous requests', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
-					ok: true,
-					json: () => Promise.resolve({})
+					json: () => Promise.resolve({}),
+					ok: true
 				} as Response)
 			);
 
@@ -310,8 +310,8 @@ describe('API Integration', () => {
 		it('includes API version in headers', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
-					ok: true,
-					json: () => Promise.resolve({})
+					json: () => Promise.resolve({}),
+					ok: true
 				} as Response)
 			);
 

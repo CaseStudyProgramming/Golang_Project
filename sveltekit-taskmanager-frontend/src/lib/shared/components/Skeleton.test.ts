@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 // Helper function to test the logic without type narrowing issues
-function getVariantClasses(variant: 'default' | 'circular' | 'text' | 'rectangular'): string {
+function getVariantClasses(variant: 'circular' | 'default' | 'rectangular' | 'text'): string {
 	return variant === 'circular' ? 'rounded-full' : variant === 'text' ? 'rounded h-4' : variant === 'rectangular' ? 'rounded-md' : 'rounded-md';
 }
 

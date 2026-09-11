@@ -1,9 +1,9 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 	"taskmanager/models"
+	"taskmanager/utils"
 )
 
 type TagService struct {
@@ -16,7 +16,7 @@ func NewTagService(model models.TagModelInterface) *TagService {
 
 func (s *TagService) Create(userID int64, tag *models.Tag) (*models.Tag, error) {
 	if tag.Name == "" {
-		return nil, errors.New("Tag name tidak boleh kosong")
+		return nil, utils.ErrMissingRequired
 	}
 
 	// Set default color if not provided
@@ -59,7 +59,7 @@ func (s *TagService) Update(userID int64, id int64, tag *models.Tag) (*models.Ta
 	}
 
 	if tag.Name == "" {
-		return nil, errors.New("Tag name tidak boleh kosong")
+		return nil, utils.ErrMissingRequired
 	}
 
 	if err := s.model.Update(userID, tag); err != nil {

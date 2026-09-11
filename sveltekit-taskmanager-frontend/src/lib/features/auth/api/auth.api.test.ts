@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { authApi } from './auth.api';
 import type { User } from '../types/auth.types';
+
+import { authApi } from './auth.api';
 
 // Mock the HTTP client
 const mockHttpClient = {
+	delete: vi.fn(),
 	get: vi.fn(),
-	post: vi.fn(),
 	patch: vi.fn(),
-	delete: vi.fn()
+	post: vi.fn()
 };
 
 vi.mock('$lib/shared/utils/api.utils', () => ({
@@ -28,10 +29,10 @@ describe('Auth API', () => {
 				name: 'Test User'
 			};
 			const mockResponse = {
-				user: mockUser,
-				token: 'auth-token',
+				expiresIn: 3600,
 				refreshToken: 'refresh-token',
-				expiresIn: 3600
+				token: 'auth-token',
+				user: mockUser
 			};
 
 			mockHttpClient.post.mockResolvedValue(mockResponse);
@@ -65,24 +66,24 @@ describe('Auth API', () => {
 				name: 'Test User'
 			};
 			const mockResponse = {
-				user: mockUser,
-				token: 'auth-token',
+				expiresIn: 3600,
 				refreshToken: 'refresh-token',
-				expiresIn: 3600
+				token: 'auth-token',
+				user: mockUser
 			};
 
 			mockHttpClient.post.mockResolvedValue(mockResponse);
 
 			const result = await authApi.register({
 				email: 'test@example.com',
-				password: 'password',
-				name: 'Test User'
+				name: 'Test User',
+				password: 'password'
 			});
 
 			expect(mockHttpClient.post).toHaveBeenCalledWith('/auth/register', {
 				email: 'test@example.com',
-				password: 'password',
-				name: 'Test User'
+				name: 'Test User',
+				password: 'password'
 			});
 			expect(result).toEqual(mockResponse);
 		});
@@ -138,9 +139,9 @@ describe('Auth API', () => {
 	describe('Refresh Token', () => {
 		it('calls refresh token endpoint', async () => {
 			const mockResponse = {
-				token: 'new-token',
+				expiresIn: 3600,
 				refreshToken: 'new-refresh-token',
-				expiresIn: 3600
+				token: 'new-token'
 			};
 
 			mockHttpClient.post.mockResolvedValue(mockResponse);
@@ -192,15 +193,15 @@ describe('Auth API', () => {
 			mockHttpClient.post.mockResolvedValue(mockResponse);
 
 			const result = await authApi.resetPassword({
-				token: 'reset-token',
+				confirmPassword: 'new-password',
 				password: 'new-password',
-				confirmPassword: 'new-password'
+				token: 'reset-token'
 			});
 
 			expect(mockHttpClient.post).toHaveBeenCalledWith('/auth/reset-password', {
-				token: 'reset-token',
+				confirmPassword: 'new-password',
 				password: 'new-password',
-				confirmPassword: 'new-password'
+				token: 'reset-token'
 			});
 			expect(result).toEqual(mockResponse);
 		});
@@ -210,9 +211,9 @@ describe('Auth API', () => {
 
 			await expect(
 				authApi.resetPassword({
-					token: 'invalid-token',
+					confirmPassword: 'new-password',
 					password: 'new-password',
-					confirmPassword: 'new-password'
+					token: 'invalid-token'
 				})
 			).rejects.toThrow('Invalid token');
 		});

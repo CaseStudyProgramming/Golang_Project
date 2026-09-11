@@ -10,15 +10,6 @@
 
 import type { Metric } from 'web-vitals';
 
-// Web Vitals types
-interface WebVitalsData {
-  FCP?: number; // First Contentful Paint
-  LCP?: number; // Largest Contentful Paint
-  FID?: number; // First Input Delay
-  CLS?: number; // Cumulative Layout Shift
-  TTFB?: number; // Time to First Byte
-}
-
 // Custom metrics
 interface CustomMetrics {
   apiResponseTime: number;
@@ -35,14 +26,23 @@ interface PerformanceData {
   userAgent: string;
 }
 
+// Web Vitals types
+interface WebVitalsData {
+  FCP?: number; // First Contentful Paint
+  LCP?: number; // Largest Contentful Paint
+  FID?: number; // First Input Delay
+  CLS?: number; // Cumulative Layout Shift
+  TTFB?: number; // Time to First Byte
+}
+
 class PerformanceMonitor {
-  private metrics: WebVitalsData = {};
   private customMetrics: CustomMetrics = {
     apiResponseTime: 0,
-    renderTime: 0,
-    componentLoadTime: 0
+    componentLoadTime: 0,
+    renderTime: 0
   };
   private isEnabled: boolean;
+  private metrics: WebVitalsData = {};
   private reportingEndpoint?: string;
 
   constructor(options: { enabled?: boolean; reportingEndpoint?: string } = {}) {
@@ -55,11 +55,113 @@ class PerformanceMonitor {
   }
 
   /**
+   * Clear all metrics
+   */
+  clearMetrics(): void {
+    this.metrics = {};
+    this.customMetrics = {
+      apiResponseTime: 0,
+      componentLoadTime: 0,
+      renderTime: 0
+    };
+  }
+
+  /**
+   * Get current performance data
+   */
+  getPerformanceData(): PerformanceData {
+    return {
+      customMetrics: this.customMetrics,
+      timestamp: Date.now(),
+      url: typeof window !== 'undefined' ? window.location.href : '',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      webVitals: this.metrics
+    };
+  }
+
+  /**
+   * Enable/disable monitoring
+   */
+  setEnabled(enabled: boolean): void {
+    this.isEnabled = enabled;
+  }
+
+  /**
+   * Set reporting endpoint
+   */
+  setReportingEndpoint(endpoint: string): void {
+    this.reportingEndpoint = endpoint;
+  }
+
+  /**
+   * Track API response time
+   */
+  trackApiCall(url: string, startTime: number): void {
+    const duration = performance.now() - startTime;
+    this.customMetrics.apiResponseTime = duration;
+    
+    if (this.isEnabled) {
+      console.log(`[Performance] API call to ${url}:`, duration);
+      
+      if (this.reportingEndpoint) {
+        this.sendToReportingService({
+          duration,
+          timestamp: Date.now(),
+          type: 'api_call',
+          url
+        });
+      }
+    }
+  }
+
+  /**
+   * Track component render time
+   */
+  trackComponentRender(componentName: string, startTime: number): void {
+    const duration = performance.now() - startTime;
+    this.customMetrics.componentLoadTime = duration;
+    
+    if (this.isEnabled) {
+      console.log(`[Performance] Component ${componentName} render:`, duration);
+      
+      if (this.reportingEndpoint) {
+        this.sendToReportingService({
+          componentName,
+          duration,
+          timestamp: Date.now(),
+          type: 'component_render'
+        });
+      }
+    }
+  }
+
+  /**
+   * Track page render time
+   */
+  trackPageRender(pageName: string, startTime: number): void {
+    const duration = performance.now() - startTime;
+    this.customMetrics.renderTime = duration;
+    
+    if (this.isEnabled) {
+      console.log(`[Performance] Page ${pageName} render:`, duration);
+      
+      if (this.reportingEndpoint) {
+        this.sendToReportingService({
+          duration,
+          pageName,
+          timestamp: Date.now(),
+          type: 'page_render'
+        });
+      }
+    }
+  }
+
+  /**
    * Initialize Web Vitals monitoring
    */
   private async initializeWebVitals(): Promise<void> {
     try {
-      const { onCLS, onFID, onFCP, onLCP, onTTFB } = await import('web-vitals');
+      const { onCLS, onFCP, onFID, onLCP, onTTFB } = await import('web-vitals');
 
       onCLS((metric: Metric) => {
         this.metrics.CLS = metric.value;
@@ -102,10 +204,10 @@ class PerformanceMonitor {
     if (this.reportingEndpoint) {
       this.sendToReportingService({
         name,
-        value: metric.value,
-        rating: metric.rating,
         navigationType: metric.navigationType,
-        timestamp: Date.now()
+        rating: metric.rating,
+        timestamp: Date.now(),
+        value: metric.value
       });
     }
   }
@@ -123,113 +225,11 @@ class PerformanceMonitor {
     } else {
       // Fallback to fetch
       fetch(this.reportingEndpoint, {
-        method: 'POST',
         body: JSON.stringify(data),
-        keepalive: true
+        keepalive: true,
+        method: 'POST'
       }).catch(err => console.warn('Failed to send metrics:', err));
     }
-  }
-
-  /**
-   * Track API response time
-   */
-  trackApiCall(url: string, startTime: number): void {
-    const duration = performance.now() - startTime;
-    this.customMetrics.apiResponseTime = duration;
-    
-    if (this.isEnabled) {
-      console.log(`[Performance] API call to ${url}:`, duration);
-      
-      if (this.reportingEndpoint) {
-        this.sendToReportingService({
-          type: 'api_call',
-          url,
-          duration,
-          timestamp: Date.now()
-        });
-      }
-    }
-  }
-
-  /**
-   * Track component render time
-   */
-  trackComponentRender(componentName: string, startTime: number): void {
-    const duration = performance.now() - startTime;
-    this.customMetrics.componentLoadTime = duration;
-    
-    if (this.isEnabled) {
-      console.log(`[Performance] Component ${componentName} render:`, duration);
-      
-      if (this.reportingEndpoint) {
-        this.sendToReportingService({
-          type: 'component_render',
-          componentName,
-          duration,
-          timestamp: Date.now()
-        });
-      }
-    }
-  }
-
-  /**
-   * Track page render time
-   */
-  trackPageRender(pageName: string, startTime: number): void {
-    const duration = performance.now() - startTime;
-    this.customMetrics.renderTime = duration;
-    
-    if (this.isEnabled) {
-      console.log(`[Performance] Page ${pageName} render:`, duration);
-      
-      if (this.reportingEndpoint) {
-        this.sendToReportingService({
-          type: 'page_render',
-          pageName,
-          duration,
-          timestamp: Date.now()
-        });
-      }
-    }
-  }
-
-  /**
-   * Get current performance data
-   */
-  getPerformanceData(): PerformanceData {
-    return {
-      webVitals: this.metrics,
-      customMetrics: this.customMetrics,
-      timestamp: Date.now(),
-      url: typeof window !== 'undefined' ? window.location.href : '',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
-    };
-  }
-
-  /**
-   * Enable/disable monitoring
-   */
-  setEnabled(enabled: boolean): void {
-    this.isEnabled = enabled;
-  }
-
-  /**
-   * Set reporting endpoint
-   */
-  setReportingEndpoint(endpoint: string): void {
-    this.reportingEndpoint = endpoint;
-  }
-
-  /**
-   * Clear all metrics
-   */
-  clearMetrics(): void {
-    this.metrics = {};
-    this.customMetrics = {
-      apiResponseTime: 0,
-      renderTime: 0,
-      componentLoadTime: 0
-    };
   }
 }
 
@@ -258,27 +258,22 @@ export function getPerformanceMonitor(): PerformanceMonitor {
  */
 export const performanceUtils = {
   /**
-   * Measure function execution time
+   * Get navigation timing
    */
-  async measureFunction<T>(
-    name: string,
-    fn: () => Promise<T>
-  ): Promise<T> {
-    const start = performance.now();
-    try {
-      const result = await fn();
-      const duration = performance.now() - start;
-      
-      if (performanceMonitor) {
-        console.log(`[Performance] ${name}:`, duration);
-      }
-      
-      return result;
-    } catch (error) {
-      const duration = performance.now() - start;
-      console.error(`[Performance] ${name} failed after:`, duration);
-      throw error;
+  getNavigationTiming(): null | Record<string, number> {
+    if (typeof performance === 'undefined' || !performance.timing) {
+      return null;
     }
+
+    const timing = performance.timing;
+    return {
+      dns: timing.domainLookupEnd - timing.domainLookupStart,
+      domProcessing: timing.domComplete - timing.domLoading,
+      download: timing.responseEnd - timing.responseStart,
+      tcp: timing.connectEnd - timing.connectStart,
+      total: timing.loadEventEnd - timing.navigationStart,
+      ttfb: timing.responseStart - timing.requestStart
+    };
   },
 
   /**
@@ -308,22 +303,27 @@ export const performanceUtils = {
   },
 
   /**
-   * Get navigation timing
+   * Measure function execution time
    */
-  getNavigationTiming(): Record<string, number> | null {
-    if (typeof performance === 'undefined' || !performance.timing) {
-      return null;
+  async measureFunction<T>(
+    name: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const start = performance.now();
+    try {
+      const result = await fn();
+      const duration = performance.now() - start;
+      
+      if (performanceMonitor) {
+        console.log(`[Performance] ${name}:`, duration);
+      }
+      
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      console.error(`[Performance] ${name} failed after:`, duration);
+      throw error;
     }
-
-    const timing = performance.timing;
-    return {
-      dns: timing.domainLookupEnd - timing.domainLookupStart,
-      tcp: timing.connectEnd - timing.connectStart,
-      ttfb: timing.responseStart - timing.requestStart,
-      download: timing.responseEnd - timing.responseStart,
-      domProcessing: timing.domComplete - timing.domLoading,
-      total: timing.loadEventEnd - timing.navigationStart
-    };
   }
 };
 

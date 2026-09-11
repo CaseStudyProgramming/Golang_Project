@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import type { Toast as ToastType } from '../stores/toast.store';
+
+function getIconColors(type: ToastType['type']): string {
+	return type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
+}
 
 // Helper functions to test the logic without type narrowing issues
 function getTypeColors(type: ToastType['type']): string {
 	return type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-blue-50 border-blue-200 text-blue-800';
-}
-
-function getIconColors(type: ToastType['type']): string {
-	return type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-yellow-500' : 'text-blue-500';
 }
 
 describe('Toast Component Logic', () => {
@@ -67,17 +68,17 @@ describe('Toast Component Logic', () => {
 	it('determines when to show message', () => {
 	 const toast: ToastType = {
 			id: '1',
-			type: 'info',
+			message: 'Test message',
 			title: 'Test',
-			message: 'Test message'
+			type: 'info'
 		};
 		const shouldShowMessage = toast.message !== undefined;
 		expect(shouldShowMessage).toBeTruthy();
 
 		const toastWithoutMessage: ToastType = {
 			id: '2',
-			type: 'info',
-			title: 'Test'
+			title: 'Test',
+			type: 'info'
 		};
 		const shouldNotShowMessage = toastWithoutMessage.message !== undefined;
 		expect(shouldNotShowMessage).toBeFalsy();

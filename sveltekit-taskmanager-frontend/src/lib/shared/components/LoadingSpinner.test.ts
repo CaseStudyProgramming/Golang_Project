@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-// Helper functions to test the logic without type narrowing issues
-function getSizeClasses(size: 'sm' | 'md' | 'lg'): string {
-	return size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-12 w-12' : 'h-8 w-8';
+function getColorClasses(color: 'blue' | 'gray' | 'white'): string {
+	return color === 'white' ? 'border-white' : color === 'gray' ? 'border-gray-400' : 'border-blue-600';
 }
 
-function getColorClasses(color: 'blue' | 'white' | 'gray'): string {
-	return color === 'white' ? 'border-white' : color === 'gray' ? 'border-gray-400' : 'border-blue-600';
+// Helper functions to test the logic without type narrowing issues
+function getSizeClasses(size: 'lg' | 'md' | 'sm'): string {
+	return size === 'sm' ? 'h-4 w-4' : size === 'lg' ? 'h-12 w-12' : 'h-8 w-8';
 }
 
 describe('LoadingSpinner Component Logic', () => {

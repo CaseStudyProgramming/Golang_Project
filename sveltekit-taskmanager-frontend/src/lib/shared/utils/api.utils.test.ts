@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError } from './error.utils';
 import { HttpClient } from './api.utils';
+import { ApiError } from './error.utils';
 
 // Mock window object for tests
 const localStorageMock = {
@@ -81,8 +81,8 @@ describe('HttpClient', () => {
 		expect(globalThis.fetch).toHaveBeenCalledWith(
 			'http://localhost:8080/test',
 			expect.objectContaining({
-				method: 'POST',
-				body: JSON.stringify({ name: 'test' })
+				body: JSON.stringify({ name: 'test' }),
+				method: 'POST'
 			})
 		);
 	});
@@ -101,8 +101,8 @@ describe('HttpClient', () => {
 		expect(globalThis.fetch).toHaveBeenCalledWith(
 			'http://localhost:8080/test/1',
 			expect.objectContaining({
-				method: 'PUT',
-				body: JSON.stringify({ name: 'updated' })
+				body: JSON.stringify({ name: 'updated' }),
+				method: 'PUT'
 			})
 		);
 	});
@@ -121,8 +121,8 @@ describe('HttpClient', () => {
 		expect(globalThis.fetch).toHaveBeenCalledWith(
 			'http://localhost:8080/test/1',
 			expect.objectContaining({
-				method: 'PATCH',
-				body: JSON.stringify({ status: 'active' })
+				body: JSON.stringify({ status: 'active' }),
+				method: 'PATCH'
 			})
 		);
 	});
@@ -258,7 +258,7 @@ describe('HttpClient', () => {
 
 	it('handles request timeout', async () => {
 		// Simplified timeout test - just verify timeout option is accepted
-		const client = new HttpClient('http://localhost:8080', { timeout: 100, retries: 0 });
+		const client = new HttpClient('http://localhost:8080', { retries: 0, timeout: 100 });
 		expect(client).toBeDefined();
 	});
 
@@ -326,7 +326,7 @@ describe('HttpClient', () => {
 	});
 
 	it('parses error data from failed response', async () => {
-		const errorData = { message: 'Validation failed', field: 'email' };
+		const errorData = { field: 'email', message: 'Validation failed' };
 		globalThis.fetch = vi.fn(() =>
 			Promise.resolve({
 				json: () => Promise.resolve(errorData),

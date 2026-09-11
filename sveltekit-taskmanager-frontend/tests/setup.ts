@@ -1,8 +1,8 @@
-import { vi, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/svelte';
-import '@testing-library/jest-dom';
 import { http, HttpResponse } from 'msw';
+import '@testing-library/jest-dom';
 import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 // Setup Testing Library cleanup
 afterEach(() => {
@@ -18,10 +18,10 @@ vi.mock('$env/static/private', () => ({}));
 
 // Mock localStorage
 const localStorageMock = {
+	clear: vi.fn(),
 	getItem: vi.fn(() => null),
 	removeItem: vi.fn(),
-	setItem: vi.fn(),
-	clear: vi.fn()
+	setItem: vi.fn()
 };
 
 // Ensure localStorage is available globally
@@ -42,10 +42,10 @@ if (!globalThis.window?.location) {
 	Object.defineProperty(globalThis, 'window', {
 		value: {
 			...globalThis.window,
-			location: locationMock,
 			document: {
 				cookie: ''
-			}
+			},
+			location: locationMock
 		},
 		writable: true
 	});
@@ -71,18 +71,18 @@ const server = setupServer(
 	// Example API mocks - add more as needed
 	http.get('http://localhost:8080/api/tasks', () => {
 		return HttpResponse.json({
-			tasks: [],
-			total: 0,
+			limit: 10,
 			page: 1,
-			limit: 10
+			tasks: [],
+			total: 0
 		});
 	}),
 	http.post('http://localhost:8080/api/auth/login', () => {
 		return HttpResponse.json({
 			token: 'mock-token',
 			user: {
-				id: '1',
 				email: 'test@example.com',
+				id: '1',
 				name: 'Test User'
 			}
 		});

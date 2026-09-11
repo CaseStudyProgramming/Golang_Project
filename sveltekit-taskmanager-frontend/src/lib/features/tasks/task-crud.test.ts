@@ -4,19 +4,19 @@ describe('Task CRUD Operations', () => {
 	describe('Create Task', () => {
 		it('creates task with valid data', async () => {
 			const taskData = {
-				title: 'New Task',
+				categoryId: '1',
 				description: 'Task description',
-				priority: 'high' as const,
 				dueDate: '2024-12-31',
-				categoryId: '1'
+				priority: 'high' as const,
+				title: 'New Task'
 			};
 
 			// Simulate task creation
 			const newTask = {
 				id: '1',
 				...taskData,
-				status: 'todo' as const,
 				createdAt: new Date().toISOString(),
+				status: 'todo' as const,
 				updatedAt: new Date().toISOString(),
 				userId: '1'
 			};
@@ -28,8 +28,8 @@ describe('Task CRUD Operations', () => {
 
 		it('validates required task fields', () => {
 			const invalidTask = {
-				title: '',
-				description: 'Description'
+				description: 'Description',
+				title: ''
 			};
 
 			const isValid = invalidTask.title.length > 0;
@@ -57,10 +57,10 @@ describe('Task CRUD Operations', () => {
 		it('fetches single task by ID', async () => {
 			const taskId = '1';
 			const mockTask = {
-				id: taskId,
-				title: 'Test Task',
-				status: 'todo' as const,
 				createdAt: new Date().toISOString(),
+				id: taskId,
+				status: 'todo' as const,
+				title: 'Test Task',
 				updatedAt: new Date().toISOString(),
 				userId: '1'
 			};
@@ -92,8 +92,8 @@ describe('Task CRUD Operations', () => {
 					{ id: '1', title: 'Task 1' },
 					{ id: '2', title: 'Task 2' }
 				],
-				page,
 				limit,
+				page,
 				total: 2,
 				totalPages: 1
 			};
@@ -107,8 +107,8 @@ describe('Task CRUD Operations', () => {
 		it('updates existing task', async () => {
 			const existingTask = {
 				id: '1',
-				title: 'Original Title',
-				status: 'todo' as const
+				status: 'todo' as const,
+				title: 'Original Title'
 			};
 			const updateData = { title: 'Updated Title' };
 
@@ -146,8 +146,8 @@ describe('Task CRUD Operations', () => {
 		it('soft deletes task', async () => {
 			const task = {
 				id: '1',
-				title: 'Task to delete',
-				status: 'todo' as const
+				status: 'todo' as const,
+				title: 'Task to delete'
 			};
 
 			// Simulate soft delete
@@ -174,8 +174,8 @@ describe('Task CRUD Operations', () => {
 		it('restores soft-deleted task', async () => {
 			const deletedTask = {
 				id: '1',
-				title: 'Deleted Task',
-				status: 'deleted' as const
+				status: 'deleted' as const,
+				title: 'Deleted Task'
 			};
 
 			// Simulate restore
@@ -188,9 +188,9 @@ describe('Task CRUD Operations', () => {
 	describe('Task Filtering and Sorting', () => {
 		it('filters tasks by status', () => {
 			const tasks = [
-				{ id: '1', title: 'Task 1', status: 'todo' },
-				{ id: '2', title: 'Task 2', status: 'completed' },
-				{ id: '3', title: 'Task 3', status: 'todo' }
+				{ id: '1', status: 'todo', title: 'Task 1' },
+				{ id: '2', status: 'completed', title: 'Task 2' },
+				{ id: '3', status: 'todo', title: 'Task 3' }
 			];
 
 			const filtered = tasks.filter(task => task.status === 'todo');
@@ -201,9 +201,9 @@ describe('Task CRUD Operations', () => {
 
 		it('filters tasks by priority', () => {
 			const tasks = [
-				{ id: '1', title: 'Task 1', priority: 'high' },
-				{ id: '2', title: 'Task 2', priority: 'low' },
-				{ id: '3', title: 'Task 3', priority: 'high' }
+				{ id: '1', priority: 'high', title: 'Task 1' },
+				{ id: '2', priority: 'low', title: 'Task 2' },
+				{ id: '3', priority: 'high', title: 'Task 3' }
 			];
 
 			const filtered = tasks.filter(task => task.priority === 'high');
@@ -213,9 +213,9 @@ describe('Task CRUD Operations', () => {
 
 		it('sorts tasks by due date', () => {
 			const tasks = [
-				{ id: '1', title: 'Task 1', dueDate: '2024-12-31' },
-				{ id: '2', title: 'Task 2', dueDate: '2024-01-01' },
-				{ id: '3', title: 'Task 3', dueDate: '2024-06-15' }
+				{ dueDate: '2024-12-31', id: '1', title: 'Task 1' },
+				{ dueDate: '2024-01-01', id: '2', title: 'Task 2' },
+				{ dueDate: '2024-06-15', id: '3', title: 'Task 3' }
 			];
 
 			const sorted = [...tasks].sort((a, b) => 
@@ -228,9 +228,9 @@ describe('Task CRUD Operations', () => {
 
 		it('combines multiple filters', () => {
 			const tasks = [
-				{ id: '1', title: 'Task 1', status: 'todo', priority: 'high' },
-				{ id: '2', title: 'Task 2', status: 'completed', priority: 'high' },
-				{ id: '3', title: 'Task 3', status: 'todo', priority: 'low' }
+				{ id: '1', priority: 'high', status: 'todo', title: 'Task 1' },
+				{ id: '2', priority: 'high', status: 'completed', title: 'Task 2' },
+				{ id: '3', priority: 'low', status: 'todo', title: 'Task 3' }
 			];
 
 			const filtered = tasks.filter(task => 
@@ -246,14 +246,14 @@ describe('Task CRUD Operations', () => {
 		it('adds subtask to task', async () => {
 			const task = {
 				id: '1',
-				title: 'Main Task',
-				subtasks: []
+				subtasks: [],
+				title: 'Main Task'
 			};
 
 			const newSubtask = {
 				id: 'sub-1',
-				title: 'Subtask 1',
-				isCompleted: false
+				isCompleted: false,
+				title: 'Subtask 1'
 			};
 
 			// Simulate adding subtask
@@ -270,7 +270,7 @@ describe('Task CRUD Operations', () => {
 			const task = {
 				id: '1',
 				subtasks: [
-					{ id: 'sub-1', title: 'Subtask 1', isCompleted: false }
+					{ id: 'sub-1', isCompleted: false, title: 'Subtask 1' }
 				]
 			};
 

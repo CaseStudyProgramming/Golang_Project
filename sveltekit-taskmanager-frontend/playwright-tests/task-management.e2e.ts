@@ -29,8 +29,8 @@ test.describe('Task Management E2E Tests', () => {
 		
 		// Verify task items are displayed
 		const taskItems = page.locator('[data-testid="task-item"]');
-		const count = await taskItems.count();
-		
+		const _count = await taskItems.count();
+
 		// At least verify the task list container exists
 		await expect(page.locator('[data-testid="task-list"]')).toBeVisible();
 	});

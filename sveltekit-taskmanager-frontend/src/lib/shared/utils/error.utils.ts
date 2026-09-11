@@ -50,6 +50,13 @@ export class ValidationError extends Error {
 const errorHandlers: ErrorHandler[] = [];
 
 /**
+ * Clear all registered error handlers (for testing)
+ */
+export function clearErrorHandlers(): void {
+	errorHandlers.length = 0;
+}
+
+/**
  * Get user-friendly error message
  */
 export function getErrorMessage(error: unknown): string {
@@ -138,11 +145,4 @@ function executeErrorHandlers(error: Error): void {
 			console.error('Error in error handler:', handlerError);
 		}
 	});
-}
-
-/**
- * Clear all registered error handlers (for testing)
- */
-export function clearErrorHandlers(): void {
-	errorHandlers.length = 0;
 }

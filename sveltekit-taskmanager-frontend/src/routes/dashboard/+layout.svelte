@@ -2,18 +2,22 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/features/auth';
 	import { LoadingSpinner } from '$lib/shared/components';
-	import { toastStore, confirmStore } from '$lib/shared/stores';
+	import { confirmStore, toastStore } from '$lib/shared/stores';
 
 	let { children } = $props();
 	let isLoggingOut = $state(false);
 	let isMobileMenuOpen = $state(false);
 
+	function closeMobileMenu() {
+		isMobileMenuOpen = false;
+	}
+
 	async function handleLogout() {
 		const confirmed = await confirmStore.showConfirm({
-			title: 'Logout',
-			message: 'Are you sure you want to logout?',
-			confirmText: 'Logout',
 			cancelText: 'Cancel',
+			confirmText: 'Logout',
+			message: 'Are you sure you want to logout?',
+			title: 'Logout',
 			type: 'info'
 		});
 
@@ -34,10 +38,6 @@
 
 	function toggleMobileMenu() {
 		isMobileMenuOpen = !isMobileMenuOpen;
-	}
-
-	function closeMobileMenu() {
-		isMobileMenuOpen = false;
 	}
 </script>
 

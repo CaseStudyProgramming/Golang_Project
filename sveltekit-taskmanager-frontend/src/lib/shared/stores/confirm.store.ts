@@ -3,8 +3,6 @@
  * Manages confirmation dialogs for destructive actions
  */
 
-export type ConfirmType = 'danger' | 'warning' | 'info';
-
 export interface ConfirmDialog {
 	id: string;
 	isOpen: boolean;
@@ -13,9 +11,11 @@ export interface ConfirmDialog {
 	confirmText: string;
 	cancelText: string;
 	type: ConfirmType;
-	onConfirm?: () => void | Promise<void>;
+	onConfirm?: () => Promise<void> | void;
 	onCancel?: () => void;
 }
+
+export type ConfirmType = 'danger' | 'info' | 'warning';
 
 interface ConfirmState {
 	dialog: ConfirmDialog | null;
@@ -40,15 +40,15 @@ function createConfirmStore() {
 				...options,
 				id,
 				isOpen: true,
-				onConfirm: async () => {
-					await options.onConfirm?.();
-					state.dialog = null;
-					resolve(true);
-				},
 				onCancel: () => {
 					options.onCancel?.();
 					state.dialog = null;
 					resolve(false);
+				},
+				onConfirm: async () => {
+					await options.onConfirm?.();
+					state.dialog = null;
+					resolve(true);
 				}
 			};
 		});
@@ -62,8 +62,8 @@ function createConfirmStore() {
 	}
 
 	return {
-		showConfirm,
 		closeConfirm,
+		showConfirm,
 		get state() {
 			return state;
 		}
@@ -83,8 +83,8 @@ function createSSRConfirmStore() {
 	};
 
 	return {
-		showConfirm: async () => false,
 		closeConfirm: () => {},
+		showConfirm: async () => false,
 		get state() {
 			return state;
 		}

@@ -314,31 +314,31 @@ let authStoreInstance: null | ReturnType<typeof createAuthStore> = null;
 // Create a safe SSR-compatible default store
 function createSSRAuthStore() {
 	const state: AuthState = {
+		error: null,
 		isAuthenticated: false,
-		user: null,
-		token: null,
 		isLoading: false,
-		error: null
+		token: null,
+		user: null
 	};
 
 	return {
-		login: async () => { throw new Error('Auth store not available during SSR'); },
-		logout: async () => { throw new Error('Auth store not available during SSR'); },
-		register: async () => { throw new Error('Auth store not available during SSR'); },
-		initialize: () => {},
 		cleanup: () => {},
 		clearError: () => {},
 		ensureValidToken: async () => {},
 		fetchCurrentUser: async () => {},
 		getRedirectUrl: () => null,
+		initialize: () => {},
+		login: async () => { throw new Error('Auth store not available during SSR'); },
+		logout: async () => { throw new Error('Auth store not available during SSR'); },
 		needsTokenRefresh: () => false,
 		redirectAfterAuth: async () => {},
 		refreshToken: async () => {},
+		register: async () => { throw new Error('Auth store not available during SSR'); },
 		saveRedirectUrl: () => {},
-		updateUser: () => {},
 		get state() {
 			return state;
-		}
+		},
+		updateUser: () => {}
 	};
 }
 

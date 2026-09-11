@@ -149,7 +149,7 @@ describe('Routing and Navigation', () => {
 		});
 
 		it('builds query strings from objects', () => {
-			const params = { page: '2', limit: '10', filter: 'active' };
+			const params = { filter: 'active', limit: '10', page: '2' };
 			const queryString = new URLSearchParams(params).toString();
 
 			expect(queryString).toBe('page=2&limit=10&filter=active');
@@ -254,8 +254,8 @@ describe('Routing and Navigation', () => {
 		it('extracts page titles from routes', () => {
 			const routeMetadata = {
 				'/dashboard': { title: 'Dashboard' },
-				'/tasks': { title: 'Tasks' },
-				'/settings': { title: 'Settings' }
+				'/settings': { title: 'Settings' },
+				'/tasks': { title: 'Tasks' }
 			};
 
 			const currentRoute = '/tasks';

@@ -68,21 +68,21 @@ describe('Auth Store Logic', () => {
 
 		it('clears user state on logout', () => {
 			type AuthState = {
-				user: { email: string; id: string; name: string } | null;
-				token: string | null;
 				isAuthenticated: boolean;
+				token: null | string;
+				user: null | { email: string; id: string; name: string };
 			};
 
 			const state: AuthState = {
-				user: { email: 'test@example.com', id: '1', name: 'Test' },
+				isAuthenticated: true,
 				token: 'auth-token',
-				isAuthenticated: true
+				user: { email: 'test@example.com', id: '1', name: 'Test' }
 			};
 
 			const clearedState: AuthState = {
-				user: null,
+				isAuthenticated: false,
 				token: null,
-				isAuthenticated: false
+				user: null
 			};
 
 			expect(clearedState.user).toBe(null);
@@ -100,7 +100,7 @@ describe('Auth Store Logic', () => {
 		});
 
 		it('clears error state', () => {
-			type ErrorState = { error: string | null };
+			type ErrorState = { error: null | string };
 			const state: ErrorState = { error: 'Test error' };
 			state.error = null;
 

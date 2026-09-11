@@ -67,8 +67,8 @@ describe('Error Scenarios', () => {
 
 		it('handles required field validation', () => {
 			const formData = {
-				title: '',
-				description: 'Task description'
+				description: 'Task description',
+				title: ''
 			};
 
 			const errors = {
@@ -92,10 +92,10 @@ describe('Error Scenarios', () => {
 		it('handles 400 Bad Request errors', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Invalid request data' }),
 					ok: false,
 					status: 400,
-					statusText: 'Bad Request',
-					json: () => Promise.resolve({ error: 'Invalid request data' })
+					statusText: 'Bad Request'
 				} as Response)
 			);
 
@@ -110,10 +110,10 @@ describe('Error Scenarios', () => {
 		it('handles 401 Unauthorized errors', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Authentication required' }),
 					ok: false,
 					status: 401,
-					statusText: 'Unauthorized',
-					json: () => Promise.resolve({ error: 'Authentication required' })
+					statusText: 'Unauthorized'
 				} as Response)
 			);
 
@@ -127,10 +127,10 @@ describe('Error Scenarios', () => {
 		it('handles 403 Forbidden errors', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Insufficient permissions' }),
 					ok: false,
 					status: 403,
-					statusText: 'Forbidden',
-					json: () => Promise.resolve({ error: 'Insufficient permissions' })
+					statusText: 'Forbidden'
 				} as Response)
 			);
 
@@ -144,10 +144,10 @@ describe('Error Scenarios', () => {
 		it('handles 404 Not Found errors', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Resource not found' }),
 					ok: false,
 					status: 404,
-					statusText: 'Not Found',
-					json: () => Promise.resolve({ error: 'Resource not found' })
+					statusText: 'Not Found'
 				} as Response)
 			);
 
@@ -161,10 +161,10 @@ describe('Error Scenarios', () => {
 		it('handles 500 Internal Server Error', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Server error occurred' }),
 					ok: false,
 					status: 500,
-					statusText: 'Internal Server Error',
-					json: () => Promise.resolve({ error: 'Server error occurred' })
+					statusText: 'Internal Server Error'
 				} as Response)
 			);
 
@@ -178,10 +178,10 @@ describe('Error Scenarios', () => {
 		it('handles 503 Service Unavailable errors', async () => {
 			const mockFetch = vi.fn(() =>
 				Promise.resolve({
+					json: () => Promise.resolve({ error: 'Service temporarily unavailable' }),
 					ok: false,
 					status: 503,
-					statusText: 'Service Unavailable',
-					json: () => Promise.resolve({ error: 'Service temporarily unavailable' })
+					statusText: 'Service Unavailable'
 				} as Response)
 			);
 
@@ -205,7 +205,7 @@ describe('Error Scenarios', () => {
 
 		it('handles constraint violations', async () => {
 			const parentTask = { id: '1', title: 'Parent Task' };
-			const childTask = { id: '2', title: 'Child Task', parentId: '999' };
+			const childTask = { id: '2', parentId: '999', title: 'Child Task' };
 
 			const parentExists = parentTask.id === childTask.parentId;
 
@@ -229,8 +229,8 @@ describe('Error Scenarios', () => {
 	describe('State Management Errors', () => {
 		it('handles inconsistent state', () => {
 			const taskState = {
-				tasks: [{ id: '1', status: 'completed' }],
-				filter: { status: 'todo' }
+				filter: { status: 'todo' },
+				tasks: [{ id: '1', status: 'completed' }]
 			};
 
 			const visibleTasks = taskState.tasks.filter(t => t.status === taskState.filter.status);

@@ -6,12 +6,12 @@ describe('Tag Store Logic', () => {
 	describe('Tag CRUD Operations', () => {
 		it('creates new tag with required fields', () => {
 			const tag: Tag = {
+				color: '#3B82F6',
+				createdAt: new Date().toISOString(),
 				id: '123',
 				name: 'Work',
-				color: '#3B82F6',
-				userId: 'user1',
-				createdAt: new Date().toISOString(),
-				updatedAt: new Date().toISOString()
+				updatedAt: new Date().toISOString(),
+				userId: 'user1'
 			};
 
 			expect(tag.id).toBe('123');
@@ -22,18 +22,18 @@ describe('Tag Store Logic', () => {
 
 		it('updates existing tag', () => {
 			const originalTag: Tag = {
+				color: '#10B981',
+				createdAt: '2024-01-01T00:00:00Z',
 				id: '123',
 				name: 'Personal',
-				color: '#10B981',
-				userId: 'user1',
-				createdAt: '2024-01-01T00:00:00Z',
-				updatedAt: '2024-01-01T00:00:00Z'
+				updatedAt: '2024-01-01T00:00:00Z',
+				userId: 'user1'
 			};
 
 			const updatedTag: Tag = {
 				...originalTag,
-				name: 'Updated Personal',
 				color: '#F59E0B',
+				name: 'Updated Personal',
 				updatedAt: new Date().toISOString()
 			};
 
@@ -44,8 +44,8 @@ describe('Tag Store Logic', () => {
 
 		it('deletes tag from array', () => {
 			const tags: Tag[] = [
-				{ id: '1', name: 'Tag 1', color: '#3B82F6', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', name: 'Tag 2', color: '#10B981', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' }
+				{ color: '#3B82F6', createdAt: '2024-01-01T00:00:00Z', id: '1', name: 'Tag 1', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' },
+				{ color: '#10B981', createdAt: '2024-01-01T00:00:00Z', id: '2', name: 'Tag 2', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' }
 			];
 
 			const filtered = tags.filter(t => t.id !== '1');
@@ -75,27 +75,27 @@ describe('Tag Store Logic', () => {
 	describe('Current Tag Management', () => {
 		it('sets current tag', () => {
 			const tag: Tag = {
+				color: '#8B5CF6',
+				createdAt: '2024-01-01T00:00:00Z',
 				id: '123',
 				name: 'Current',
-				color: '#8B5CF6',
-				userId: 'user1',
-				createdAt: '2024-01-01T00:00:00Z',
-				updatedAt: '2024-01-01T00:00:00Z'
+				updatedAt: '2024-01-01T00:00:00Z',
+				userId: 'user1'
 			};
 
-			let currentTag: Tag | null = null;
+			let currentTag: null | Tag = null;
 			currentTag = tag;
 			expect(currentTag).toEqual(tag);
 		});
 
 		it('clears current tag', () => {
-			let currentTag: Tag | null = {
+			let currentTag: null | Tag = {
+				color: '#8B5CF6',
+				createdAt: '2024-01-01T00:00:00Z',
 				id: '123',
 				name: 'Current',
-				color: '#8B5CF6',
-				userId: 'user1',
-				createdAt: '2024-01-01T00:00:00Z',
-				updatedAt: '2024-01-01T00:00:00Z'
+				updatedAt: '2024-01-01T00:00:00Z',
+				userId: 'user1'
 			};
 
 			currentTag = null;
@@ -104,20 +104,20 @@ describe('Tag Store Logic', () => {
 
 		it('updates current tag when tag is updated', () => {
 			const originalTag: Tag = {
+				color: '#3B82F6',
+				createdAt: '2024-01-01T00:00:00Z',
 				id: '123',
 				name: 'Original',
-				color: '#3B82F6',
-				userId: 'user1',
-				createdAt: '2024-01-01T00:00:00Z',
-				updatedAt: '2024-01-01T00:00:00Z'
+				updatedAt: '2024-01-01T00:00:00Z',
+				userId: 'user1'
 			};
 
 			let currentTag: Tag = originalTag;
 
 			const updatedTag: Tag = {
 				...originalTag,
-				name: 'Updated',
 				color: '#10B981',
+				name: 'Updated',
 				updatedAt: new Date().toISOString()
 			};
 
@@ -129,13 +129,13 @@ describe('Tag Store Logic', () => {
 
 	describe('Error Handling', () => {
 		it('sets error message', () => {
-			let error: string | null = null;
+			let error: null | string = null;
 			error = 'Failed to fetch tags';
 			expect(error).toBe('Failed to fetch tags');
 		});
 
 		it('clears error state', () => {
-			let error: string | null = 'Some error';
+			let error: null | string = 'Some error';
 			error = null;
 			expect(error).toBeNull();
 		});
@@ -158,7 +158,7 @@ describe('Tag Store Logic', () => {
 	describe('State Reset', () => {
 		it('resets tag list', () => {
 			let tags: Tag[] = [
-				{ id: '1', name: 'Tag 1', color: '#3B82F6', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' }
+				{ color: '#3B82F6', createdAt: '2024-01-01T00:00:00Z', id: '1', name: 'Tag 1', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' }
 			];
 
 			tags = [];
@@ -166,13 +166,13 @@ describe('Tag Store Logic', () => {
 		});
 
 		it('resets current tag', () => {
-			let currentTag: Tag | null = {
+			let currentTag: null | Tag = {
+				color: '#8B5CF6',
+				createdAt: '2024-01-01T00:00:00Z',
 				id: '123',
 				name: 'Current',
-				color: '#8B5CF6',
-				userId: 'user1',
-				createdAt: '2024-01-01T00:00:00Z',
-				updatedAt: '2024-01-01T00:00:00Z'
+				updatedAt: '2024-01-01T00:00:00Z',
+				userId: 'user1'
 			};
 
 			currentTag = null;
@@ -180,7 +180,7 @@ describe('Tag Store Logic', () => {
 		});
 
 		it('resets error state', () => {
-			let error: string | null = 'Some error';
+			let error: null | string = 'Some error';
 			let isLoading = true;
 
 			error = null;
@@ -194,9 +194,9 @@ describe('Tag Store Logic', () => {
 	describe('Tag State Management', () => {
 		it('maintains tag list across operations', () => {
 			const tags: Tag[] = [
-				{ id: '1', name: 'Tag 1', color: '#3B82F6', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', name: 'Tag 2', color: '#10B981', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-				{ id: '3', name: 'Tag 3', color: '#F59E0B', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' }
+				{ color: '#3B82F6', createdAt: '2024-01-01T00:00:00Z', id: '1', name: 'Tag 1', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' },
+				{ color: '#10B981', createdAt: '2024-01-01T00:00:00Z', id: '2', name: 'Tag 2', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' },
+				{ color: '#F59E0B', createdAt: '2024-01-01T00:00:00Z', id: '3', name: 'Tag 3', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' }
 			];
 
 			expect(tags).toHaveLength(3);
@@ -204,12 +204,12 @@ describe('Tag Store Logic', () => {
 
 		it('preserves other tags when updating one tag', () => {
 			const tags: Tag[] = [
-				{ id: '1', name: 'Tag 1', color: '#3B82F6', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-				{ id: '2', name: 'Tag 2', color: '#10B981', userId: 'user1', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' }
+				{ color: '#3B82F6', createdAt: '2024-01-01T00:00:00Z', id: '1', name: 'Tag 1', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' },
+				{ color: '#10B981', createdAt: '2024-01-01T00:00:00Z', id: '2', name: 'Tag 2', updatedAt: '2024-01-01T00:00:00Z', userId: 'user1' }
 			];
 
 			const updatedTags = tags.map(tag =>
-				tag.id === '1' ? { ...tag, name: 'Updated Tag 1', color: '#EF4444' } : tag
+				tag.id === '1' ? { ...tag, color: '#EF4444', name: 'Updated Tag 1' } : tag
 			);
 
 			expect(updatedTags).toHaveLength(2);

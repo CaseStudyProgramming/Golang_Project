@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 describe('Category Store Logic', () => {
 	describe('Category CRUD Operations', () => {
 		it('creates new category', () => {
-			const categories: Array<{ id: string; name: string; description: string; color: string; icon: string; createdAt: string }> = [];
+			const categories: Array<{ color: string; createdAt: string; description: string; icon: string; id: string; name: string; }> = [];
 			const newCategory = {
-				id: '1',
-				name: 'New Category',
-				description: 'Category description',
 				color: '#FF0000',
+				createdAt: new Date().toISOString(),
+				description: 'Category description',
 				icon: 'folder',
-				createdAt: new Date().toISOString()
+				id: '1',
+				name: 'New Category'
 			};
 
 			const updatedCategories = [...categories, newCategory];
@@ -22,10 +22,10 @@ describe('Category Store Logic', () => {
 
 		it('updates existing category', () => {
 			const categories = [
-				{ id: '1', name: 'Initial Category', color: '#FF0000' }
+				{ color: '#FF0000', id: '1', name: 'Initial Category' }
 			];
 
-			const updatedCategory = { ...categories[0], name: 'Updated Category', color: '#00FF00' };
+			const updatedCategory = { ...categories[0], color: '#00FF00', name: 'Updated Category' };
 			const updatedCategories = categories.map(category =>
 				category.id === '1' ? updatedCategory : category
 			);
@@ -50,7 +50,7 @@ describe('Category Store Logic', () => {
 	describe('Current Category Management', () => {
 		it('sets current category', () => {
 			type CategoryState = {
-				currentCategory: { id: string; name: string } | null;
+				currentCategory: null | { id: string; name: string };
 			};
 			const state: CategoryState = { currentCategory: null };
 			const category = { id: '1', name: 'Test Category' };
@@ -61,7 +61,7 @@ describe('Category Store Logic', () => {
 
 		it('clears current category on delete', () => {
 			type CategoryState = {
-				currentCategory: { id: string; name: string } | null;
+				currentCategory: null | { id: string; name: string };
 			};
 			const state: CategoryState = {
 				currentCategory: { id: '1', name: 'Category to delete' }
@@ -92,7 +92,7 @@ describe('Category Store Logic', () => {
 
 	describe('Error Handling', () => {
 		it('sets error on failure', () => {
-			type ErrorState = { error: string | null };
+			type ErrorState = { error: null | string };
 			const state: ErrorState = { error: null };
 			state.error = 'Failed to fetch categories';
 
@@ -100,7 +100,7 @@ describe('Category Store Logic', () => {
 		});
 
 		it('clears error state', () => {
-			type ErrorState = { error: string | null };
+			type ErrorState = { error: null | string };
 			const state: ErrorState = { error: 'Test error' };
 			state.error = null;
 

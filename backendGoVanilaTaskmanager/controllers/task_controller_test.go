@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -205,7 +204,7 @@ func TestCreateTaskHandler_EmptyTitle(t *testing.T) {
 	mockService := &MockTaskService{
 		CreateFunc: func(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 			// Service layer should validate empty title and return error
-			return nil, errors.New("Title tidak boleh kosong")
+			return nil, utils.ErrMissingRequired
 		},
 	}
 

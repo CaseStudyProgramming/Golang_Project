@@ -3,8 +3,6 @@
  * Manages toast notifications with different types and auto-dismissal
  */
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-
 export interface Toast {
 	id: string;
 	type: ToastType;
@@ -12,6 +10,8 @@ export interface Toast {
 	message?: string;
 	duration?: number;
 }
+
+export type ToastType = 'error' | 'info' | 'success' | 'warning';
 
 interface ToastState {
 	toasts: Toast[];
@@ -32,8 +32,8 @@ function createToastStore() {
 		const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 		const newToast: Toast = {
 			...toast,
-			id,
-			duration: toast.duration ?? 5000
+			duration: toast.duration ?? 5000,
+			id
 		};
 
 		state.toasts = [...state.toasts, newToast];
@@ -66,28 +66,28 @@ function createToastStore() {
 	 * Show success toast
 	 */
 	function success(title: string, message?: string, duration?: number): string {
-		return addToast({ type: 'success', title, message, duration });
+		return addToast({ duration, message, title, type: 'success' });
 	}
 
 	/**
 	 * Show error toast
 	 */
 	function error(title: string, message?: string, duration?: number): string {
-		return addToast({ type: 'error', title, message, duration });
+		return addToast({ duration, message, title, type: 'error' });
 	}
 
 	/**
 	 * Show warning toast
 	 */
 	function warning(title: string, message?: string, duration?: number): string {
-		return addToast({ type: 'warning', title, message, duration });
+		return addToast({ duration, message, title, type: 'warning' });
 	}
 
 	/**
 	 * Show info toast
 	 */
 	function info(title: string, message?: string, duration?: number): string {
-		return addToast({ type: 'info', title, message, duration });
+		return addToast({ duration, message, title, type: 'info' });
 	}
 
 	return {
@@ -96,11 +96,11 @@ function createToastStore() {
 		error,
 		info,
 		removeToast,
-		success,
-		warning,
 		get state() {
 			return state;
-		}
+		},
+		success,
+		warning
 	};
 }
 
@@ -122,11 +122,11 @@ function createSSRToastStore() {
 		error: () => 'ssr-toast-id',
 		info: () => 'ssr-toast-id',
 		removeToast: () => {},
-		success: () => 'ssr-toast-id',
-		warning: () => 'ssr-toast-id',
 		get state() {
 			return state;
-		}
+		},
+		success: () => 'ssr-toast-id',
+		warning: () => 'ssr-toast-id'
 	};
 }
 

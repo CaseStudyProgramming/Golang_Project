@@ -3,13 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 describe('Task Store Logic', () => {
 	describe('Task CRUD Operations', () => {
 		it('creates task with optimistic update', () => {
-			const tasks: Array<{ id: string; title: string; status: string; createdAt: string }> = [];
+			const tasks: Array<{ createdAt: string; id: string; status: string; title: string; }> = [];
 			const tempId = `temp-${Date.now()}`;
 			const newTask = {
+				createdAt: new Date().toISOString(),
 				id: tempId,
-				title: 'New Task',
 				status: 'todo',
-				createdAt: new Date().toISOString()
+				title: 'New Task'
 			};
 
 			const updatedTasks = [newTask, ...tasks];
@@ -21,7 +21,7 @@ describe('Task Store Logic', () => {
 
 		it('rolls back optimistic update on failure', () => {
 			const tasks = [
-				{ id: 'temp-123', title: 'Temp Task', status: 'todo' }
+				{ id: 'temp-123', status: 'todo', title: 'Temp Task' }
 			];
 
 			const rollbackTasks = tasks.filter(task => !task.id.startsWith('temp-'));
@@ -31,7 +31,7 @@ describe('Task Store Logic', () => {
 
 		it('updates task with optimistic update', () => {
 			const tasks = [
-				{ id: '1', title: 'Initial Task', status: 'todo' }
+				{ id: '1', status: 'todo', title: 'Initial Task' }
 			];
 
 			const updatedTask = { ...tasks[0], title: 'Updated Task' };
@@ -42,7 +42,7 @@ describe('Task Store Logic', () => {
 
 		it('deletes task with optimistic update', () => {
 			const tasks = [
-				{ id: '1', title: 'Task to delete', status: 'todo' }
+				{ id: '1', status: 'todo', title: 'Task to delete' }
 			];
 
 			const deletedTasks = tasks.map(task =>
@@ -54,8 +54,8 @@ describe('Task Store Logic', () => {
 
 		it('permanently deletes task', () => {
 			const tasks = [
-				{ id: '1', title: 'Task to delete', status: 'deleted' },
-				{ id: '2', title: 'Keep this task', status: 'todo' }
+				{ id: '1', status: 'deleted', title: 'Task to delete' },
+				{ id: '2', status: 'todo', title: 'Keep this task' }
 			];
 
 			const filteredTasks = tasks.filter(task => task.id !== '1');
@@ -69,14 +69,14 @@ describe('Task Store Logic', () => {
 		it('adds subtask to task', () => {
 			const task = {
 				id: '1',
-				title: 'Main Task',
-				subtasks: []
+				subtasks: [],
+				title: 'Main Task'
 			};
 
 			const newSubtask = {
 				id: 'sub-1',
-				title: 'Subtask 1',
-				isCompleted: false
+				isCompleted: false,
+				title: 'Subtask 1'
 			};
 
 			const updatedTask = {
@@ -91,10 +91,10 @@ describe('Task Store Logic', () => {
 		it('toggles subtask completion', () => {
 			const task = {
 				id: '1',
-				title: 'Main Task',
 				subtasks: [
-					{ id: 'sub-1', title: 'Subtask 1', isCompleted: false }
-				]
+					{ id: 'sub-1', isCompleted: false, title: 'Subtask 1' }
+				],
+				title: 'Main Task'
 			};
 
 			const updatedSubtasks = task.subtasks.map(subtask =>
@@ -107,11 +107,11 @@ describe('Task Store Logic', () => {
 		it('deletes subtask', () => {
 			const task = {
 				id: '1',
-				title: 'Main Task',
 				subtasks: [
-					{ id: 'sub-1', title: 'Subtask 1', isCompleted: false },
-					{ id: 'sub-2', title: 'Subtask 2', isCompleted: false }
-				]
+					{ id: 'sub-1', isCompleted: false, title: 'Subtask 1' },
+					{ id: 'sub-2', isCompleted: false, title: 'Subtask 2' }
+				],
+				title: 'Main Task'
 			};
 
 			const updatedSubtasks = task.subtasks.filter(subtask => subtask.id !== 'sub-1');
@@ -123,12 +123,12 @@ describe('Task Store Logic', () => {
 		it('bulk completes subtasks', () => {
 			const task = {
 				id: '1',
-				title: 'Main Task',
 				subtasks: [
-					{ id: 'sub-1', title: 'Subtask 1', isCompleted: false },
-					{ id: 'sub-2', title: 'Subtask 2', isCompleted: false },
-					{ id: 'sub-3', title: 'Subtask 3', isCompleted: false }
-				]
+					{ id: 'sub-1', isCompleted: false, title: 'Subtask 1' },
+					{ id: 'sub-2', isCompleted: false, title: 'Subtask 2' },
+					{ id: 'sub-3', isCompleted: false, title: 'Subtask 3' }
+				],
+				title: 'Main Task'
 			};
 
 			const subtaskIds = ['sub-1', 'sub-2'];
@@ -167,10 +167,10 @@ describe('Task Store Logic', () => {
 		it('sets filters and resets pagination', () => {
 			const state = {
 				filters: {},
-				pagination: { page: 5, limit: 10 }
+				pagination: { limit: 10, page: 5 }
 			};
 
-			const newFilters = { status: 'completed', priority: 'high' };
+			const newFilters = { priority: 'high', status: 'completed' };
 			state.filters = { ...state.filters, ...newFilters };
 			state.pagination.page = 1;
 
@@ -180,11 +180,11 @@ describe('Task Store Logic', () => {
 
 		it('clears all filters', () => {
 			type FilterState = {
-				filters: { status?: string; priority?: string };
+				filters: { priority?: string; status?: string; };
 				pagination: { page: number };
 			};
 			const state: FilterState = {
-				filters: { status: 'completed', priority: 'high' },
+				filters: { priority: 'high', status: 'completed' },
 				pagination: { page: 3 }
 			};
 
@@ -209,14 +209,14 @@ describe('Task Store Logic', () => {
 
 	describe('Pagination', () => {
 		it('sets pagination page', () => {
-			const state = { pagination: { page: 1, limit: 10 } };
+			const state = { pagination: { limit: 10, page: 1 } };
 			state.pagination.page = 2;
 
 			expect(state.pagination.page).toBe(2);
 		});
 
 		it('sets pagination limit and resets page', () => {
-			const state = { pagination: { page: 3, limit: 10 } };
+			const state = { pagination: { limit: 10, page: 3 } };
 			state.pagination.limit = 25;
 			state.pagination.page = 1;
 
@@ -227,7 +227,7 @@ describe('Task Store Logic', () => {
 
 	describe('Error Handling', () => {
 		it('sets error on failure', () => {
-			type ErrorState = { error: string | null };
+			type ErrorState = { error: null | string };
 			const state: ErrorState = { error: null };
 			state.error = 'Failed to fetch tasks';
 
@@ -235,7 +235,7 @@ describe('Task Store Logic', () => {
 		});
 
 		it('clears error state', () => {
-			type ErrorState = { error: string | null };
+			type ErrorState = { error: null | string };
 			const state: ErrorState = { error: 'Test error' };
 			state.error = null;
 
@@ -246,21 +246,21 @@ describe('Task Store Logic', () => {
 	describe('State Reset', () => {
 		it('resets store to initial state', () => {
 			const state = {
-				tasks: [{ id: '1', title: 'Task 1' }],
 				currentTask: { id: '1', title: 'Task 1' },
+				error: 'Test error',
 				filters: { status: 'completed' },
+				pagination: { limit: 20, page: 2 },
 				sort: { field: 'priority', order: 'asc' },
-				pagination: { page: 2, limit: 20 },
-				error: 'Test error'
+				tasks: [{ id: '1', title: 'Task 1' }]
 			};
 
 			const resetState = {
-				tasks: [],
 				currentTask: null,
+				error: null,
 				filters: {},
+				pagination: { limit: 10, page: 1, total: 0, totalPages: 0 },
 				sort: { field: 'createdAt', order: 'desc' },
-				pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
-				error: null
+				tasks: []
 			};
 
 			expect(resetState.tasks).toEqual([]);

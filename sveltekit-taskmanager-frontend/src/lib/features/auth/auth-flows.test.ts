@@ -5,10 +5,10 @@ describe('Authentication Flows', () => {
 		it('handles successful login flow', async () => {
 			const credentials = { email: 'test@example.com', password: 'password' };
 			const mockResponse = {
-				user: { id: '1', email: 'test@example.com', name: 'Test User' },
-				token: 'auth-token',
+				expiresIn: 3600,
 				refreshToken: 'refresh-token',
-				expiresIn: 3600
+				token: 'auth-token',
+				user: { email: 'test@example.com', id: '1', name: 'Test User' }
 			};
 
 			// Simulate successful login
@@ -48,14 +48,14 @@ describe('Authentication Flows', () => {
 		it('handles successful registration', async () => {
 			const registrationData = {
 				email: 'new@example.com',
-				password: 'password',
-				name: 'New User'
+				name: 'New User',
+				password: 'password'
 			};
 			const mockResponse = {
-				user: { id: '2', email: 'new@example.com', name: 'New User' },
-				token: 'new-auth-token',
+				expiresIn: 3600,
 				refreshToken: 'new-refresh-token',
-				expiresIn: 3600
+				token: 'new-auth-token',
+				user: { email: 'new@example.com', id: '2', name: 'New User' }
 			};
 
 			// Simulate successful registration
@@ -87,13 +87,13 @@ describe('Authentication Flows', () => {
 		it('clears authentication state on logout', () => {
 			type AuthState = {
 				isAuthenticated: boolean;
-				token: string | null;
-				user: { id: string; email: string } | null;
+				token: null | string;
+				user: null | { email: string; id: string; };
 			};
 			let authState: AuthState = {
 				isAuthenticated: true,
 				token: 'auth-token',
-				user: { id: '1', email: 'test@example.com' }
+				user: { email: 'test@example.com', id: '1' }
 			};
 
 			// Simulate logout
@@ -109,8 +109,8 @@ describe('Authentication Flows', () => {
 		});
 
 		it('clears stored tokens on logout', () => {
-			let storedToken: string | null = 'auth-token';
-			let storedRefreshToken: string | null = 'refresh-token';
+			let storedToken: null | string = 'auth-token';
+			let storedRefreshToken: null | string = 'refresh-token';
 
 			// Simulate token cleanup
 			storedToken = null;
@@ -170,9 +170,9 @@ describe('Authentication Flows', () => {
 
 		it('handles password reset with valid token', async () => {
 			const resetData = {
-				token: 'valid-reset-token',
+				confirmPassword: 'new-password',
 				password: 'new-password',
-				confirmPassword: 'new-password'
+				token: 'valid-reset-token'
 			};
 			const mockResponse = { message: 'Password reset successful' };
 
@@ -186,9 +186,9 @@ describe('Authentication Flows', () => {
 
 		it('validates password confirmation', () => {
 			const resetData = {
-				token: 'valid-token',
+				confirmPassword: 'different-password',
 				password: 'new-password',
-				confirmPassword: 'different-password'
+				token: 'valid-token'
 			};
 
 			const passwordsMatch = resetData.password === resetData.confirmPassword;
@@ -258,7 +258,7 @@ describe('Authentication Flows', () => {
 	describe('Authentication State Persistence', () => {
 		it('persists authentication state across page reloads', () => {
 			const storedToken = 'auth-token';
-			const storedUser = { id: '1', email: 'test@example.com' };
+			const storedUser = { email: 'test@example.com', id: '1' };
 			
 			// Simulate state restoration
 		 const restoredState = {

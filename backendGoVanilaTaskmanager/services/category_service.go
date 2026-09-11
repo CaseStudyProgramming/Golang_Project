@@ -1,9 +1,9 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 	"taskmanager/models"
+	"taskmanager/utils"
 )
 
 type CategoryService struct {
@@ -16,7 +16,7 @@ func NewCategoryService(model models.CategoryModelInterface) *CategoryService {
 
 func (s *CategoryService) Create(userID int64, category *models.Category) (*models.Category, error) {
 	if category.Name == "" {
-		return nil, errors.New("Category name tidak boleh kosong")
+		return nil, utils.ErrMissingRequired
 	}
 
 	// Set default color if not provided
@@ -59,7 +59,7 @@ func (s *CategoryService) Update(userID int64, id int64, category *models.Catego
 	}
 
 	if category.Name == "" {
-		return nil, errors.New("Category name tidak boleh kosong")
+		return nil, utils.ErrMissingRequired
 	}
 
 	if err := s.model.Update(userID, category); err != nil {

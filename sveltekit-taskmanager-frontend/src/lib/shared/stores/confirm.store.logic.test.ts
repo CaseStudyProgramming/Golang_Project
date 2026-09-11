@@ -44,12 +44,12 @@ describe('Confirm Store Logic', () => {
 	describe('Dialog State Management', () => {
 		it('initializes dialog with open state', () => {
 			const dialog = {
+				cancelText: 'Cancel',
+				confirmText: 'Confirm',
 				id: 'test-id',
 				isOpen: true,
-				title: 'Test',
 				message: 'Test message',
-				confirmText: 'Confirm',
-				cancelText: 'Cancel',
+				title: 'Test',
 				type: 'info' as ConfirmType
 			};
 
@@ -58,12 +58,12 @@ describe('Confirm Store Logic', () => {
 
 		it('closes dialog by setting isOpen to false', () => {
 			const dialog = {
+				cancelText: 'Cancel',
+				confirmText: 'Confirm',
 				id: 'test-id',
 				isOpen: true,
-				title: 'Test',
 				message: 'Test message',
-				confirmText: 'Confirm',
-				cancelText: 'Cancel',
+				title: 'Test',
 				type: 'info' as ConfirmType
 			};
 
@@ -72,7 +72,7 @@ describe('Confirm Store Logic', () => {
 		});
 
 		it('clears dialog by setting to null', () => {
-			let dialog: { id: string } | null = { id: 'test-id' };
+			let dialog: null | { id: string } = { id: 'test-id' };
 			dialog = null;
 			expect(dialog).toBeNull();
 		});
@@ -106,19 +106,19 @@ describe('Confirm Store Logic', () => {
 	describe('Optional Callbacks', () => {
 		it('handles missing onConfirm callback', () => {
 			type ConfirmOptions = {
-				title: string;
-				message: string;
-				confirmText: string;
 				cancelText: string;
-				type: ConfirmType;
-				onConfirm?: unknown;
+				confirmText: string;
+				message: string;
 				onCancel?: unknown;
+				onConfirm?: unknown;
+				title: string;
+				type: ConfirmType;
 			};
 			const options: ConfirmOptions = {
-				title: 'Test',
-				message: 'Test message',
-				confirmText: 'OK',
 				cancelText: 'Cancel',
+				confirmText: 'OK',
+				message: 'Test message',
+				title: 'Test',
 				type: 'info' as ConfirmType
 			};
 
@@ -127,19 +127,19 @@ describe('Confirm Store Logic', () => {
 
 		it('handles missing onCancel callback', () => {
 			type ConfirmOptions = {
-				title: string;
-				message: string;
-				confirmText: string;
 				cancelText: string;
-				type: ConfirmType;
-				onConfirm?: unknown;
+				confirmText: string;
+				message: string;
 				onCancel?: unknown;
+				onConfirm?: unknown;
+				title: string;
+				type: ConfirmType;
 			};
 			const options: ConfirmOptions = {
-				title: 'Test',
-				message: 'Test message',
-				confirmText: 'OK',
 				cancelText: 'Cancel',
+				confirmText: 'OK',
+				message: 'Test message',
+				title: 'Test',
 				type: 'info' as ConfirmType
 			};
 

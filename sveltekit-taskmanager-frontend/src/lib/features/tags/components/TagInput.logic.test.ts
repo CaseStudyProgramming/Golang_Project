@@ -4,9 +4,9 @@ describe('TagInput Component Logic', () => {
 	describe('Tag Filtering', () => {
 		it('filters tags by input text case-insensitively', () => {
 			const availableTags = [
-				{ id: '1', name: 'JavaScript', color: '#F7DF1E' },
-				{ id: '2', name: 'TypeScript', color: '#3178C6' },
-				{ id: '3', name: 'Python', color: '#3776AB' }
+				{ color: '#F7DF1E', id: '1', name: 'JavaScript' },
+				{ color: '#3178C6', id: '2', name: 'TypeScript' },
+				{ color: '#3776AB', id: '3', name: 'Python' }
 			];
 
 			const input = 'script';
@@ -21,8 +21,8 @@ describe('TagInput Component Logic', () => {
 
 		it('returns all tags when input is empty', () => {
 			const availableTags = [
-				{ id: '1', name: 'JavaScript', color: '#F7DF1E' },
-				{ id: '2', name: 'TypeScript', color: '#3178C6' }
+				{ color: '#F7DF1E', id: '1', name: 'JavaScript' },
+				{ color: '#3178C6', id: '2', name: 'TypeScript' }
 			];
 
 			const input = '';
@@ -35,8 +35,8 @@ describe('TagInput Component Logic', () => {
 
 		it('returns empty array when no matches found', () => {
 			const availableTags = [
-				{ id: '1', name: 'JavaScript', color: '#F7DF1E' },
-				{ id: '2', name: 'TypeScript', color: '#3178C6' }
+				{ color: '#F7DF1E', id: '1', name: 'JavaScript' },
+				{ color: '#3178C6', id: '2', name: 'TypeScript' }
 			];
 
 			const input = 'ruby';
@@ -156,9 +156,9 @@ describe('TagInput Component Logic', () => {
 	describe('Selected Tag Objects', () => {
 		it('filters available tags to get selected tag objects', () => {
 			const availableTags = [
-				{ id: '1', name: 'JavaScript', color: '#F7DF1E' },
-				{ id: '2', name: 'TypeScript', color: '#3178C6' },
-				{ id: '3', name: 'Python', color: '#3776AB' }
+				{ color: '#F7DF1E', id: '1', name: 'JavaScript' },
+				{ color: '#3178C6', id: '2', name: 'TypeScript' },
+				{ color: '#3776AB', id: '3', name: 'Python' }
 			];
 			const selectedTags = ['1', '3'];
 
@@ -175,7 +175,7 @@ describe('TagInput Component Logic', () => {
 
 	describe('Color Fallback', () => {
 		it('uses default color when tag color is not provided', () => {
-			type Tag = { id: string; name: string; color?: string };
+			type Tag = { color?: string; id: string; name: string; };
 			const tag: Tag = { id: '1', name: 'Test' };
 			const defaultColor = '#3B82F6';
 			const backgroundColor = tag.color || defaultColor;
@@ -184,8 +184,8 @@ describe('TagInput Component Logic', () => {
 		});
 
 		it('uses tag color when provided', () => {
-			type Tag = { id: string; name: string; color?: string };
-			const tag: Tag = { id: '1', name: 'Test', color: '#FF0000' };
+			type Tag = { color?: string; id: string; name: string; };
+			const tag: Tag = { color: '#FF0000', id: '1', name: 'Test' };
 			const defaultColor = '#3B82F6';
 			const backgroundColor = tag.color || defaultColor;
 
@@ -195,14 +195,14 @@ describe('TagInput Component Logic', () => {
 
 	describe('Loading State', () => {
 		it('disables input during loading', () => {
-			let isLoading = true;
+			const isLoading = true;
 			const isDisabled = isLoading;
 
 			expect(isDisabled).toBe(true);
 		});
 
 		it('enables input when not loading', () => {
-			let isLoading = false;
+			const isLoading = false;
 			const isDisabled = isLoading;
 
 			expect(isDisabled).toBe(false);
