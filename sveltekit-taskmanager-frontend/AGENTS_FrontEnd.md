@@ -199,13 +199,14 @@
 - **Data Generators for Mock Data**:
   - **Trigger Condition**: Create data generators/factories ONLY when an entity is used in >5 different test files AND has >5 properties
   - **Implementation Options**: 
-    - **@faker-js/faker** (Recommended for multi-users, multi-regions, realistic data): Use for user profiles, regional data (timezones, formats), collaboration scenarios
-    - **Fishery pattern** (Factory pattern): Use for business logic states, known scenarios, deterministic behavior
-    - **Hybrid approach**: Combine both - use Faker for realistic data (names, emails, regions) and Fishery for known states (pending, completed, assigned)
+    - **@faker-js/faker** (Recommended for multi-users, realistic data): Use for user profiles (names, emails), collaboration scenarios, varied test data
+    - **Fishery pattern** (Factory pattern): Use for business logic states, known scenarios, deterministic behavior, timezone offsets, time-based states (overdue, due soon)
+    - **Custom epoch utilities**: For epoch-based timezone systems - use helper functions for epoch generation and timezone conversion
+    - **Hybrid approach**: Combine both - use Faker for realistic user data and Fishery for known business logic states with epoch-based time operations
     - **Custom factories**: Use for simple needs without library dependency
   - **Gradual Migration**: Do not migrate all entities at once—prioritize entities that change most frequently
   - **Manual Construction**: For entities below threshold, continue using manual mock construction
-  - **Benefits**: Reduces boilerplate, ensures consistency, easier to update when entity structure changes, supports realistic multi-user/multi-region testing
+  - **Benefits**: Reduces boilerplate, ensures consistency, easier to update when entity structure changes, supports realistic multi-user testing with epoch-based timezone handling
 - **Comprehensive Testing Approach**:
   - Type Safety + Test Helpers + Negative Testing + (Conditional Data Generators) = Type-safe comprehensive testing with negative case coverage
   - This combination ensures compile-time type safety, runtime validation, comprehensive edge case coverage, and maintainable test code
