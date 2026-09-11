@@ -198,10 +198,14 @@
   - Type safety does NOT prevent random testing - it ensures random data is type-valid while still allowing variation
 - **Data Generators for Mock Data**:
   - **Trigger Condition**: Create data generators/factories ONLY when an entity is used in >5 different test files AND has >5 properties
-  - **Implementation Options**: Use Fishery (Factory pattern), @faker-js/faker, or custom Data Generator/Factory based on team preference
+  - **Implementation Options**: 
+    - **@faker-js/faker** (Recommended for multi-users, multi-regions, realistic data): Use for user profiles, regional data (timezones, formats), collaboration scenarios
+    - **Fishery pattern** (Factory pattern): Use for business logic states, known scenarios, deterministic behavior
+    - **Hybrid approach**: Combine both - use Faker for realistic data (names, emails, regions) and Fishery for known states (pending, completed, assigned)
+    - **Custom factories**: Use for simple needs without library dependency
   - **Gradual Migration**: Do not migrate all entities at once—prioritize entities that change most frequently
   - **Manual Construction**: For entities below threshold, continue using manual mock construction
-  - **Benefits**: Reduces boilerplate, ensures consistency, easier to update when entity structure changes
+  - **Benefits**: Reduces boilerplate, ensures consistency, easier to update when entity structure changes, supports realistic multi-user/multi-region testing
 - **Comprehensive Testing Approach**:
   - Type Safety + Test Helpers + Negative Testing + (Conditional Data Generators) = Type-safe comprehensive testing with negative case coverage
   - This combination ensures compile-time type safety, runtime validation, comprehensive edge case coverage, and maintainable test code
