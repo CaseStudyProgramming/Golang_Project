@@ -12,7 +12,7 @@
 
 - **Branch-Based Development**:
   - Always work on a new branch for each sub-issue using git branch standard naming convention (e.g., `feat/setup-sveltekit-frontend`).
-- **Task Breakdown via Checklists / Issues**:
+- **Task Breakdown via Granular Checklists / Issues**:
   - Read and parse task lists (`- [ ]`) or sub-issues sequentially.
   - Work on only ONE granular checklist item at a time. Complete it fully before moving to the next.
 - **Atomic Commits & Verification**:
@@ -31,7 +31,7 @@
 - **OWASP Security Standard**: Validate all inputs with Zod/Valibot, prevent XSS/injection, and leverage SvelteKit CSRF/CORS protections, OWASP Top 10
 - **Clarity and Consistency**: Clarity over cleverness. Match existing code patterns. Minimal changes unless refactoring is explicitly requested.
 - **Modularity**: Keep functions under 50 lines and components under 200 lines. Break down when improves readability and structure.
-- **Type Safety**: TypeScript everywhere. Use `any` ONLY when dealing with external libraries without types, and document why.
+- **Type Safety**: TypeScript everywhere including test files. Use `any` ONLY when dealing with external libraries without types, and document why with `@ts-expect-error` comments.
 - **Error Handling**: Avoid unnecessary `try/catch`. Use type narrowing over type casting. Use SvelteKit error boundaries for critical failures.
 - **Exports & Routing**: Use named exports for TypeScript modules. Follow SvelteKit file-based routing conventions (`+page.svelte`, `+page.server.ts`, `+layout.svelte`, etc.).
 - **Path Aliases**: Use absolute imports via `$lib/...` (SvelteKit standard path alias).
@@ -40,6 +40,46 @@
 - **Type Inference**: Let the compiler infer return types unless: (1) function is exported, (2) return type is complex, or (3) explicit annotation improves clarity.
 - **Function Parameters**: Use an options object for functions with 3+ parameters, optional flags, or ambiguous arguments.
 - **Debugging**: Hypothesis-driven debugging—formulate 1–3 most likely causes first, then validate incrementally.
+
+## Type Safety Tooling Stack
+
+- **Three-Layer Type Safety Approach**:
+  1. **Incremental TypeScript Compilation** (`tsconfig.json`): Performance foundation with caching for fast type checking (70-90% faster than full compilation).
+  2. **Vitest Type Checking Integration** (`vitest.config.ts`): Developer experience with instant type feedback during test runs.
+  3. **CI/CD Type Checking Gate**: Final safety net before production deployment.
+
+- **TypeScript Configuration**:
+  - Enable `strict: true` for maximum type safety across all files including tests.
+  - Enable `incremental: true` with `tsBuildInfoFile: ".tsbuildinfo"` for performance optimization.
+  - Include test files in type checking: remove test file exclusions from `tsconfig.json`.
+  - Use tiered approach if needed: strict for production code, relaxed for test files with separate `tsconfig.test.json`.
+
+- **Vitest Type Checking**:
+  - Enable `typecheck` configuration in `vitest.config.ts` for integrated type checking during test runs.
+  - Use same `tsconfig.json` for consistency between development and CI/CD.
+  - Type errors in tests will fail test runs, providing immediate feedback.
+
+- **CI/CD Integration**:
+  - Always run type checking (`bun run check`) before test execution in CI/CD pipelines.
+  - Type checking failures should block deployment to production.
+  - Use caching strategies (GitHub Actions cache, TurboRepo, Nx) for faster CI/CD builds.
+
+- **Performance Best Practices**:
+  - Target type checking time < 500ms for medium projects using incremental compilation.
+  - Monitor type checking performance; if > 2s, investigate project references or monorepo optimization.
+  - Leverage modern tooling (Vite, esbuild, swc, Bun) for faster compilation.
+
+- **TypeScript Configuration Best Practices**:
+  - **tsconfig.json**: Base configuration with strict mode enabled for all files including tests. Remove test file exclusions from `exclude` array.
+  - **Incremental Compilation**: Always enable for performance - set `incremental: true` and `tsBuildInfoFile: ".tsbuildinfo"`.
+  - **No Test Exclusions**: Never exclude test files from type checking in base tsconfig.json. If relaxed type checking for tests is needed, use separate `tsconfig.test.json` that extends base config.
+  - **Path Aliases**: Use SvelteKit's built-in `$lib` alias and configure additional aliases in `tsconfig.json` and `vite.config.ts` for consistency.
+  - **Module Resolution**: Use `"moduleResolution": "bundler"` for modern ESM projects (SvelteKit default).
+
+- **Handling Edge Cases**:
+  - For external libraries without types: use `@ts-expect-error` with explanatory comments, never globally disable type checking.
+  - For complex mocking scenarios: use relaxed type config for test files if strict mode causes significant DX friction.
+  - Document any type compromises with clear rationale in code comments.
 
 ## System Quality & Reliability (Frontend/Client-Side Scope)
 
@@ -53,16 +93,19 @@
 
 **Note**: Infrastructure, database resiliency, traffic control at server level, and data consistency rules apply to backend systems. Frontend should handle UI-level error states and retry logic for API calls.
 
-## Commands (Bun)
 
+## Commands (Bun)
 - Always use `bun` as the package manager and test/runtime runner:
   - `bun run dev` - Start dev server
   - `bun run build` - Build for production
   - `bun run preview` - Preview production build
-  - `bun run check` - Svelte & TypeScript type checking (`svelte-check`)
+  - `bun run check` - Svelte & TypeScript type checking for all files including tests (`svelte-check`)
+  - `bun run check:watch` - Watch mode for type checking with instant feedback
   - `bun run lint` - Run linter
   - `bun run format` - Format code
-  - `bun test` - Run unit tests with Bun / Vitest
+  - `bun test` - Run unit tests with Vitest (includes type checking integration)
+  - `bun test:ui` - Run tests with Vitest UI interface
+  - `bun test:coverage` - Run tests with coverage report
 
 ## Git Commits
 
@@ -119,6 +162,10 @@
   - Keep server-only business logic and database queries strictly isolated in `$lib/server/`.
   - Use native `fetch` with custom wrappers; do NOT use or install `axios`.
   - Use SvelteKit built-in navigation utilities (`goto`, `redirect`, `error`).
+- **Global/Shared State**:
+  - Extract reusable reactive logic into .svelte.ts or .svelte.js files using $state classes or functions instead of using legacy Svelte stores (writable, readable)
+- **External Backend Communication**:
+  - All communications with external backend services (e.g., Go microservices or custom APIs) that require sensitive credentials must be routed through SvelteKit's server-side functions (+page.server.ts or +server.ts) to ensure secrets are never exposed to the client
 
 ## JSDoc
 
@@ -126,124 +173,49 @@
 - Write short, sentence-case, present-tense descriptions of intent.
 - Tag order: description → `@param` → `@returns` → `@throws` (only if it can throw).
 
-## Testing Standards & Best Practices
+## Tests
 
-### Testing Framework Stack
-- **Unit Testing**: Vitest (via `bun test`)
-- **Component Testing**: Testing Library for Svelte (`@testing-library/svelte`)
-- **E2E Testing**: Playwright (`@playwright/test`)
-- **API Mocking**: MSW (Mock Service Worker)
-- **Coverage**: c8 (built-in Vitest coverage)
+- **Type-Safe Testing**: All test files (`*.test.ts`, `*.spec.ts`) are included in TypeScript type checking. Tests must pass type checking to be considered valid.
+- **Test File Organization**:
+  - Co-locate unit and integration tests (`*.test.ts`) with implementation files.
+  - Place Playwright E2E tests (`*.spec.ts` or `*.e2e.ts`) in the `tests/` directory.
+- **Test Structure**: Top `describe` = subject; nested `describe` = scenarios/contexts.
+- **Test Naming**: `it` titles: short, third-person present, `verb + object + context` (sentence case, no period). Omit words like "should/works/handles".
+- **Mocking Strategy**: Avoid unnecessary mocking unless dealing with external network or hardware I/O. When mocking is required, use type-safe mocks that maintain type safety.
+- **Type Safety in Tests**:
+  - Use `@ts-expect-error` with explanatory comments for intentional type violations (e.g., mocking untyped libraries).
+  - Leverage TypeScript for test data validation and API response typing.
+  - Ensure test doubles, mocks, and fixtures maintain type contracts with production code.
+- **Type-Safe Test Helpers**:
+  - Extract reusable logic into helper functions to avoid TypeScript literal type narrowing issues
+  - Helper functions accept union types as parameters to enable proper type inference without type assertions
+  - This maintains full type safety while solving compile-time comparison errors with literal values
+  - Helpers are test-only utilities (excluded from production builds) and do not represent production code logic
+- **Negative Testing**:
+  - Test edge cases and invalid inputs to ensure functions reject illegal data appropriately
+  - Use domain data validation (Zod schemas) to validate boundary conditions for external data (API responses, form payloads, database schemas)
+  - Type safety provides compile-time guardrails; runtime validation (Zod) provides business logic guardrails
+  - Type safety does NOT prevent random testing - it ensures random data is type-valid while still allowing variation
+- **Data Generators for Mock Data**:
+  - Use factory functions and data generators to create complex mock objects instead of manual construction
+  - Implement patterns like `createMockUser(overrides)` for consistent, type-safe test data generation
+  - Factory patterns support negative testing scenarios (e.g., `userFactory.underage()`, `userFactory.withInvalidEmail()`)
+  - This approach maintains type safety while reducing boilerplate in test setup
+- **Comprehensive Testing Approach**:
+  - Type Safety + Test Helpers + Data Generators = Type-safe comprehensive testing with negative case coverage
+  - This combination ensures compile-time type safety, runtime validation, comprehensive edge case coverage, and maintainable test code
+- **Vitest Integration**: Run `bun test` to execute tests with integrated type checking. Type errors in tests will fail the test suite.
 
-### Test Organization
-- **Unit & Integration Tests**: Co-locate with implementation files (`*.test.ts`)
-- **Component Tests**: Co-locate with components (`*.component.test.ts`)
-- **E2E Tests**: Place in `tests/` directory (`*.spec.ts` or `*.e2e.ts`)
-- **Logic Tests**: Separate business logic tests (`*.logic.test.ts`)
+## CI/CD & Type Safety Gates
 
-### Test Structure
-- Top `describe` = subject (function, component, module)
-- Nested `describe` = scenarios/contexts
-- `it` titles: short, third-person present, `verb + object + context` (sentence case, no period)
-- Omit words like "should/works/handles"
-- Example: `calculates total price from cart items` instead of `should calculate total price`
-
-### Testing Strategy (Testing Pyramid)
-```
-        E2E Tests (Playwright) - 10-15%
-         ↑ Critical user journeys
-    Integration Tests - 20-30%
-         ↑ Component + store interactions
-        Unit Tests (Vitest) - 60-70%
-         ↑ Business logic, utilities, stores
-```
-
-### Unit Testing Guidelines
-- Test business logic in isolation
-- Test pure functions without external dependencies
-- Use logic-focused tests for Svelte 5 stores (avoid Svelte rune dependencies)
-- Mock external API calls, network I/O, and hardware interactions
-- Focus on behavior over implementation details
-- Keep tests fast and deterministic
-
-### Component Testing Guidelines
-- Use Testing Library for Svelte component testing
-- Test user interactions and behavior, not internal state
-- Test accessibility (ARIA attributes, keyboard navigation)
-- Test component props and emitted events
-- Avoid testing Svelte implementation details (reactive statements, runes)
-- Focus on what users see and interact with
-
-### E2E Testing Guidelines
-- Use Playwright for critical user journeys only
-- Test cross-browser compatibility (Chrome, Firefox, Safari)
-- Test mobile responsiveness and touch interactions
-- Test authentication flows and critical business workflows
-- Keep E2E tests minimal and focused on happy paths
-- Use test data fixtures for consistent test data
-
-### API Mocking Guidelines
-- Use MSW for network-level API mocking
-- Mock at HTTP level, not at function level
-- Mock both success and error scenarios
-- Keep mocks close to real API responses
-- Use request handlers for different endpoints
-- Test edge cases: rate limiting, network errors, timeouts
-
-### Coverage Guidelines
-- Target 80%+ overall code coverage
-- Prioritize coverage for critical business logic
-- Don't chase 100% coverage for trivial code
-- Use coverage reports to identify testing gaps
-- Focus on coverage of complex logic over simple getters/setters
-
-### Test Data Management
-- Use test fixtures for consistent test data
-- Clean up test data after each test
-- Use factories for complex object creation
-- Avoid hardcoded test data in test bodies
-- Use realistic data that mirrors production
-
-### Performance Testing
-- Test critical path performance (TTI, LCP, CLS)
-- Test bundle size impact of new features
-- Test memory usage and cleanup
-- Test concurrent operations and race conditions
-- Test debouncing/throttling for expensive operations
-
-### Error Scenario Testing
-- Test network failures (timeout, connection refused, offline)
-- Test API errors (400, 401, 403, 404, 429, 500, 503)
-- Test validation errors (required fields, type validation)
-- Test authentication errors (invalid token, expired token)
-- Test state consistency and race conditions
-
-### Accessibility Testing
-- Test keyboard navigation for all interactive components
-- Test ARIA attributes and roles
-- Test screen reader compatibility
-- Test color contrast and visual accessibility
-- Test focus management and tab order
-
-### Security Testing
-- Test input validation and sanitization
-- Test XSS prevention in user-generated content
-- Test CSRF protection for form submissions
-- Test authentication and authorization flows
-- Test sensitive data handling (no logging of secrets)
-
-### Test CI/CD Integration
-- Run unit tests on every commit
-- Run integration tests on pull requests
-- Run E2E tests on main branch and releases
-- Fail builds if critical tests fail
-- Use coverage gates for minimum coverage requirements
-
-### Test Files & GitHub Integration
-- **DO Commit Test Files**: All test files (`*.test.ts`, `*.logic.test.ts`, `*.spec.ts`) must be committed to the repository
-- **TypeScript Exclusion**: Test files are excluded from strict TypeScript checking via `tsconfig.json` exclude patterns - this is intentional for test flexibility
-- **Sensitive Data**: Never commit API keys, credentials, or sensitive test data. Use environment variables or test fixtures instead
-- **Git Ignore for Artifacts**: Exclude test coverage reports and generated artifacts via `.gitignore` (coverage/, test-results/, playwright-report/)
-- **Pre-Commit Verification**: Always run `bun run check` and `bun test` before committing to ensure production code quality
-- **Branch Protection**: Configure GitHub branch protection to require passing tests before merging to main branch
-- **Test File Documentation**: Tests serve as living documentation - commit them to preserve expected behavior documentation
+- **Type Checking Gate**: All CI/CD pipelines MUST run `bun run check` before test execution and deployment. Type checking failures should block the pipeline.
+- **Test Execution Gate**: Run `bun test` after successful type checking. Both gates must pass for deployment.
+- **Pipeline Order**:
+  1. Type check (all files including tests)
+  2. Lint check
+  3. Unit tests (with type checking)
+  4. E2E tests
+  5. Build
+- **Caching Strategy**: Implement TypeScript build cache and dependency caching in CI/CD for faster builds (GitHub Actions cache, TurboRepo, or similar).
+- **Branch Protection**: Enable branch protection rules requiring type checking and test status to pass before merging to main branch.
+- **Rollback Safety**: Maintain atomic commits with clear type checking verification to enable safe rollbacks if type-related issues are discovered post-deployment.
