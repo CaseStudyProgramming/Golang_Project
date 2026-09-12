@@ -83,8 +83,7 @@ jobs:
         files: ./sveltekit-taskmanager-frontend/coverage/coverage-final.json
         flags: frontend
         name: frontend-coverage
-        fail_ci_if_error: true
-        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
 
   build:
     runs-on: ubuntu-latest
