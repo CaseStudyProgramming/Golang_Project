@@ -28,9 +28,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built assets from builder
 COPY --from=builder /app/.svelte-kit/output/client /usr/share/nginx/html
 
-# Copy .htaccess for routing (if needed)
-COPY --from=builder /app/.svelte-kit/output/client/.htaccess /usr/share/nginx/html/.htaccess 2>/dev/null || true
-
 # Expose port
 EXPOSE 80
 
