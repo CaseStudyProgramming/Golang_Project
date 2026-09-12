@@ -1,99 +1,99 @@
 <script lang="ts">
-	import type { TaskFilters, TaskStatus, TaskPriority } from '../types/task.types';
-	import { categoryStore } from '$lib/features/categories';
-	import { tagStore } from '$lib/features/tags';
-	import { TagInput } from '$lib/features/tags';
-	import type { Category } from '$lib/features/categories';
+import { categoryStore } from '$lib/features/categories'
+import { tagStore } from '$lib/features/tags'
+import TagInput from '$lib/features/tags/components/TagInput.svelte'
 
-	let {
-		filters = $bindable({}),
-		onFilterChange,
-		onClearFilters
-	}: {
-		filters?: TaskFilters;
-		onFilterChange?: (filters: TaskFilters) => void;
-		onClearFilters?: () => void;
-	} = $props();
+import type { TaskFilters, TaskPriority, TaskStatus } from '../types/task.types'
 
-	let categories = $derived(categoryStore.state.categories);
-	let availableTags = $derived(tagStore.state.tags);
+let {
+	filters = $bindable({}),
+	onClearFilters,
+	onFilterChange,
+}: {
+	filters?: TaskFilters
+	onClearFilters?: () => void
+	onFilterChange?: (filters: TaskFilters) => void
+} = $props()
 
-	/**
-	 * Initialize categories and tags on mount
-	 */
-	$effect(() => {
-		categoryStore.fetchCategories();
-		tagStore.fetchTags();
-	});
+let categories = $derived(categoryStore.state.categories)
+let availableTags = $derived(tagStore.state.tags)
 
-	const statusOptions: { value: TaskStatus; label: string }[] = [
-		{ value: 'todo', label: 'To Do' },
-		{ value: 'in_progress', label: 'In Progress' },
-		{ value: 'completed', label: 'Completed' },
-		{ value: 'cancelled', label: 'Cancelled' }
-	];
+/**
+ * Initialize categories and tags on mount
+ */
+$effect(() => {
+	categoryStore.fetchCategories()
+	tagStore.fetchTags()
+})
 
-	const priorityOptions: { value: TaskPriority; label: string }[] = [
-		{ value: 'low', label: 'Low' },
-		{ value: 'medium', label: 'Medium' },
-		{ value: 'high', label: 'High' },
-		{ value: 'urgent', label: 'Urgent' }
-	];
+const statusOptions: { label: string; value: TaskStatus }[] = [
+	{ label: 'To Do', value: 'todo' },
+	{ label: 'In Progress', value: 'in_progress' },
+	{ label: 'Completed', value: 'completed' },
+	{ label: 'Cancelled', value: 'cancelled' },
+]
 
-	/**
-	 * Handle filter change
-	 */
-	function handleFilterChange(key: keyof TaskFilters, event: Event): void {
-		const target = event.target as HTMLInputElement;
-		const value = target.value;
-		const newFilters = { ...filters, [key]: value || undefined };
-		filters = newFilters;
-		onFilterChange?.(newFilters);
+const priorityOptions: { label: string; value: TaskPriority }[] = [
+	{ label: 'Low', value: 'low' },
+	{ label: 'Medium', value: 'medium' },
+	{ label: 'High', value: 'high' },
+	{ label: 'Urgent', value: 'urgent' },
+]
+
+/**
+ * Handle filter change
+ */
+function handleFilterChange(key: keyof TaskFilters, event: Event): void {
+	const target = event.target as HTMLInputElement
+	const value = target.value
+	const newFilters = { ...filters, [key]: value || undefined }
+	filters = newFilters
+	onFilterChange?.(newFilters)
+}
+
+/**
+ * Handle tag filter change
+ */
+function handleTagFilterChange(tagIds: string[]): void {
+	const newFilters = { ...filters, tags: tagIds.length > 0 ? tagIds : undefined }
+	filters = newFilters
+	onFilterChange?.(newFilters)
+}
+
+/**
+ * Create reactive binding for tags filter
+ */
+let tagFilterIds = $state(filters.tags || [])
+
+/**
+ * Sync tag filter changes with filters
+ */
+$effect(() => {
+	if (tagFilterIds.length > 0) {
+		handleTagFilterChange(tagFilterIds)
+	} else if (filters.tags) {
+		handleTagFilterChange([])
 	}
+})
 
-	/**
-	 * Handle tag filter change
-	 */
-	function handleTagFilterChange(tagIds: string[]): void {
-		const newFilters = { ...filters, tags: tagIds.length > 0 ? tagIds : undefined };
-		filters = newFilters;
-		onFilterChange?.(newFilters);
-	}
+/**
+ * Clear all filters
+ */
+function handleClearFilters(): void {
+	filters = {}
+	tagFilterIds = []
+	onClearFilters?.()
+}
 
-	/**
-	 * Create reactive binding for tags filter
-	 */
-	let tagFilterIds = $state(filters.tags || []);
-
-	/**
-	 * Sync tag filter changes with filters
-	 */
-	$effect(() => {
-		if (tagFilterIds.length > 0) {
-			handleTagFilterChange(tagFilterIds);
-		} else if (filters.tags) {
-			handleTagFilterChange([]);
-		}
-	});
-
-	/**
-	 * Clear all filters
-	 */
-	function handleClearFilters(): void {
-		filters = {};
-		tagFilterIds = [];
-		onClearFilters?.();
-	}
-
-	/**
-	 * Check if any filters are active
-	 */
-	const hasActiveFilters = $derived(
-		tagFilterIds.length > 0 ||
+/**
+ * Check if any filters are active
+ */
+const hasActiveFilters = $derived(
+	tagFilterIds.length > 0 ||
 		Object.values(filters).some(
 			(value) => value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0)
 		)
-	);
+)
 </script>
 
 <div class="bg-white rounded-lg shadow p-4 mb-4">
@@ -101,7 +101,7 @@
 		<h3 class="text-lg font-medium text-gray-900">Filters</h3>
 		{#if hasActiveFilters}
 			<button
-				onclick={handleClearFilters}
+				onclick={() => handleClearFilters()}
 				class="text-sm text-blue-600 hover:text-blue-700"
 			>
 				Clear all
@@ -119,7 +119,7 @@
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			>
 				<option value="">All Statuses</option>
-				{#each statusOptions as option}
+				{#each statusOptions as option (option.value)}
 					<option value={option.value}>{option.label}</option>
 				{/each}
 			</select>
@@ -134,7 +134,7 @@
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			>
 				<option value="">All Priorities</option>
-				{#each priorityOptions as option}
+				{#each priorityOptions as option (option.value)}
 					<option value={option.value}>{option.label}</option>
 				{/each}
 			</select>
@@ -149,7 +149,7 @@
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			>
 				<option value="">All Categories</option>
-				{#each categories as category}
+				{#each categories as category (category.id)}
 					<option value={category.id}>{category.icon ? category.icon + ' ' : ''}{category.name}</option>
 				{/each}
 			</select>

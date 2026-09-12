@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Task } from '$lib/features/tasks/types/task.types';
+import type { Task } from '$lib/features/tasks/types/task.types'
 
-	let { overdueTasks }: { overdueTasks: Task[] } = $props();
+let { overdueTasks }: { overdueTasks: Task[] } = $props()
 </script>
 
 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
@@ -10,7 +10,7 @@
 		<div class="text-center py-8 text-gray-500">No overdue tasks 🎉</div>
 	{:else}
 		<div class="space-y-3">
-			{#each overdueTasks.slice(0, 5) as task}
+			{#each overdueTasks.slice(0, 5) as task (task.id)}
 				<div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100">
 					<div class="flex-1">
 						<h4 class="font-medium text-gray-800">{task.title}</h4>

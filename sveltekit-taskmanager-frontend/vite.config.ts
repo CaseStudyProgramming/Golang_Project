@@ -19,41 +19,38 @@ export default defineConfig({
 			adapter: adapter()
 		})
 	],
-	
+
 	// Build optimizations for production
 	build: {
 		// Enable source maps for production debugging
 		sourcemap: true,
-		
+
 		// Optimize chunk splitting
 		rollupOptions: {
 			output: {
-				manualChunks: {
+				manualChunks(id) {
 					// Vendor chunks for better caching
-					'chart-vendor': ['chart.js', 'svelte-chartjs'],
-					'zod': ['zod']
+					if (id.includes('node_modules')) {
+						if (id.includes('chart.js') || id.includes('svelte-chartjs')) {
+							return 'chart-vendor';
+						}
+						if (id.includes('zod')) {
+							return 'zod';
+						}
+					}
 				}
 			}
 		},
-		
+
 		// Minify output
-		minify: 'terser',
-		terserOptions: {
-			compress: {
-				drop_console: true, // Remove console.log in production
-				drop_debugger: true
-			},
-			format: {
-				comments: false
-			}
-		}
+		minify: 'terser'
 	},
-	
+
 	// Optimize dependencies
 	optimizeDeps: {
 		include: ['chart.js', 'svelte-chartjs', 'zod']
 	},
-	
+
 	// Server configuration
 	server: {
 		port: 5173,
@@ -63,7 +60,7 @@ export default defineConfig({
 			overlay: true
 		}
 	},
-	
+
 	// Preview configuration
 	preview: {
 		port: 4173,

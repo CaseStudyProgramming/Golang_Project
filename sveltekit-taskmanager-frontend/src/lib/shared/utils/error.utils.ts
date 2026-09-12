@@ -5,7 +5,7 @@
 /**
  * Error handler function type
  */
-type ErrorHandler = (error: Error) => void;
+type ErrorHandler = (error: Error) => void
 
 /**
  * Custom error class for API errors
@@ -16,8 +16,8 @@ export class ApiError extends Error {
 		public statusText: string,
 		public data?: unknown
 	) {
-		super(`API Error: ${status} ${statusText}`);
-		this.name = 'ApiError';
+		super(`API Error: ${status} ${statusText}`)
+		this.name = 'ApiError'
 	}
 }
 
@@ -26,8 +26,8 @@ export class ApiError extends Error {
  */
 export class AuthenticationError extends Error {
 	constructor(message: string = 'Authentication failed') {
-		super(message);
-		this.name = 'AuthenticationError';
+		super(message)
+		this.name = 'AuthenticationError'
 	}
 }
 
@@ -39,15 +39,22 @@ export class ValidationError extends Error {
 		public field: string,
 		message: string
 	) {
-		super(message);
-		this.name = 'ValidationError';
+		super(message)
+		this.name = 'ValidationError'
 	}
 }
 
 /**
  * Global error handlers
  */
-const errorHandlers: ErrorHandler[] = [];
+const errorHandlers: ErrorHandler[] = []
+
+/**
+ * Clear all registered error handlers (for testing)
+ */
+export function clearErrorHandlers(): void {
+	errorHandlers.length = 0
+}
 
 /**
  * Get user-friendly error message
@@ -56,57 +63,57 @@ export function getErrorMessage(error: unknown): string {
 	if (isApiError(error)) {
 		switch (error.status) {
 			case 400:
-				return 'Invalid request. Please check your input.';
+				return 'Invalid request. Please check your input.'
 			case 401:
-				return 'You need to log in to access this resource.';
+				return 'You need to log in to access this resource.'
 			case 403:
-				return "You don't have permission to access this resource.";
+				return "You don't have permission to access this resource."
 			case 404:
-				return 'The requested resource was not found.';
+				return 'The requested resource was not found.'
 			case 429:
-				return 'Too many requests. Please try again later.';
+				return 'Too many requests. Please try again later.'
 			case 500:
-				return 'Server error. Please try again later.';
+				return 'Server error. Please try again later.'
 			default:
-				return error.statusText || 'An error occurred.';
+				return error.statusText || 'An error occurred.'
 		}
 	}
 
 	if (isValidationError(error)) {
-		return `Validation error: ${error.message}`;
+		return `Validation error: ${error.message}`
 	}
 
 	if (isAuthenticationError(error)) {
-		return error.message;
+		return error.message
 	}
 
 	if (error instanceof Error) {
-		return error.message;
+		return error.message
 	}
 
-	return 'An unexpected error occurred.';
+	return 'An unexpected error occurred.'
 }
 
 /**
  * Check if error is a specific type
  */
 export function isApiError(error: unknown): error is ApiError {
-	return error instanceof ApiError;
+	return error instanceof ApiError
 }
 
 export function isAuthenticationError(error: unknown): error is AuthenticationError {
-	return error instanceof AuthenticationError;
+	return error instanceof AuthenticationError
 }
 
 export function isValidationError(error: unknown): error is ValidationError {
-	return error instanceof ValidationError;
+	return error instanceof ValidationError
 }
 
 /**
  * Register global error handler
  */
 export function registerErrorHandler(handler: ErrorHandler): void {
-	errorHandlers.push(handler);
+	errorHandlers.push(handler)
 }
 
 /**
@@ -114,16 +121,16 @@ export function registerErrorHandler(handler: ErrorHandler): void {
  */
 export async function withErrorHandling<T>(fn: () => Promise<T>, context?: string): Promise<T> {
 	try {
-		return await fn();
+		return await fn()
 	} catch (error) {
-		const processedError = error instanceof Error ? error : new Error(String(error));
+		const processedError = error instanceof Error ? error : new Error(String(error))
 
 		if (context) {
-			processedError.message = `${context}: ${processedError.message}`;
+			processedError.message = `${context}: ${processedError.message}`
 		}
 
-		executeErrorHandlers(processedError);
-		throw processedError;
+		executeErrorHandlers(processedError)
+		throw processedError
 	}
 }
 
@@ -131,18 +138,11 @@ export async function withErrorHandling<T>(fn: () => Promise<T>, context?: strin
  * Execute all registered error handlers
  */
 function executeErrorHandlers(error: Error): void {
-	errorHandlers.forEach(handler => {
+	errorHandlers.forEach((handler) => {
 		try {
-			handler(error);
+			handler(error)
 		} catch (handlerError) {
-			console.error('Error in error handler:', handlerError);
+			console.error('Error in error handler:', handlerError)
 		}
-	});
-}
-
-/**
- * Clear all registered error handlers (for testing)
- */
-export function clearErrorHandlers(): void {
-	errorHandlers.length = 0;
+	})
 }

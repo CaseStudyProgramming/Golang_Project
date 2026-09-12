@@ -1,61 +1,61 @@
 <script lang="ts">
-	let {
-		currentPage = $bindable(1),
-		totalPages,
-		onPageChange
-	}: {
-		currentPage?: number;
-		totalPages: number;
-		onPageChange?: (page: number) => void;
-	} = $props();
+let {
+	currentPage = $bindable(1),
+	onPageChange,
+	totalPages,
+}: {
+	currentPage?: number
+	onPageChange?: (page: number) => void
+	totalPages: number
+} = $props()
 
-	/**
-	 * Generate page numbers to display
-	 */
-	function getPageNumbers(): (number | string)[] {
-		const pages: (number | string)[] = [];
-		const maxVisible = 5;
+/**
+ * Generate page numbers to display
+ */
+function getPageNumbers(): (number | string)[] {
+	const pages: (number | string)[] = []
+	const maxVisible = 5
 
-		if (totalPages <= maxVisible) {
-			for (let i = 1; i <= totalPages; i++) {
-				pages.push(i);
+	if (totalPages <= maxVisible) {
+		for (let i = 1; i <= totalPages; i++) {
+			pages.push(i)
+		}
+	} else {
+		if (currentPage <= 3) {
+			for (let i = 1; i <= 4; i++) {
+				pages.push(i)
+			}
+			pages.push('...')
+			pages.push(totalPages)
+		} else if (currentPage >= totalPages - 2) {
+			pages.push(1)
+			pages.push('...')
+			for (let i = totalPages - 3; i <= totalPages; i++) {
+				pages.push(i)
 			}
 		} else {
-			if (currentPage <= 3) {
-				for (let i = 1; i <= 4; i++) {
-					pages.push(i);
-				}
-				pages.push('...');
-				pages.push(totalPages);
-			} else if (currentPage >= totalPages - 2) {
-				pages.push(1);
-				pages.push('...');
-				for (let i = totalPages - 3; i <= totalPages; i++) {
-					pages.push(i);
-				}
-			} else {
-				pages.push(1);
-				pages.push('...');
-				for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-					pages.push(i);
-				}
-				pages.push('...');
-				pages.push(totalPages);
+			pages.push(1)
+			pages.push('...')
+			for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+				pages.push(i)
 			}
-		}
-
-		return pages;
-	}
-
-	/**
-	 * Handle page change
-	 */
-	function handlePageChange(page: number): void {
-		if (page >= 1 && page <= totalPages && page !== currentPage) {
-			currentPage = page;
-			onPageChange?.(page);
+			pages.push('...')
+			pages.push(totalPages)
 		}
 	}
+
+	return pages
+}
+
+/**
+ * Handle page change
+ */
+function handlePageChange(page: number): void {
+	if (page >= 1 && page <= totalPages && page !== currentPage) {
+		currentPage = page
+		onPageChange?.(page)
+	}
+}
 </script>
 
 <div class="flex items-center justify-between">
@@ -71,7 +71,7 @@
 			Previous
 		</button>
 		<div class="flex items-center gap-1">
-			{#each getPageNumbers() as page}
+			{#each getPageNumbers() as page, index (index)}
 				{#if page === '...'}
 					<span class="px-3 py-2 text-sm text-gray-500">...</span>
 				{:else}

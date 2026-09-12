@@ -21,6 +21,7 @@ This is the frontend component of the Task Manager application, providing a user
 ## Features
 
 ### Core Functionality
+
 - User authentication (login, register, logout)
 - Task CRUD operations with advanced filtering
 - Task completion tracking and progress monitoring
@@ -32,6 +33,7 @@ This is the frontend component of the Task Manager application, providing a user
 - Bulk operations (delete, complete)
 
 ### Advanced Features
+
 - Analytics dashboard with visualizations
 - CSV export functionality
 - Responsive design (mobile-first)
@@ -41,6 +43,7 @@ This is the frontend component of the Task Manager application, providing a user
 - Multi-timezone support
 
 ### UI/UX Features
+
 - Modern, clean interface design
 - Loading states and skeleton screens
 - Error handling with toast notifications
@@ -70,6 +73,7 @@ bun install
 ```
 
 Or with npm:
+
 ```bash
 npm install
 ```
@@ -95,6 +99,7 @@ bun run dev
 ```
 
 Or with npm:
+
 ```bash
 npm run dev
 ```
@@ -229,6 +234,7 @@ Shared components are located in `src/lib/shared/components/` and can be importe
 ```
 
 Available shared components:
+
 - `LoadingSpinner` - Loading indicator
 - `Skeleton` - Loading placeholder
 - `ProgressBar` - Progress indicator
@@ -263,8 +269,8 @@ const tasks = await api.getTasks({ page: 1, limit: 10 });
 
 // Create task
 const newTask = await api.createTask({
-  title: 'New task',
-  priority: 'HIGH'
+	title: 'New task',
+	priority: 'HIGH'
 });
 ```
 
@@ -304,10 +310,10 @@ import { describe, it, expect } from 'vitest';
 import { api } from './api.utils';
 
 describe('API Utilities', () => {
-  it('should make GET request', async () => {
-    const result = await api.get('/test');
-    expect(result).toBeDefined();
-  });
+	it('should make GET request', async () => {
+		const result = await api.get('/test');
+		expect(result).toBeDefined();
+	});
 });
 ```
 
@@ -320,11 +326,11 @@ E2E tests are located in `playwright-tests/`:
 import { test, expect } from '@playwright/test';
 
 test('should create a new task', async ({ page }) => {
-  await page.goto('/tasks');
-  await page.click('[data-testid="add-task-button"]');
-  await page.fill('[data-testid="task-title"]', 'Test task');
-  await page.click('[data-testid="save-task"]');
-  await expect(page.locator('text=Test task')).toBeVisible();
+	await page.goto('/tasks');
+	await page.click('[data-testid="add-task-button"]');
+	await page.fill('[data-testid="task-title"]', 'Test task');
+	await page.click('[data-testid="save-task"]');
+	await expect(page.locator('text=Test task')).toBeVisible();
 });
 ```
 
@@ -354,6 +360,7 @@ The optimized production build will be in the `build/` directory.
 ### Build Optimization
 
 The production build includes:
+
 - Code splitting and tree shaking
 - Minification with Terser
 - Asset optimization

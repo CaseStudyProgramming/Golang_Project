@@ -1,20 +1,20 @@
 <script lang="ts">
-	let { message, onDismiss }: { message: string; onDismiss: () => void } = $props();
-	let isVisible = $state(true);
+let { message, onDismiss }: { message: string; onDismiss: () => void } = $props()
+let isVisible = $state(true)
 
-	function handleDismiss() {
-		isVisible = false;
-		setTimeout(() => {
-			onDismiss();
-		}, 300);
-	}
-
-	// Auto-dismiss after 5 seconds
+function handleDismiss() {
+	isVisible = false
 	setTimeout(() => {
-		if (isVisible) {
-			handleDismiss();
-		}
-	}, 5000);
+		onDismiss()
+	}, 300)
+}
+
+// Auto-dismiss after 5 seconds
+setTimeout(() => {
+	if (isVisible) {
+		handleDismiss()
+	}
+}, 5000)
 </script>
 
 {#if isVisible}

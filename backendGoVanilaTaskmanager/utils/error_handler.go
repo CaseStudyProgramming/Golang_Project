@@ -172,7 +172,27 @@ func HandleAPIError(err error) (int, string) {
 		return appErr.StatusCode, GetUserMessage(appErr)
 	}
 
-	// For regular errors, treat as internal
+	// For regular errors, check if they are validation errors
+	errorMsg := strings.ToLower(err.Error())
+
+	// JSON syntax errors
+	if strings.Contains(errorMsg, "invalid character") ||
+		strings.Contains(errorMsg, "json") ||
+		strings.Contains(errorMsg, "unmarshal") ||
+		strings.Contains(errorMsg, "decode") {
+		LogInternalError(err, "Validation Error")
+		return 400, "Invalid JSON format"
+	}
+
+	// Parse errors (strconv, etc.)
+	if strings.Contains(errorMsg, "parse") ||
+		strings.Contains(errorMsg, "invalid syntax") ||
+		strings.Contains(errorMsg, "strconv") {
+		LogInternalError(err, "Validation Error")
+		return 400, "Invalid input format"
+	}
+
+	// For other regular errors, treat as internal
 	LogInternalError(err, "API Error")
 	return 500, "An internal error occurred. Please try again later."
 }

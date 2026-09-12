@@ -1,148 +1,149 @@
 <script lang="ts">
-	import { tagStore } from '../stores/tag.store';
-	import type { Tag } from '../types/tag.types';
-	import { toastStore } from '$lib/shared/stores';
+import { toastStore } from '$lib/shared/stores'
+import { tagStore } from '../stores/tag.store'
+import type { Tag } from '../types/tag.types'
 
-	let {
-		selectedTags = $bindable([]),
-		availableTags = $bindable(tagStore.state.tags),
-		onCreateTag,
-		placeholder = 'Add tags...'
-	}: {
-		selectedTags?: string[];
-		availableTags?: Tag[];
-		onCreateTag?: (name: string) => Promise<void>;
-		placeholder?: string;
-	} = $props();
+let {
+	availableTags = $bindable(tagStore.state.tags),
+	onCreateTag,
+	placeholder = 'Add tags...',
+	selectedTags = $bindable([]),
+}: {
+	availableTags?: Tag[]
+	onCreateTag?: (name: string) => Promise<void>
+	placeholder?: string
+	selectedTags?: string[]
+} = $props()
 
-	let input = $state('');
-	let isOpen = $state(false);
-	let highlightedIndex = $state(-1);
-	let isLoading = $state(false);
+let input = $state('')
+let isOpen = $state(false)
+let highlightedIndex = $state(-1)
+let isLoading = $state(false)
 
-	/**
-	 * Get filtered available tags
-	 */
-	const filteredTags = $derived(
-		!input.trim() ? availableTags : availableTags.filter((tag) =>
-			tag.name.toLowerCase().includes(input.toLowerCase())
+/**
+ * Get filtered available tags
+ */
+const filteredTags = $derived(
+	!input.trim()
+		? availableTags
+		: availableTags.filter((tag) => tag.name.toLowerCase().includes(input.toLowerCase()))
+)
+
+/**
+ * Get selected tag objects
+ */
+const selectedTagObjects = $derived(availableTags.filter((tag) => selectedTags.includes(tag.id)))
+
+/**
+ * Handle blur with delay to allow click events
+ */
+function handleBlur() {
+	setTimeout(() => {
+		isOpen = false
+		highlightedIndex = -1
+	}, 200)
+}
+
+/**
+ * Handle creating new tag
+ */
+async function handleCreateTag() {
+	if (!input.trim() || !onCreateTag) return
+
+	isLoading = true
+	try {
+		await onCreateTag(input.trim())
+		toastStore.success('Tag created', `Tag "${input.trim()}" has been created successfully`)
+		input = ''
+		isOpen = false
+	} catch (error) {
+		console.error('Failed to create tag:', error)
+		toastStore.error(
+			'Failed to create tag',
+			error instanceof Error ? error.message : 'An unexpected error occurred'
 		)
-	);
-
-	/**
-	 * Get selected tag objects
-	 */
-	const selectedTagObjects = $derived(
-		availableTags.filter((tag) => selectedTags.includes(tag.id))
-	);
-
-	/**
-	 * Handle input change
-	 */
-	function handleInput(e: Event) {
-		input = (e.target as HTMLInputElement).value;
-		isOpen = true;
-		highlightedIndex = -1;
+	} finally {
+		isLoading = false
 	}
+}
 
-	/**
-	 * Handle tag selection
-	 */
-	function selectTag(tag: Tag) {
-		if (!selectedTags.includes(tag.id)) {
-			selectedTags = [...selectedTags, tag.id];
+/**
+ * Handle input change
+ */
+function handleInput(e: Event) {
+	input = (e.target as HTMLInputElement).value
+	isOpen = true
+	highlightedIndex = -1
+}
+
+/**
+ * Handle keyboard navigation
+ */
+function handleKeydown(e: KeyboardEvent) {
+	if (!isOpen) {
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			isOpen = true
 		}
-		input = '';
-		isOpen = false;
+		return
 	}
 
-	/**
-	 * Handle tag removal
-	 */
-	function removeTag(tagId: string) {
-		selectedTags = selectedTags.filter((id) => id !== tagId);
-	}
-
-	/**
-	 * Handle creating new tag
-	 */
-	async function handleCreateTag() {
-		if (!input.trim() || !onCreateTag) return;
-
-		isLoading = true;
-		try {
-			await onCreateTag(input.trim());
-			toastStore.success('Tag created', `Tag "${input.trim()}" has been created successfully`);
-			input = '';
-			isOpen = false;
-		} catch (error) {
-			console.error('Failed to create tag:', error);
-			toastStore.error('Failed to create tag', error instanceof Error ? error.message : 'An unexpected error occurred');
-		} finally {
-			isLoading = false;
-		}
-	}
-
-	/**
-	 * Handle keyboard navigation
-	 */
-	function handleKeydown(e: KeyboardEvent) {
-		if (!isOpen) {
-			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-				isOpen = true;
+	switch (e.key) {
+		case 'ArrowDown':
+			e.preventDefault()
+			highlightedIndex = Math.min(highlightedIndex + 1, filteredTags.length - 1)
+			break
+		case 'ArrowUp':
+			e.preventDefault()
+			highlightedIndex = Math.max(highlightedIndex - 1, 0)
+			break
+		case 'Backspace':
+			if (!input && selectedTags.length > 0) {
+				removeTag(selectedTags[selectedTags.length - 1])
 			}
-			return;
-		}
-
-		switch (e.key) {
-			case 'ArrowDown':
-				e.preventDefault();
-				highlightedIndex = Math.min(highlightedIndex + 1, filteredTags.length - 1);
-				break;
-			case 'ArrowUp':
-				e.preventDefault();
-				highlightedIndex = Math.max(highlightedIndex - 1, 0);
-				break;
-			case 'Enter':
-				e.preventDefault();
-				if (highlightedIndex >= 0 && filteredTags[highlightedIndex]) {
-					selectTag(filteredTags[highlightedIndex]);
-				} else if (input.trim()) {
-					handleCreateTag();
-				}
-				break;
-			case 'Escape':
-				isOpen = false;
-				highlightedIndex = -1;
-				break;
-			case 'Backspace':
-				if (!input && selectedTags.length > 0) {
-					removeTag(selectedTags[selectedTags.length - 1]);
-				}
-				break;
-			case 'Tab':
-				isOpen = false;
-				highlightedIndex = -1;
-				break;
-		}
+			break
+		case 'Enter':
+			e.preventDefault()
+			if (highlightedIndex >= 0 && filteredTags[highlightedIndex]) {
+				selectTag(filteredTags[highlightedIndex])
+			} else if (input.trim()) {
+				handleCreateTag()
+			}
+			break
+		case 'Escape':
+			isOpen = false
+			highlightedIndex = -1
+			break
+		case 'Tab':
+			isOpen = false
+			highlightedIndex = -1
+			break
 	}
+}
 
-	/**
-	 * Handle blur with delay to allow click events
-	 */
-	function handleBlur() {
-		setTimeout(() => {
-			isOpen = false;
-			highlightedIndex = -1;
-		}, 200);
+/**
+ * Handle tag removal
+ */
+function removeTag(tagId: string) {
+	selectedTags = selectedTags.filter((id) => id !== tagId)
+}
+
+/**
+ * Handle tag selection
+ */
+function selectTag(tag: Tag) {
+	if (!selectedTags.includes(tag.id)) {
+		selectedTags = [...selectedTags, tag.id]
 	}
+	input = ''
+	isOpen = false
+}
 </script>
 
 <div class="relative">
 	<!-- Selected tags display -->
 	{#if selectedTagObjects.length > 0}
 		<div class="flex flex-wrap gap-2 mb-2" role="list">
-			{#each selectedTagObjects as tag}
+			{#each selectedTagObjects as tag (tag.id)}
 				<div
 					class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm"
 					style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}; border: 1px solid {tag.color || '#3B82F6'}40"
@@ -199,7 +200,7 @@
 	{#if isOpen && (filteredTags.length > 0 || input.trim())}
 		<div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" role="listbox" id="tag-listbox">
 			{#if filteredTags.length > 0}
-				{#each filteredTags as tag, index}
+				{#each filteredTags as tag, index (tag.id)}
 					<button
 						type="button"
 						onclick={() => selectTag(tag)}

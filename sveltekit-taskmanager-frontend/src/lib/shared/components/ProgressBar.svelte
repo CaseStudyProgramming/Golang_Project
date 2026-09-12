@@ -1,45 +1,45 @@
 <script lang="ts">
-	let { 
-		progress = 0,
-		color = 'blue',
-		size = 'md',
-		showLabel = false,
-		label = ''
-	}: {
-		progress?: number;
-		color?: 'blue' | 'green' | 'orange' | 'red' | 'purple';
-		size?: 'sm' | 'md' | 'lg';
-		showLabel?: boolean;
-		label?: string;
-	} = $props();
+let {
+	color = 'blue',
+	label = '',
+	progress = 0,
+	showLabel = false,
+	size = 'md',
+}: {
+	color?: 'blue' | 'green' | 'orange' | 'purple' | 'red'
+	label?: string
+	progress?: number
+	showLabel?: boolean
+	size?: 'lg' | 'md' | 'sm'
+} = $props()
 
-	const clampedProgress = $derived(Math.min(100, Math.max(0, progress)));
+const clampedProgress = $derived(Math.min(100, Math.max(0, progress)))
 
-	const sizeClasses = $derived(() => {
-		switch (size) {
-			case 'sm':
-				return 'h-1.5';
-			case 'lg':
-				return 'h-4';
-			default:
-				return 'h-2.5';
-		}
-	});
+const sizeClasses = $derived(() => {
+	switch (size) {
+		case 'lg':
+			return 'h-4'
+		case 'sm':
+			return 'h-1.5'
+		default:
+			return 'h-2.5'
+	}
+})
 
-	const colorClasses = $derived(() => {
-		switch (color) {
-			case 'green':
-				return 'bg-green-600';
-			case 'orange':
-				return 'bg-orange-600';
-			case 'red':
-				return 'bg-red-600';
-			case 'purple':
-				return 'bg-purple-600';
-			default:
-				return 'bg-blue-600';
-		}
-	});
+const colorClasses = $derived(() => {
+	switch (color) {
+		case 'green':
+			return 'bg-green-600'
+		case 'orange':
+			return 'bg-orange-600'
+		case 'purple':
+			return 'bg-purple-600'
+		case 'red':
+			return 'bg-red-600'
+		default:
+			return 'bg-blue-600'
+	}
+})
 </script>
 
 <div class="w-full">

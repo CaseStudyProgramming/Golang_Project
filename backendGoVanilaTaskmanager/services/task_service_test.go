@@ -276,8 +276,8 @@ func TestCreateTask_EmptyTitle(t *testing.T) {
 		t.Error("Expected error for empty title, got nil")
 	}
 
-	if err.Error() != "Title tidak boleh kosong" {
-		t.Errorf("Expected 'Title tidak boleh kosong' error, got %v", err)
+	if err != utils.ErrMissingRequired {
+		t.Errorf("Expected ErrMissingRequired error, got %v", err)
 	}
 }
 

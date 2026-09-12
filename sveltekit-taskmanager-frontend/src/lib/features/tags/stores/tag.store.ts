@@ -2,12 +2,9 @@
  * Tag management store using Svelte 5 runes
  */
 
-import { httpClient } from '$lib/shared/utils/api.utils';
-import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
-
-import type { Tag, TagState } from '../types/tag.types';
-
-import { createTagSchema, updateTagSchema } from '../schemas/tag.schemas';
+import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils'
+import { createTagSchema, updateTagSchema } from '../schemas/tag.schemas'
+import type { Tag, TagState } from '../types/tag.types'
 
 /**
  * Create tag store with Svelte 5 runes
@@ -17,15 +14,15 @@ function createTagStore() {
 		currentTag: null,
 		error: null,
 		isLoading: false,
-		tags: []
-	});
+		tags: [],
+	})
 
 	/**
 	 * Fetch all tags
 	 */
 	async function fetchTags(): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
@@ -33,15 +30,15 @@ function createTagStore() {
 				// const response = await httpClient.get<Tag[]>('/tags');
 
 				// Mock response for development
-				const mockTags: Tag[] = [];
+				const mockTags: Tag[] = []
 
-				state.tags = mockTags;
-			}, 'Failed to fetch tags');
+				state.tags = mockTags
+			}, 'Failed to fetch tags')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch tags';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch tags'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -49,8 +46,8 @@ function createTagStore() {
 	 * Fetch single tag by ID
 	 */
 	async function fetchTagById(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
@@ -63,16 +60,16 @@ function createTagStore() {
 					id,
 					name: 'Mock Tag',
 					updatedAt: new Date().toISOString(),
-					userId: '1'
-				};
+					userId: '1',
+				}
 
-				state.currentTag = mockTag;
-			}, 'Failed to fetch tag');
+				state.currentTag = mockTag
+			}, 'Failed to fetch tag')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch tag';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch tag'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -80,12 +77,12 @@ function createTagStore() {
 	 * Create new tag
 	 */
 	async function createTag(payload: unknown): Promise<Tag> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedPayload = createTagSchema.parse(payload);
+			const validatedPayload = createTagSchema.parse(payload)
 
 			const newTag = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -98,24 +95,24 @@ function createTagStore() {
 					id: Date.now().toString(),
 					name: validatedPayload.name,
 					updatedAt: new Date().toISOString(),
-					userId: '1'
-				};
+					userId: '1',
+				}
 
-				state.tags = [...state.tags, mockTag];
+				state.tags = [...state.tags, mockTag]
 
-				return mockTag;
-			}, 'Failed to create tag');
+				return mockTag
+			}, 'Failed to create tag')
 
-			return newTag;
+			return newTag
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('tag', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('tag', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Failed to create tag';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to create tag'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -123,12 +120,12 @@ function createTagStore() {
 	 * Update existing tag
 	 */
 	async function updateTag(id: string, payload: unknown): Promise<Tag> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedPayload = updateTagSchema.parse(payload);
+			const validatedPayload = updateTagSchema.parse(payload)
 
 			const updatedTag = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -136,30 +133,30 @@ function createTagStore() {
 
 				// Mock response for development
 				const mockTag: Tag = {
-					...state.tags.find(t => t.id === id)!,
+					...state.tags.find((t) => t.id === id)!,
 					...validatedPayload,
-					updatedAt: new Date().toISOString()
-				};
-
-				state.tags = state.tags.map(tag => (tag.id === id ? mockTag : tag));
-
-				if (state.currentTag?.id === id) {
-					state.currentTag = mockTag;
+					updatedAt: new Date().toISOString(),
 				}
 
-				return mockTag;
-			}, 'Failed to update tag');
+				state.tags = state.tags.map((tag) => (tag.id === id ? mockTag : tag))
 
-			return updatedTag;
+				if (state.currentTag?.id === id) {
+					state.currentTag = mockTag
+				}
+
+				return mockTag
+			}, 'Failed to update tag')
+
+			return updatedTag
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('tag', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('tag', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Failed to update tag';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to update tag'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -167,25 +164,25 @@ function createTagStore() {
 	 * Delete tag
 	 */
 	async function deleteTag(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/tags/${id}`);
 
-				state.tags = state.tags.filter(tag => tag.id !== id);
+				state.tags = state.tags.filter((tag) => tag.id !== id)
 
 				if (state.currentTag?.id === id) {
-					state.currentTag = null;
+					state.currentTag = null
 				}
-			}, 'Failed to delete tag');
+			}, 'Failed to delete tag')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to delete tag';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to delete tag'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -193,17 +190,17 @@ function createTagStore() {
 	 * Clear error state
 	 */
 	function clearError(): void {
-		state.error = null;
+		state.error = null
 	}
 
 	/**
 	 * Reset store state
 	 */
 	function reset(): void {
-		state.tags = [];
-		state.currentTag = null;
-		state.isLoading = false;
-		state.error = null;
+		state.tags = []
+		state.currentTag = null
+		state.isLoading = false
+		state.error = null
 	}
 
 	return {
@@ -214,31 +211,31 @@ function createTagStore() {
 		fetchTags,
 		reset,
 		get state() {
-			return state;
+			return state
 		},
-		updateTag
-	};
+		updateTag,
+	}
 }
 
 /**
  * Export tag store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let tagStoreInstance: null | ReturnType<typeof createTagStore> = null;
+let tagStoreInstance: null | ReturnType<typeof createTagStore> = null
 
 export const tagStore = new Proxy({} as ReturnType<typeof createTagStore>, {
 	get(_target, prop) {
 		if (!tagStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('tagStore can only be accessed on the client side');
+				throw new Error('tagStore can only be accessed on the client side')
 			}
-			tagStoreInstance = createTagStore();
+			tagStoreInstance = createTagStore()
 		}
-		return tagStoreInstance[prop as keyof ReturnType<typeof createTagStore>];
-	}
-});
+		return tagStoreInstance[prop as keyof ReturnType<typeof createTagStore>]
+	},
+})
 
 /**
  * Export store creator for testing
  */
-export { createTagStore };
+export { createTagStore }

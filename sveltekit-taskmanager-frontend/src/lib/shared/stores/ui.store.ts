@@ -3,31 +3,31 @@
  * Manages loading states, notifications, and modals
  */
 
-import type { LoadingState, Modal, Notification, NotificationType } from '../types/ui.types';
+import type { LoadingState, Modal, Notification, NotificationType } from '../types/ui.types'
 
 /**
  * Options for adding notifications
  */
 interface AddNotificationOptions {
-	duration?: number;
-	isPersistent?: boolean;
+	duration?: number
+	isPersistent?: boolean
 }
 
 /**
  * Options for opening modals
  */
 interface OpenModalOptions {
-	confirmText?: string;
-	cancelText?: string;
+	confirmText?: string
+	cancelText?: string
 }
 
 /**
  * UI store state interface
  */
 interface UIState {
-	loading: LoadingState;
-	notifications: Notification[];
-	modals: Modal[];
+	loading: LoadingState
+	notifications: Notification[]
+	modals: Modal[]
 }
 
 /**
@@ -37,24 +37,24 @@ function createUIStore() {
 	const state = $state<UIState>({
 		loading: {
 			isLoading: false,
-			message: undefined
+			message: undefined,
 		},
 		modals: [],
-		notifications: []
-	});
+		notifications: [],
+	})
 
 	/**
 	 * Set loading state
 	 */
 	function setLoading(isLoading: boolean, message?: string): void {
-		state.loading = { isLoading, message };
+		state.loading = { isLoading, message }
 	}
 
 	/**
 	 * Clear loading state
 	 */
 	function clearLoading(): void {
-		state.loading = { isLoading: false, message: undefined };
+		state.loading = { isLoading: false, message: undefined }
 	}
 
 	/**
@@ -66,7 +66,7 @@ function createUIStore() {
 		message?: string,
 		options?: AddNotificationOptions
 	): string {
-		const id = Date.now().toString();
+		const id = Date.now().toString()
 		const notification: Notification = {
 			createdAt: Date.now(),
 			duration: options?.duration || 5000,
@@ -74,102 +74,102 @@ function createUIStore() {
 			isPersistent: options?.isPersistent || false,
 			message,
 			title,
-			type
-		};
+			type,
+		}
 
-		state.notifications = [...state.notifications, notification];
+		state.notifications = [...state.notifications, notification]
 
 		// Auto-remove notification if not persistent
 		if (!notification.isPersistent && notification.duration) {
 			setTimeout(() => {
-				removeNotification(id);
-			}, notification.duration);
+				removeNotification(id)
+			}, notification.duration)
 		}
 
-		return id;
+		return id
 	}
 
 	/**
 	 * Remove notification by ID
 	 */
 	function removeNotification(id: string): void {
-		state.notifications = state.notifications.filter(n => n.id !== id);
+		state.notifications = state.notifications.filter((n) => n.id !== id)
 	}
 
 	/**
 	 * Clear all notifications
 	 */
 	function clearNotifications(): void {
-		state.notifications = [];
+		state.notifications = []
 	}
 
 	/**
 	 * Add success notification
 	 */
 	function success(title: string, message?: string, options?: AddNotificationOptions): string {
-		return addNotification('success', title, message, options);
+		return addNotification('success', title, message, options)
 	}
 
 	/**
 	 * Add error notification
 	 */
 	function error(title: string, message?: string, options?: AddNotificationOptions): string {
-		return addNotification('error', title, message, { ...options, isPersistent: true });
+		return addNotification('error', title, message, { ...options, isPersistent: true })
 	}
 
 	/**
 	 * Add warning notification
 	 */
 	function warning(title: string, message?: string, options?: AddNotificationOptions): string {
-		return addNotification('warning', title, message, options);
+		return addNotification('warning', title, message, options)
 	}
 
 	/**
 	 * Add info notification
 	 */
 	function info(title: string, message?: string, options?: AddNotificationOptions): string {
-		return addNotification('info', title, message, options);
+		return addNotification('info', title, message, options)
 	}
 
 	/**
 	 * Open modal
 	 */
 	function openModal(modal: Omit<Modal, 'id' | 'isOpen'>): string {
-		const id = Date.now().toString();
+		const id = Date.now().toString()
 		const newModal: Modal = {
 			...modal,
 			id,
-			isOpen: true
-		};
+			isOpen: true,
+		}
 
-		state.modals = [...state.modals, newModal];
-		return id;
+		state.modals = [...state.modals, newModal]
+		return id
 	}
 
 	/**
 	 * Close modal by ID
 	 */
 	function closeModal(id: string): void {
-		state.modals = state.modals.map(modal =>
+		state.modals = state.modals.map((modal) =>
 			modal.id === id ? { ...modal, isOpen: false } : modal
-		);
+		)
 
 		// Remove modal after animation
 		setTimeout(() => {
-			state.modals = state.modals.filter(modal => modal.id !== id);
-		}, 300);
+			state.modals = state.modals.filter((modal) => modal.id !== id)
+		}, 300)
 	}
 
 	/**
 	 * Close all modals
 	 */
 	function closeAllModals(): void {
-		state.modals = state.modals.map(modal => ({ ...modal, isOpen: false }));
+		state.modals = state.modals.map((modal) => ({ ...modal, isOpen: false }))
 
 		// Remove all modals after animation
 		setTimeout(() => {
-			state.modals = [];
-		}, 300);
+			state.modals = []
+		}, 300)
 	}
 
 	/**
@@ -188,8 +188,8 @@ function createUIStore() {
 			onConfirm,
 			showCancel: true,
 			title,
-			type: 'confirm'
-		});
+			type: 'confirm',
+		})
 	}
 
 	/**
@@ -201,17 +201,17 @@ function createUIStore() {
 			message,
 			showCancel: false,
 			title,
-			type: 'alert'
-		});
+			type: 'alert',
+		})
 	}
 
 	/**
 	 * Reset store state
 	 */
 	function reset(): void {
-		state.loading = { isLoading: false, message: undefined };
-		state.notifications = [];
-		state.modals = [];
+		state.loading = { isLoading: false, message: undefined }
+		state.notifications = []
+		state.modals = []
 	}
 
 	return {
@@ -229,32 +229,32 @@ function createUIStore() {
 		reset,
 		setLoading,
 		get state() {
-			return state;
+			return state
 		},
 		success,
-		warning
-	};
+		warning,
+	}
 }
 
 /**
  * Export UI store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let uiStoreInstance: null | ReturnType<typeof createUIStore> = null;
+let uiStoreInstance: null | ReturnType<typeof createUIStore> = null
 
 export const uiStore = new Proxy({} as ReturnType<typeof createUIStore>, {
 	get(_target, prop) {
 		if (!uiStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('uiStore can only be accessed on the client side');
+				throw new Error('uiStore can only be accessed on the client side')
 			}
-			uiStoreInstance = createUIStore();
+			uiStoreInstance = createUIStore()
 		}
-		return uiStoreInstance[prop as keyof ReturnType<typeof createUIStore>];
-	}
-});
+		return uiStoreInstance[prop as keyof ReturnType<typeof createUIStore>]
+	},
+})
 
 /**
  * Export store creator for testing
  */
-export { createUIStore };
+export { createUIStore }

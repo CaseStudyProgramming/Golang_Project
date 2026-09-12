@@ -1,92 +1,103 @@
 <script lang="ts">
-	import { taskStore, TaskList, Pagination, TaskSearch, TaskFilters } from '$lib/features/tasks';
-	import { TaskForm } from '$lib/features/tasks';
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+import { onMount } from 'svelte'
+import { goto } from '$app/navigation'
+import { taskStore } from '$lib/features/tasks'
+import TaskSearch from '$lib/features/tasks/components/TaskSearch.svelte'
+import TaskFilters from '$lib/features/tasks/components/TaskFilters.svelte'
+import TaskList from '$lib/features/tasks/components/TaskList.svelte'
+import Pagination from '$lib/features/tasks/components/Pagination.svelte'
+import TaskForm from '$lib/features/tasks/components/TaskForm.svelte'
 
-	let showCreateModal = $state(false);
-	let searchQuery = $state('');
+let showCreateModal = $state(false)
+let searchQuery = $state('')
 
-	onMount(async () => {
+onMount(async () => {
+	try {
+		await taskStore.fetchTasks()
+	} catch (error) {
+		console.error('Failed to fetch tasks:', error)
+	}
+})
+
+/**
+ * Handle clear filters
+ */
+function handleClearFilters(): void {
+	taskStore.clearFilters()
+	taskStore.fetchTasks()
+}
+
+/**
+ * Handle create task
+ */
+async function handleCreateTask(data: {
+	categoryId?: string
+	description?: string
+	dueDate?: string
+	priority?: string
+	tags?: string[]
+	title: string
+}): Promise<void> {
+	try {
+		await taskStore.createTask(data)
+		showCreateModal = false
+		await taskStore.fetchTasks()
+	} catch (error) {
+		console.error('Failed to create task:', error)
+	}
+}
+
+/**
+ * Handle delete task
+ */
+async function handleDeleteTask(task: (typeof taskStore.state.tasks)[0]): Promise<void> {
+	if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
 		try {
-			await taskStore.fetchTasks();
+			await taskStore.deleteTask(task.id)
 		} catch (error) {
-			console.error('Failed to fetch tasks:', error);
-		}
-	});
-
-	/**
-	 * Handle search
-	 */
-	function handleSearch(query: string): void {
-		searchQuery = query;
-		taskStore.setFilters({ search: query || undefined });
-		taskStore.fetchTasks();
-	}
-
-	/**
-	 * Handle filter change
-	 */
-	function handleFilterChange(filters: typeof taskStore.state.filters): void {
-		taskStore.setFilters(filters);
-		taskStore.fetchTasks();
-	}
-
-	/**
-	 * Handle clear filters
-	 */
-	function handleClearFilters(): void {
-		taskStore.clearFilters();
-		taskStore.fetchTasks();
-	}
-
-	/**
-	 * Handle page change
-	 */
-	function handlePageChange(page: number): void {
-		taskStore.setPage(page);
-		taskStore.fetchTasks();
-	}
-
-	/**
-	 * Handle view task
-	 */
-	function handleViewTask(task: typeof taskStore.state.tasks[0]): void {
-		goto(`/tasks/${task.id}`);
-	}
-
-	/**
-	 * Handle edit task
-	 */
-	function handleEditTask(task: typeof taskStore.state.tasks[0]): void {
-		goto(`/tasks/${task.id}/edit`);
-	}
-
-	/**
-	 * Handle delete task
-	 */
-	async function handleDeleteTask(task: typeof taskStore.state.tasks[0]): Promise<void> {
-		if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
-			try {
-				await taskStore.deleteTask(task.id);
-			} catch (error) {
-				console.error('Failed to delete task:', error);
-			}
+			console.error('Failed to delete task:', error)
 		}
 	}
+}
 
-	/**
-	 * Handle create task
-	 */
-	async function handleCreateTask(data: any): Promise<void> {
-		try {
-			await taskStore.createTask(data);
-			showCreateModal = false;
-			await taskStore.fetchTasks();
-		} catch (error) {
-			console.error('Failed to create task:', error);
-		}
-	}
+/**
+ * Handle edit task
+ */
+function handleEditTask(task: (typeof taskStore.state.tasks)[0]): void {
+	goto(`/tasks/${task.id}/edit`)
+}
+
+/**
+ * Handle filter change
+ */
+function handleFilterChange(filters: typeof taskStore.state.filters): void {
+	taskStore.setFilters(filters)
+	taskStore.fetchTasks()
+}
+
+/**
+ * Handle page change
+ */
+function handlePageChange(page: number): void {
+	taskStore.setPage(page)
+	taskStore.fetchTasks()
+}
+
+/**
+ * Handle search
+ */
+function handleSearch(query: string): void {
+	searchQuery = query
+	taskStore.setFilters({ search: query || undefined })
+	taskStore.fetchTasks()
+}
+
+/**
+ * Handle view task
+ */
+function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
+	goto(`/tasks/${task.id}`)
+}
 </script>
 
 <div class="container mx-auto px-4 py-8">

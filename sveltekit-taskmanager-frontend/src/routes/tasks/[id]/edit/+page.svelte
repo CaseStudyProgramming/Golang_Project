@@ -1,46 +1,49 @@
 <script lang="ts">
-	import { taskStore, TaskForm } from '$lib/features/tasks';
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+import { onMount } from 'svelte'
 
-	let taskId = $derived($page.params.id || '');
+import { goto } from '$app/navigation'
+import { page } from '$app/stores'
+import { taskStore } from '$lib/features/tasks'
+import TaskForm from '$lib/features/tasks/components/TaskForm.svelte'
+import type { CreateTaskPayload } from '$lib/features/tasks/schemas/task.schemas'
 
-	onMount(async () => {
-		if (!taskId) return;
-		try {
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to fetch task:', error);
-		}
-	});
+let taskId = $derived($page.params.id || '')
 
-	/**
-	 * Handle update task
-	 */
-	async function handleUpdateTask(data: any): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.updateTask(taskId, data);
-			goto(`/tasks/${taskId}`);
-		} catch (error) {
-			console.error('Failed to update task:', error);
-		}
+onMount(async () => {
+	if (!taskId) return
+	try {
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to fetch task:', error)
 	}
+})
 
-	/**
-	 * Handle cancel
-	 */
-	function handleCancel(): void {
-		goto(`/tasks/${taskId}`);
+/**
+ * Handle cancel
+ */
+function handleCancel(): void {
+	goto(`/tasks/${taskId}`)
+}
+
+/**
+ * Handle update task
+ */
+async function handleUpdateTask(data: CreateTaskPayload): Promise<void> {
+	if (!taskId) return
+	try {
+		await taskStore.updateTask(taskId, data)
+		goto(`/tasks/${taskId}`)
+	} catch (error) {
+		console.error('Failed to update task:', error)
 	}
+}
 </script>
 
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="flex items-center justify-between mb-6">
 			<button
-				onclick={handleCancel}
+				onclick={() => handleCancel()}
 				class="text-blue-600 hover:text-blue-700 flex items-center"
 			>
 				<svg class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,8 +64,8 @@
 				<TaskForm
 					mode="edit"
 					initialData={taskStore.state.currentTask}
-					onSubmit={handleUpdateTask}
-					onCancel={handleCancel}
+					onSubmit={(data: CreateTaskPayload) => handleUpdateTask(data)}
+					onCancel={() => handleCancel()}
 				/>
 			</div>
 		{:else}

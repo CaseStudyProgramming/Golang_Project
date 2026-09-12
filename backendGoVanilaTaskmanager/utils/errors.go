@@ -5,28 +5,28 @@ import "errors"
 // Common public errors (safe to show to users)
 var (
 	// Validation errors
-	ErrInvalidInput      = NewPublicError("Invalid input provided", 400)
-	ErrMissingRequired   = NewPublicError("Required field is missing", 400)
-	ErrInvalidFormat     = NewPublicError("Invalid format", 400)
-	
+	ErrInvalidInput    = NewPublicError("Invalid input provided", 400)
+	ErrMissingRequired = NewPublicError("Required field is missing", 400)
+	ErrInvalidFormat   = NewPublicError("Invalid format", 400)
+
 	// Authentication errors
-	ErrUnauthorized      = NewPublicError("Unauthorized access", 401)
+	ErrUnauthorized       = NewPublicError("Unauthorized access", 401)
 	ErrInvalidCredentials = NewPublicError("Invalid email or password", 401)
-	ErrTokenExpired      = NewPublicError("Token has expired", 401)
-	
+	ErrTokenExpired       = NewPublicError("Token has expired", 401)
+
 	// Authorization errors
-	ErrForbidden         = NewPublicError("You do not have permission to perform this action", 403)
-	
+	ErrForbidden = NewPublicError("You do not have permission to perform this action", 403)
+
 	// Resource errors
-	ErrNotFound          = NewPublicError("Resource not found", 404)
-	ErrConflict          = NewPublicError("Resource already exists", 409)
-	
+	ErrNotFound = NewPublicError("Resource not found", 404)
+	ErrConflict = NewPublicError("Resource already exists", 409)
+
 	// Business logic errors
-	ErrInvalidOperation  = NewPublicError("Invalid operation", 400)
-	ErrInvalidState      = NewPublicError("Invalid state for this operation", 400)
-	
+	ErrInvalidOperation = NewPublicError("Invalid operation", 400)
+	ErrInvalidState     = NewPublicError("Invalid state for this operation", 400)
+
 	// Generic internal error (message shown to users)
-	ErrInternal          = NewPublicError("An internal error occurred. Please try again later", 500)
+	ErrInternal = NewPublicError("An internal error occurred. Please try again later", 500)
 )
 
 // WrapInternalError wraps an internal error with context

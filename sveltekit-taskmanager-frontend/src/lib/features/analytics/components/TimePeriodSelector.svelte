@@ -1,20 +1,23 @@
 <script lang="ts">
-	import type { TimePeriod } from '../types/analytics.types';
+import type { TimePeriod } from '../types/analytics.types'
 
-	let { selectedPeriod, onPeriodChange }: {
-		selectedPeriod: TimePeriod;
-		onPeriodChange: (period: TimePeriod) => void;
-	} = $props();
+let {
+	onPeriodChange,
+	selectedPeriod,
+}: {
+	onPeriodChange: (period: TimePeriod) => void
+	selectedPeriod: TimePeriod
+} = $props()
 
-	const periods: { value: TimePeriod; label: string }[] = [
-		{ value: 'daily', label: 'Last 7 days' },
-		{ value: 'weekly', label: 'Last 30 days' },
-		{ value: 'monthly', label: 'Last 90 days' }
-	];
+const periods: { label: string; value: TimePeriod }[] = [
+	{ label: 'Last 7 days', value: 'daily' },
+	{ label: 'Last 30 days', value: 'weekly' },
+	{ label: 'Last 90 days', value: 'monthly' },
+]
 </script>
 
 <div class="flex items-center gap-2">
-	{#each periods as period}
+	{#each periods as period (period.value)}
 		<button
 			onclick={() => onPeriodChange(period.value)}
 			class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {selectedPeriod === period.value

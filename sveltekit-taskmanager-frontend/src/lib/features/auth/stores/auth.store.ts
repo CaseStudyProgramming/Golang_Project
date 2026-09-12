@@ -3,28 +3,26 @@
  * Manages user session, JWT token, and authentication state
  */
 
-import { goto } from '$app/navigation';
+import { goto } from '$app/navigation'
 import {
 	getAuthToken,
 	getRefreshToken,
 	isTokenExpired,
 	removeAuthToken,
 	setAuthToken,
-	setRefreshToken
-} from '$lib/shared/utils/auth.interceptors';
+	setRefreshToken,
+} from '$lib/shared/utils/auth.interceptors'
 import {
 	AuthenticationError,
 	ValidationError,
-	withErrorHandling
-} from '$lib/shared/utils/error.utils';
+	withErrorHandling,
+} from '$lib/shared/utils/error.utils'
+import { authApi } from '../api/auth.api'
+import { loginSchema, registerSchema } from '../schemas/auth.schemas'
+import type { AuthState, User } from '../types/auth.types'
 
-import type { AuthState, User } from '../types/auth.types';
-
-import { authApi } from '../api/auth.api';
-import { loginSchema, registerSchema } from '../schemas/auth.schemas';
-
-let refreshTimer: null | ReturnType<typeof setTimeout> = null;
-const REDIRECT_KEY = 'auth_redirect';
+let refreshTimer: null | ReturnType<typeof setTimeout> = null
+const REDIRECT_KEY = 'auth_redirect'
 
 /**
  * Create authentication store with Svelte 5 runes
@@ -35,26 +33,26 @@ function createAuthStore() {
 		isAuthenticated: false,
 		isLoading: false,
 		token: null,
-		user: null
-	});
+		user: null,
+	})
 
 	/**
 	 * Initialize authentication state from localStorage
 	 */
 	function initialize(): void {
-		const token = getAuthToken();
+		const token = getAuthToken()
 		if (token) {
-			state.token = token;
-			state.isAuthenticated = true;
+			state.token = token
+			state.isAuthenticated = true
 
 			// Set up automatic token refresh
-			setupTokenRefresh();
+			setupTokenRefresh()
 
 			// Fetch current user data
 			fetchCurrentUser().catch(() => {
 				// If fetch fails, token might be invalid
-				logout();
-			});
+				logout()
+			})
 		}
 	}
 
@@ -64,7 +62,7 @@ function createAuthStore() {
 	function setupTokenRefresh(): void {
 		// Clear any existing timer
 		if (refreshTimer) {
-			clearTimeout(refreshTimer);
+			clearTimeout(refreshTimer)
 		}
 
 		// Check token every minute
@@ -72,10 +70,10 @@ function createAuthStore() {
 			if (state.token && isTokenExpired()) {
 				refreshToken().catch(() => {
 					// If refresh fails, logout
-					logout();
-				});
+					logout()
+				})
 			}
-		}, 60000); // Check every minute
+		}, 60000) // Check every minute
 	}
 
 	/**
@@ -83,8 +81,8 @@ function createAuthStore() {
 	 */
 	function cleanup(): void {
 		if (refreshTimer) {
-			clearInterval(refreshTimer);
-			refreshTimer = null;
+			clearInterval(refreshTimer)
+			refreshTimer = null
 		}
 	}
 
@@ -92,29 +90,29 @@ function createAuthStore() {
 	 * Save redirect URL for after authentication
 	 */
 	function saveRedirectUrl(url: string): void {
-		if (typeof window === 'undefined') return;
-		sessionStorage.setItem(REDIRECT_KEY, url);
+		if (typeof window === 'undefined') return
+		sessionStorage.setItem(REDIRECT_KEY, url)
 	}
 
 	/**
 	 * Get and clear redirect URL
 	 */
 	function getRedirectUrl(): null | string {
-		if (typeof window === 'undefined') return null;
-		const url = sessionStorage.getItem(REDIRECT_KEY);
-		sessionStorage.removeItem(REDIRECT_KEY);
-		return url;
+		if (typeof window === 'undefined') return null
+		const url = sessionStorage.getItem(REDIRECT_KEY)
+		sessionStorage.removeItem(REDIRECT_KEY)
+		return url
 	}
 
 	/**
 	 * Perform redirect after authentication
 	 */
-	async function redirectAfterAuth(): Promise<void> {
-		const redirectUrl = getRedirectUrl();
+	function redirectAfterAuth(): void {
+		const redirectUrl = getRedirectUrl()
 		if (redirectUrl) {
-			await goto(redirectUrl);
+			goto(redirectUrl)
 		} else {
-			await goto('/dashboard');
+			goto('/dashboard')
 		}
 	}
 
@@ -122,34 +120,34 @@ function createAuthStore() {
 	 * Login user with credentials
 	 */
 	async function login(credentials: { email: string; password: string }): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedCredentials = loginSchema.parse(credentials);
+			const validatedCredentials = loginSchema.parse(credentials)
 
 			await withErrorHandling(async () => {
-				const response = await authApi.login(validatedCredentials);
+				const response = await authApi.login(validatedCredentials)
 
-				state.user = response.user;
-				state.token = response.token;
-				state.isAuthenticated = true;
+				state.user = response.user
+				state.token = response.token
+				state.isAuthenticated = true
 
-				setAuthToken(response.token, response.expiresIn);
+				setAuthToken(response.token, response.expiresIn)
 				if (response.refreshToken) {
-					setRefreshToken(response.refreshToken);
+					setRefreshToken(response.refreshToken)
 				}
-			}, 'Login failed');
+			}, 'Login failed')
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('credentials', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('credentials', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Login failed';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Login failed'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -157,34 +155,34 @@ function createAuthStore() {
 	 * Register new user
 	 */
 	async function register(data: { email: string; name?: string; password: string }): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedData = registerSchema.parse(data);
+			const validatedData = registerSchema.parse(data)
 
 			await withErrorHandling(async () => {
-				const response = await authApi.register(validatedData);
+				const response = await authApi.register(validatedData)
 
-				state.user = response.user;
-				state.token = response.token;
-				state.isAuthenticated = true;
+				state.user = response.user
+				state.token = response.token
+				state.isAuthenticated = true
 
-				setAuthToken(response.token, response.expiresIn);
+				setAuthToken(response.token, response.expiresIn)
 				if (response.refreshToken) {
-					setRefreshToken(response.refreshToken);
+					setRefreshToken(response.refreshToken)
 				}
-			}, 'Registration failed');
+			}, 'Registration failed')
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('registration', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('registration', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Registration failed';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Registration failed'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -193,17 +191,17 @@ function createAuthStore() {
 	 */
 	async function logout(): Promise<void> {
 		try {
-			await authApi.logout();
+			await authApi.logout()
 		} catch (error) {
-			console.error('Logout API call failed:', error);
+			console.error('Logout API call failed:', error)
 		} finally {
-			state.user = null;
-			state.token = null;
-			state.isAuthenticated = false;
-			state.error = null;
+			state.user = null
+			state.token = null
+			state.isAuthenticated = false
+			state.error = null
 
-			removeAuthToken();
-			cleanup();
+			removeAuthToken()
+			cleanup()
 		}
 	}
 
@@ -212,7 +210,7 @@ function createAuthStore() {
 	 */
 	function updateUser(user: Partial<User>): void {
 		if (state.user) {
-			state.user = { ...state.user, ...user };
+			state.user = { ...state.user, ...user }
 		}
 	}
 
@@ -220,29 +218,29 @@ function createAuthStore() {
 	 * Clear error state
 	 */
 	function clearError(): void {
-		state.error = null;
+		state.error = null
 	}
 
 	/**
 	 * Refresh JWT token
 	 */
 	async function refreshToken(): Promise<void> {
-		const refreshTokenValue = getRefreshToken();
+		const refreshTokenValue = getRefreshToken()
 		if (!refreshTokenValue) {
-			throw new AuthenticationError('No refresh token available');
+			throw new AuthenticationError('No refresh token available')
 		}
 
 		try {
-			const response = await authApi.refreshToken(refreshTokenValue);
-			state.token = response.token;
-			setAuthToken(response.token, response.expiresIn);
+			const response = await authApi.refreshToken(refreshTokenValue)
+			state.token = response.token
+			setAuthToken(response.token, response.expiresIn)
 			if (response.refreshToken) {
-				setRefreshToken(response.refreshToken);
+				setRefreshToken(response.refreshToken)
 			}
 		} catch (error) {
-			console.error('Token refresh failed:', error);
-			logout();
-			throw error;
+			console.error('Token refresh failed:', error)
+			logout()
+			throw error
 		}
 	}
 
@@ -250,19 +248,19 @@ function createAuthStore() {
 	 * Fetch current user data
 	 */
 	async function fetchCurrentUser(): Promise<void> {
-		if (!state.token) return;
+		if (!state.token) return
 
-		state.isLoading = true;
+		state.isLoading = true
 		try {
-			const user = await authApi.getCurrentUser();
-			state.user = user;
-			state.isAuthenticated = true;
+			const user = await authApi.getCurrentUser()
+			state.user = user
+			state.isAuthenticated = true
 		} catch (error) {
-			console.error('Failed to fetch current user:', error);
-			state.error = error instanceof Error ? error.message : 'Failed to fetch user';
-			throw error;
+			console.error('Failed to fetch current user:', error)
+			state.error = error instanceof Error ? error.message : 'Failed to fetch user'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -270,17 +268,17 @@ function createAuthStore() {
 	 * Check if token needs refresh
 	 */
 	function needsTokenRefresh(): boolean {
-		return isTokenExpired();
+		return isTokenExpired()
 	}
 
 	/**
 	 * Ensure valid token (refresh if needed)
 	 */
 	async function ensureValidToken(): Promise<void> {
-		if (!state.token) return;
+		if (!state.token) return
 
 		if (isTokenExpired()) {
-			await refreshToken();
+			await refreshToken()
 		}
 	}
 
@@ -299,47 +297,53 @@ function createAuthStore() {
 		register,
 		saveRedirectUrl,
 		get state() {
-			return state;
+			return state
 		},
-		updateUser
-	};
+		updateUser,
+	}
 }
 
 /**
  * Export authentication store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let authStoreInstance: null | ReturnType<typeof createAuthStore> = null;
+let authStoreInstance: null | ReturnType<typeof createAuthStore> = null
 
 // Create a safe SSR-compatible default store
 function createSSRAuthStore() {
 	const state: AuthState = {
+		error: null,
 		isAuthenticated: false,
-		user: null,
-		token: null,
 		isLoading: false,
-		error: null
-	};
+		token: null,
+		user: null,
+	}
 
 	return {
-		login: async () => { throw new Error('Auth store not available during SSR'); },
-		logout: async () => { throw new Error('Auth store not available during SSR'); },
-		register: async () => { throw new Error('Auth store not available during SSR'); },
-		initialize: () => {},
 		cleanup: () => {},
 		clearError: () => {},
 		ensureValidToken: async () => {},
 		fetchCurrentUser: async () => {},
 		getRedirectUrl: () => null,
+		initialize: () => {},
+		login: async () => {
+			throw new Error('Auth store not available during SSR')
+		},
+		logout: async () => {
+			throw new Error('Auth store not available during SSR')
+		},
 		needsTokenRefresh: () => false,
-		redirectAfterAuth: async () => {},
+		redirectAfterAuth: () => {},
 		refreshToken: async () => {},
+		register: async () => {
+			throw new Error('Auth store not available during SSR')
+		},
 		saveRedirectUrl: () => {},
-		updateUser: () => {},
 		get state() {
-			return state;
-		}
-	};
+			return state
+		},
+		updateUser: () => {},
+	}
 }
 
 export const authStore = new Proxy({} as ReturnType<typeof createAuthStore>, {
@@ -347,12 +351,12 @@ export const authStore = new Proxy({} as ReturnType<typeof createAuthStore>, {
 		if (!authStoreInstance) {
 			if (typeof window === 'undefined') {
 				// Return safe SSR-compatible store during server-side rendering
-				authStoreInstance = createSSRAuthStore();
+				authStoreInstance = createSSRAuthStore()
 			} else {
-				authStoreInstance = createAuthStore();
-				authStoreInstance.initialize();
+				authStoreInstance = createAuthStore()
+				authStoreInstance.initialize()
 			}
 		}
-		return authStoreInstance![prop as keyof ReturnType<typeof createAuthStore>];
-	}
-});
+		return authStoreInstance?.[prop as keyof ReturnType<typeof createAuthStore>]
+	},
+})

@@ -1,64 +1,65 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { Chart } from 'chart.js/auto';
-	import type { PriorityDistribution } from '../types/analytics.types';
+import { Chart } from 'chart.js/auto'
+import { onMount } from 'svelte'
 
-	let { distribution }: { distribution: PriorityDistribution } = $props();
-	let canvasElement = $state<HTMLCanvasElement>();
-	let chart: Chart | null = null;
+import type { PriorityDistribution } from '../types/analytics.types'
 
-	onMount(() => {
-		if (canvasElement) {
-			const ctx = canvasElement.getContext('2d');
-			if (ctx) {
-				chart = new Chart(ctx, {
-					type: 'doughnut',
-					data: {
-						labels: ['Low', 'Medium', 'High', 'Urgent'],
-						datasets: [
-							{
-								data: [distribution.low, distribution.medium, distribution.high, distribution.urgent],
-								backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#7C3AED'],
-								borderWidth: 0
-							}
-						]
-					},
-					options: {
-						responsive: true,
-						maintainAspectRatio: false,
-						plugins: {
-							legend: {
-								position: 'bottom',
-								labels: {
-									padding: 20,
-									usePointStyle: true
-								}
-							}
+let { distribution }: { distribution: PriorityDistribution } = $props()
+let canvasElement = $state<HTMLCanvasElement>()
+let chart: Chart | null = null
+
+onMount(() => {
+	if (canvasElement) {
+		const ctx = canvasElement.getContext('2d')
+		if (ctx) {
+			chart = new Chart(ctx, {
+				data: {
+					datasets: [
+						{
+							backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#7C3AED'],
+							borderWidth: 0,
+							data: [distribution.low, distribution.medium, distribution.high, distribution.urgent],
 						},
-						cutout: '60%'
-					}
-				});
-			}
+					],
+					labels: ['Low', 'Medium', 'High', 'Urgent'],
+				},
+				options: {
+					cutout: '60%',
+					maintainAspectRatio: false,
+					plugins: {
+						legend: {
+							labels: {
+								padding: 20,
+								usePointStyle: true,
+							},
+							position: 'bottom',
+						},
+					},
+					responsive: true,
+				},
+				type: 'doughnut',
+			})
 		}
+	}
 
-		return () => {
-			if (chart) {
-				chart.destroy();
-			}
-		};
-	});
-
-	$effect(() => {
+	return () => {
 		if (chart) {
-			chart.data.datasets[0].data = [
-				distribution.low,
-				distribution.medium,
-				distribution.high,
-				distribution.urgent
-			];
-			chart.update();
+			chart.destroy()
 		}
-	});
+	}
+})
+
+$effect(() => {
+	if (chart) {
+		chart.data.datasets[0].data = [
+			distribution.low,
+			distribution.medium,
+			distribution.high,
+			distribution.urgent,
+		]
+		chart.update()
+	}
+})
 </script>
 
 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">

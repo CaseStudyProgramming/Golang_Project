@@ -19,6 +19,22 @@
   - Update or check off the task list item upon a successful commit.
 - **Rollback Readiness**:
   - Each completed task MUST correspond to a clean, isolated Git commit to allow single-step rollbacks (`git revert`) without losing previous progress.
+- **CI/CD Verification Workflow (Global Standard)**:
+  - **Pre-commit Verification Order** (local development):
+    1. Format check (`gofmt -l .`) - Fast-fail for basic formatting issues
+    2. Lint (`golangci-lint run`) - Code quality and style checks
+    3. Static analysis (`go vet ./...`) - Potential bugs and issues
+    4. Tests (`go test ./...`) - Unit and integration tests
+    5. Build (`go build`) - Compilation verification
+  - **CI/CD Pipeline Order** (`.github/workflows/backend-ci.yml`):
+    1. Format check - Fastest check, fail early
+    2. Lint & Static analysis (PARALLEL) - Independent checks for speed
+    3. Tests (with race detection & coverage) - Runtime verification
+    4. Security scan (`govulncheck`) - Vulnerability check (can be parallel with tests)
+    5. Build - Final compilation verification
+  - **Fast-Fail Principle**: Always run fastest checks first (format → lint → test → build) to fail early and save CI/CD resources
+  - **Parallel Execution**: Lint and static analysis checks can run in parallel as they are independent
+  - **Security Scan**: Can be blocking (strict) or non-blocking (relaxed) depending on project velocity requirements
 
 ## Token Efficiency
 - Skip recaps and conversational summaries unless the result is ambiguous or requires further input.

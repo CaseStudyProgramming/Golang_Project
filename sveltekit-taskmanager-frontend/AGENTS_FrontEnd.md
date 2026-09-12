@@ -21,6 +21,23 @@
   - Update or check off the task list item upon a successful commit.
 - **Rollback Readiness**:
   - Each completed task MUST correspond to a clean, isolated Git commit to allow single-step rollbacks (`git revert`) without losing previous progress.
+- **CI/CD Verification Workflow (Global Standard)**:
+  - **Pre-commit Verification Order** (local development):
+    1. Format check (`bun run format:check`) - Fast-fail for basic formatting issues
+    2. Lint (`bun run lint`) - Code quality and style checks
+    3. Type check (`bun run check`) - TypeScript/Svelte type safety
+    4. Tests (`bun test`) - Unit tests with integrated type checking
+    5. Build (`bun run build`) - Production build verification
+  - **CI/CD Pipeline Order** (`.github/workflows/frontend-ci.yml`):
+    1. Format check - Fastest check, fail early
+    2. Lint & Type check (PARALLEL) - Independent checks for speed
+    3. Unit tests (with coverage) - Runtime verification
+    4. Security audit (`bun audit`) - Dependency vulnerability check (can be parallel with tests)
+    5. Build - Final production build verification
+    6. E2E tests (Playwright) - End-to-end user flow testing
+  - **Fast-Fail Principle**: Always run fastest checks first (format → lint → type check → test → build) to fail early and save CI/CD resources
+  - **Parallel Execution**: Lint and type check can run in parallel as they are independent. Security audit can run parallel with tests
+  - **Security Scan**: Use `bun audit` for native dependency vulnerability checking. Can be blocking (strict) or non-blocking (relaxed) depending on project velocity requirements
 
 ## Token Efficiency
 
@@ -93,8 +110,8 @@
 
 **Note**: Infrastructure, database resiliency, traffic control at server level, and data consistency rules apply to backend systems. Frontend should handle UI-level error states and retry logic for API calls.
 
-
 ## Commands (Bun)
+
 - Always use `bun` as the package manager and test/runtime runner:
   - `bun run dev` - Start dev server
   - `bun run build` - Build for production
@@ -198,7 +215,7 @@
   - Type safety does NOT prevent random testing - it ensures random data is type-valid while still allowing variation
 - **Data Generators for Mock Data**:
   - **Trigger Condition**: Create data generators/factories ONLY when an entity is used in >5 different test files AND has >5 properties
-  - **Implementation Options**: 
+  - **Implementation Options**:
     - **@faker-js/faker** (Recommended for multi-users, realistic data): Use for user profiles (names, emails), collaboration scenarios, varied test data
     - **Fishery pattern** (Factory pattern): Use for business logic states, known scenarios, deterministic behavior, timezone offsets, time-based states (overdue, due soon)
     - **Custom epoch utilities**: For epoch-based timezone systems - use helper functions for epoch generation and timezone conversion

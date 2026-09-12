@@ -1,40 +1,40 @@
 <script lang="ts">
-	import { categoryStore } from '../stores/category.store';
-	import type { Category } from '../types/category.types';
-	import { LoadingSpinner, EmptyState } from '$lib/shared/components';
-	import { confirmStore, toastStore } from '$lib/shared/stores';
-	import CategoryListSkeleton from './CategoryListSkeleton.svelte';
+import { confirmStore } from '$lib/shared/stores'
+import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
+import EmptyState from '$lib/shared/components/EmptyState.svelte'
+import { categoryStore } from '../stores/category.store'
+import type { Category } from '../types/category.types'
 
-	let {
-		categories = $bindable(categoryStore.state.categories),
-		isLoading = $bindable(categoryStore.state.isLoading),
-		onEditCategory,
-		onDeleteCategory,
-		onSelectCategory
-	}: {
-		categories?: Category[];
-		isLoading?: boolean;
-		onEditCategory?: (category: Category) => void;
-		onDeleteCategory?: (category: Category) => void;
-		onSelectCategory?: (category: Category) => void;
-	} = $props();
+let {
+	categories = $bindable(categoryStore.state.categories),
+	isLoading = $bindable(categoryStore.state.isLoading),
+	onDeleteCategory,
+	onEditCategory,
+	onSelectCategory,
+}: {
+	categories?: Category[]
+	isLoading?: boolean
+	onDeleteCategory?: (category: Category) => void
+	onEditCategory?: (category: Category) => void
+	onSelectCategory?: (category: Category) => void
+} = $props()
 
-	/**
-	 * Handle delete category with confirmation
-	 */
-	async function handleDeleteCategory(category: Category) {
-		const confirmed = await confirmStore.showConfirm({
-			title: 'Delete Category',
-			message: `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
-			confirmText: 'Delete',
-			cancelText: 'Cancel',
-			type: 'danger'
-		});
+/**
+ * Handle delete category with confirmation
+ */
+async function handleDeleteCategory(category: Category) {
+	const confirmed = await confirmStore.showConfirm({
+		cancelText: 'Cancel',
+		confirmText: 'Delete',
+		message: `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
+		title: 'Delete Category',
+		type: 'danger',
+	})
 
-		if (confirmed && onDeleteCategory) {
-			onDeleteCategory(category);
-		}
+	if (confirmed && onDeleteCategory) {
+		onDeleteCategory(category)
 	}
+}
 </script>
 
 <div class="space-y-3 sm:space-y-4">
@@ -52,7 +52,7 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-			{#each categories as category}
+			{#each categories as category (category.id)}
 				<div
 					class="bg-white rounded-lg shadow hover:shadow-md active:shadow-lg transition-shadow p-3 sm:p-4 border-l-4 cursor-pointer"
 					style:border-left-color={category.color || '#3B82F6'}

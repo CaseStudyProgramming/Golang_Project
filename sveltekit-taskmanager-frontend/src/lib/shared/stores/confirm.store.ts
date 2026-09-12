@@ -3,22 +3,22 @@
  * Manages confirmation dialogs for destructive actions
  */
 
-export type ConfirmType = 'danger' | 'warning' | 'info';
-
 export interface ConfirmDialog {
-	id: string;
-	isOpen: boolean;
-	title: string;
-	message: string;
-	confirmText: string;
-	cancelText: string;
-	type: ConfirmType;
-	onConfirm?: () => void | Promise<void>;
-	onCancel?: () => void;
+	id: string
+	isOpen: boolean
+	title: string
+	message: string
+	confirmText: string
+	cancelText: string
+	type: ConfirmType
+	onConfirm?: () => Promise<void> | void
+	onCancel?: () => void
 }
 
+export type ConfirmType = 'danger' | 'info' | 'warning'
+
 interface ConfirmState {
-	dialog: ConfirmDialog | null;
+	dialog: ConfirmDialog | null
 }
 
 /**
@@ -26,69 +26,69 @@ interface ConfirmState {
  */
 function createConfirmStore() {
 	const state = $state<ConfirmState>({
-		dialog: null
-	});
+		dialog: null,
+	})
 
 	/**
 	 * Show confirmation dialog
 	 */
 	function showConfirm(options: Omit<ConfirmDialog, 'id' | 'isOpen'>): Promise<boolean> {
 		return new Promise((resolve) => {
-			const id = `confirm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-			
+			const id = `confirm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
 			state.dialog = {
 				...options,
 				id,
 				isOpen: true,
-				onConfirm: async () => {
-					await options.onConfirm?.();
-					state.dialog = null;
-					resolve(true);
-				},
 				onCancel: () => {
-					options.onCancel?.();
-					state.dialog = null;
-					resolve(false);
-				}
-			};
-		});
+					options.onCancel?.()
+					state.dialog = null
+					resolve(false)
+				},
+				onConfirm: async () => {
+					await options.onConfirm?.()
+					state.dialog = null
+					resolve(true)
+				},
+			}
+		})
 	}
 
 	/**
 	 * Close confirmation dialog
 	 */
 	function closeConfirm(): void {
-		state.dialog = null;
+		state.dialog = null
 	}
 
 	return {
-		showConfirm,
 		closeConfirm,
+		showConfirm,
 		get state() {
-			return state;
-		}
-	};
+			return state
+		},
+	}
 }
 
 /**
  * Export confirm store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let confirmStoreInstance: null | ReturnType<typeof createConfirmStore> = null;
+let confirmStoreInstance: null | ReturnType<typeof createConfirmStore> = null
 
 // Create a safe SSR-compatible default store
 function createSSRConfirmStore() {
 	const state: ConfirmState = {
-		dialog: null
-	};
+		dialog: null,
+	}
 
 	return {
-		showConfirm: async () => false,
 		closeConfirm: () => {},
+		showConfirm: async () => false,
 		get state() {
-			return state;
-		}
-	};
+			return state
+		},
+	}
 }
 
 export const confirmStore = new Proxy({} as ReturnType<typeof createConfirmStore>, {
@@ -96,16 +96,16 @@ export const confirmStore = new Proxy({} as ReturnType<typeof createConfirmStore
 		if (!confirmStoreInstance) {
 			if (typeof window === 'undefined') {
 				// Return safe SSR-compatible store during server-side rendering
-				confirmStoreInstance = createSSRConfirmStore();
+				confirmStoreInstance = createSSRConfirmStore()
 			} else {
-				confirmStoreInstance = createConfirmStore();
+				confirmStoreInstance = createConfirmStore()
 			}
 		}
-		return confirmStoreInstance[prop as keyof ReturnType<typeof createConfirmStore>];
-	}
-});
+		return confirmStoreInstance[prop as keyof ReturnType<typeof createConfirmStore>]
+	},
+})
 
 /**
  * Export store creator for testing
  */
-export { createConfirmStore };
+export { createConfirmStore }

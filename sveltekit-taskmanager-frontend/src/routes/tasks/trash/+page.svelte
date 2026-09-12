@@ -1,76 +1,80 @@
 <script lang="ts">
-	import { taskStore, TaskList } from '$lib/features/tasks';
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+import { onMount } from 'svelte'
+import { goto } from '$app/navigation'
+import { taskStore } from '$lib/features/tasks'
 
-	onMount(async () => {
+onMount(async () => {
+	try {
+		// Filter to show only deleted tasks
+		taskStore.setFilters({ status: 'deleted' })
+		await taskStore.fetchTasks()
+	} catch (error) {
+		console.error('Failed to fetch deleted tasks:', error)
+	}
+})
+
+/**
+ * Format date for display
+ */
+function formatDate(dateString?: string): string {
+	if (!dateString) return 'No due date'
+	return new Date(dateString).toLocaleDateString('en-US', {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+	})
+}
+
+/**
+ * Get status color class
+ */
+function getStatusColor(status: string): string {
+	const colors = {
+		cancelled: 'bg-red-100 text-red-800',
+		completed: 'bg-green-100 text-green-800',
+		deleted: 'bg-gray-300 text-gray-600',
+		in_progress: 'bg-blue-100 text-blue-800',
+		todo: 'bg-gray-100 text-gray-800',
+	}
+	return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
+
+/**
+ * Handle permanent delete
+ */
+async function handlePermanentDelete(task: (typeof taskStore.state.tasks)[0]): Promise<void> {
+	if (
+		confirm(
+			`Are you sure you want to permanently delete "${task.title}"? This action cannot be undone.`
+		)
+	) {
 		try {
-			// Filter to show only deleted tasks
-			taskStore.setFilters({ status: 'deleted' });
-			await taskStore.fetchTasks();
+			await taskStore.permanentDeleteTask(task.id)
+			await taskStore.fetchTasks()
 		} catch (error) {
-			console.error('Failed to fetch deleted tasks:', error);
-		}
-	});
-
-	/**
-	 * Handle restore task
-	 */
-	async function handleRestoreTask(task: typeof taskStore.state.tasks[0]): Promise<void> {
-		try {
-			await taskStore.restoreTask(task.id);
-			await taskStore.fetchTasks();
-		} catch (error) {
-			console.error('Failed to restore task:', error);
+			console.error('Failed to permanently delete task:', error)
 		}
 	}
+}
 
-	/**
-	 * Handle permanent delete
-	 */
-	async function handlePermanentDelete(task: typeof taskStore.state.tasks[0]): Promise<void> {
-		if (confirm(`Are you sure you want to permanently delete "${task.title}"? This action cannot be undone.`)) {
-			try {
-				await taskStore.permanentDeleteTask(task.id);
-				await taskStore.fetchTasks();
-			} catch (error) {
-				console.error('Failed to permanently delete task:', error);
-			}
-		}
+/**
+ * Handle restore task
+ */
+async function handleRestoreTask(task: (typeof taskStore.state.tasks)[0]): Promise<void> {
+	try {
+		await taskStore.restoreTask(task.id)
+		await taskStore.fetchTasks()
+	} catch (error) {
+		console.error('Failed to restore task:', error)
 	}
+}
 
-	/**
-	 * Handle view task
-	 */
-	function handleViewTask(task: typeof taskStore.state.tasks[0]): void {
-		goto(`/tasks/${task.id}`);
-	}
-
-	/**
-	 * Get status color class
-	 */
-	function getStatusColor(status: string): string {
-		const colors = {
-			todo: 'bg-gray-100 text-gray-800',
-			in_progress: 'bg-blue-100 text-blue-800',
-			completed: 'bg-green-100 text-green-800',
-			cancelled: 'bg-red-100 text-red-800',
-			deleted: 'bg-gray-300 text-gray-600'
-		};
-		return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-	}
-
-	/**
-	 * Format date for display
-	 */
-	function formatDate(dateString?: string): string {
-		if (!dateString) return 'No due date';
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
+/**
+ * Handle view task
+ */
+function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
+	goto(`/tasks/${task.id}`)
+}
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -102,7 +106,7 @@
 		</div>
 	{:else}
 		<div class="space-y-3">
-			{#each taskStore.state.tasks as task}
+			{#each taskStore.state.tasks as task (task.id)}
 				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">
 					<div class="flex items-start justify-between">
 						<div class="flex-1 min-w-0">

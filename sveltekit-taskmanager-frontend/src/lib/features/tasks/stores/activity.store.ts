@@ -3,10 +3,9 @@
  * Manages task activity history and filtering
  */
 
-import { httpClient } from '$lib/shared/utils/api.utils';
-import { withErrorHandling } from '$lib/shared/utils/error.utils';
+import { withErrorHandling } from '$lib/shared/utils/error.utils'
 
-import type { Activity, ActivityFilters, ActivityState } from '../types/task.types';
+import type { Activity, ActivityFilters, ActivityState } from '../types/task.types'
 
 /**
  * Create activity store with Svelte 5 runes
@@ -15,15 +14,15 @@ function createActivityStore() {
 	const state = $state<ActivityState>({
 		activities: [],
 		error: null,
-		isLoading: false
-	});
+		isLoading: false,
+	})
 
 	/**
 	 * Fetch activities with filters
 	 */
-	async function fetchActivities(filters?: ActivityFilters): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+	async function fetchActivities(_filters?: ActivityFilters): Promise<void> {
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
@@ -37,15 +36,15 @@ function createActivityStore() {
 				// const response = await httpClient.get<Activity[]>(`/activities?${queryParams}`);
 
 				// Mock response for development
-				const mockActivities: Activity[] = [];
+				const mockActivities: Activity[] = []
 
-				state.activities = mockActivities;
-			}, 'Failed to fetch activities');
+				state.activities = mockActivities
+			}, 'Failed to fetch activities')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch activities';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch activities'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -62,18 +61,18 @@ function createActivityStore() {
 				const mockActivity: Activity = {
 					...activity,
 					createdAt: new Date().toISOString(),
-					id: Date.now().toString()
-				};
+					id: Date.now().toString(),
+				}
 
-				state.activities = [mockActivity, ...state.activities];
+				state.activities = [mockActivity, ...state.activities]
 
-				return mockActivity;
-			}, 'Failed to add activity');
+				return mockActivity
+			}, 'Failed to add activity')
 
-			return newActivity;
+			return newActivity
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to add activity';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to add activity'
+			throw error
 		}
 	}
 
@@ -92,24 +91,24 @@ function createActivityStore() {
 			taskId,
 			type,
 			userId: '1', // This would come from auth context
-			userName: 'Current User' // This would come from auth context
-		});
+			userName: 'Current User', // This would come from auth context
+		})
 	}
 
 	/**
 	 * Clear error state
 	 */
 	function clearError(): void {
-		state.error = null;
+		state.error = null
 	}
 
 	/**
 	 * Reset store state
 	 */
 	function reset(): void {
-		state.activities = [];
-		state.isLoading = false;
-		state.error = null;
+		state.activities = []
+		state.isLoading = false
+		state.error = null
 	}
 
 	return {
@@ -119,30 +118,30 @@ function createActivityStore() {
 		logTaskActivity,
 		reset,
 		get state() {
-			return state;
-		}
-	};
+			return state
+		},
+	}
 }
 
 /**
  * Export activity store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let activityStoreInstance: null | ReturnType<typeof createActivityStore> = null;
+let activityStoreInstance: null | ReturnType<typeof createActivityStore> = null
 
 export const activityStore = new Proxy({} as ReturnType<typeof createActivityStore>, {
 	get(_target, prop) {
 		if (!activityStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('activityStore can only be accessed on the client side');
+				throw new Error('activityStore can only be accessed on the client side')
 			}
-			activityStoreInstance = createActivityStore();
+			activityStoreInstance = createActivityStore()
 		}
-		return activityStoreInstance[prop as keyof ReturnType<typeof createActivityStore>];
-	}
-});
+		return activityStoreInstance[prop as keyof ReturnType<typeof createActivityStore>]
+	},
+})
 
 /**
  * Export store creator for testing
  */
-export { createActivityStore };
+export { createActivityStore }

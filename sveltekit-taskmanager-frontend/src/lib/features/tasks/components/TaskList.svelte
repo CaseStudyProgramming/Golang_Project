@@ -1,110 +1,111 @@
 <script lang="ts">
-	import { taskStore } from '../stores/task.store';
-	import type { Task } from '../types/task.types';
-	import { categoryStore } from '$lib/features/categories';
-	import { tagStore } from '$lib/features/tags';
-	import { LoadingSpinner, ProgressBar, EmptyState } from '$lib/shared/components';
-	import { confirmStore } from '$lib/shared/stores';
-	import TaskListSkeleton from './TaskListSkeleton.svelte';
+import { categoryStore } from '$lib/features/categories'
+import { tagStore } from '$lib/features/tags'
+import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
+import EmptyState from '$lib/shared/components/EmptyState.svelte'
+import ProgressBar from '$lib/shared/components/ProgressBar.svelte'
+import { confirmStore } from '$lib/shared/stores'
+import { taskStore } from '../stores/task.store'
+import type { Task } from '../types/task.types'
 
-	let { 
-		tasks = $bindable(taskStore.state.tasks),
-		isLoading = $bindable(taskStore.state.isLoading),
-		onViewTask,
-		onEditTask,
-		onDeleteTask
-	}: {
-		tasks?: Task[];
-		isLoading?: boolean;
-		onViewTask?: (task: Task) => void;
-		onEditTask?: (task: Task) => void;
-		onDeleteTask?: (task: Task) => void;
-	} = $props();
+let {
+	isLoading = $bindable(taskStore.state.isLoading),
+	onDeleteTask,
+	onEditTask,
+	onViewTask,
+	tasks = $bindable(taskStore.state.tasks),
+}: {
+	isLoading?: boolean
+	onDeleteTask?: (task: Task) => void
+	onEditTask?: (task: Task) => void
+	onViewTask?: (task: Task) => void
+	tasks?: Task[]
+} = $props()
 
-	let categories = $derived(categoryStore.state.categories);
-	let tags = $derived(tagStore.state.tags);
+let categories = $derived(categoryStore.state.categories)
+let tags = $derived(tagStore.state.tags)
 
-	/**
-	 * Initialize categories and tags on mount
-	 */
-	$effect(() => {
-		categoryStore.fetchCategories();
-		tagStore.fetchTags();
-	});
+/**
+ * Initialize categories and tags on mount
+ */
+$effect(() => {
+	categoryStore.fetchCategories()
+	tagStore.fetchTags()
+})
 
-	/**
-	 * Get priority color class
-	 */
-	function getPriorityColor(priority: string): string {
-		const colors = {
-			low: 'bg-green-100 text-green-800',
-			medium: 'bg-yellow-100 text-yellow-800',
-			high: 'bg-orange-100 text-orange-800',
-			urgent: 'bg-red-100 text-red-800'
-		};
-		return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+/**
+ * Format date for display
+ */
+function formatDate(dateString?: string): string {
+	if (!dateString) return 'No due date'
+	return new Date(dateString).toLocaleDateString('en-US', {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+	})
+}
+
+/**
+ * Get category by ID
+ */
+function getCategory(categoryId?: string) {
+	if (!categoryId) return null
+	return categories.find((c) => c.id === categoryId) || null
+}
+
+/**
+ * Get priority color class
+ */
+function getPriorityColor(priority: string): string {
+	const colors = {
+		high: 'bg-orange-100 text-orange-800',
+		low: 'bg-green-100 text-green-800',
+		medium: 'bg-yellow-100 text-yellow-800',
+		urgent: 'bg-red-100 text-red-800',
 	}
+	return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
 
-	/**
-	 * Get status color class
-	 */
-	function getStatusColor(status: string): string {
-		const colors = {
-			todo: 'bg-gray-100 text-gray-800',
-			in_progress: 'bg-blue-100 text-blue-800',
-			completed: 'bg-green-100 text-green-800',
-			cancelled: 'bg-red-100 text-red-800',
-			deleted: 'bg-gray-300 text-gray-600'
-		};
-		return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+/**
+ * Get status color class
+ */
+function getStatusColor(status: string): string {
+	const colors = {
+		cancelled: 'bg-red-100 text-red-800',
+		completed: 'bg-green-100 text-green-800',
+		deleted: 'bg-gray-300 text-gray-600',
+		in_progress: 'bg-blue-100 text-blue-800',
+		todo: 'bg-gray-100 text-gray-800',
 	}
+	return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
 
-	/**
-	 * Format date for display
-	 */
-	function formatDate(dateString?: string): string {
-		if (!dateString) return 'No due date';
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
+/**
+ * Get tag objects by IDs
+ */
+function getTagObjects(tagIds?: string[]) {
+	if (!tagIds || tagIds.length === 0) return []
+	return tagIds
+		.map((id) => tags.find((t) => t.id === id))
+		.filter((tag): tag is (typeof tags)[0] => tag !== undefined)
+}
+
+/**
+ * Handle delete task with confirmation
+ */
+async function handleDeleteTask(task: Task) {
+	const confirmed = await confirmStore.showConfirm({
+		cancelText: 'Cancel',
+		confirmText: 'Delete',
+		message: `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
+		title: 'Delete Task',
+		type: 'danger',
+	})
+
+	if (confirmed && onDeleteTask) {
+		onDeleteTask(task)
 	}
-
-	/**
-	 * Get category by ID
-	 */
-	function getCategory(categoryId?: string) {
-		if (!categoryId) return null;
-		return categories.find((c) => c.id === categoryId) || null;
-	}
-
-	/**
-	 * Get tag objects by IDs
-	 */
-	function getTagObjects(tagIds?: string[]) {
-		if (!tagIds || tagIds.length === 0) return [];
-		return tagIds
-			.map((id) => tags.find((t) => t.id === id))
-			.filter((tag): tag is typeof tags[0] => tag !== undefined);
-	}
-
-	/**
-	 * Handle delete task with confirmation
-	 */
-	async function handleDeleteTask(task: Task) {
-		const confirmed = await confirmStore.showConfirm({
-			title: 'Delete Task',
-			message: `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
-			confirmText: 'Delete',
-			cancelText: 'Cancel',
-			type: 'danger'
-		});
-
-		if (confirmed && onDeleteTask) {
-			onDeleteTask(task);
-		}
-	}
+}
 </script>
 
 <div class="space-y-3 sm:space-y-4">
@@ -122,7 +123,7 @@
 		</div>
 	{:else}
 		<div class="space-y-3">
-			{#each tasks as task}
+			{#each tasks as task (task.id)}
 				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-3 sm:p-4">
 					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
 						<div class="flex-1 min-w-0">
@@ -161,7 +162,7 @@
 							{/if}
 							{#if task.tags && task.tags.length > 0}
 								<div class="flex flex-wrap gap-1 mt-2">
-									{#each getTagObjects(task.tags) as tag}
+									{#each getTagObjects(task.tags) as tag (tag.id)}
 										<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style="background-color: {tag.color || '#3B82F6'}20; color: {tag.color || '#3B82F6'}">
 											{tag.name}
 										</span>

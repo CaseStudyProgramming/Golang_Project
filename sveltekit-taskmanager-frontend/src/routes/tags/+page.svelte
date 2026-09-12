@@ -1,117 +1,117 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { tagStore } from '$lib/features/tags';
-	import type { Tag } from '$lib/features/tags';
+import { onMount } from 'svelte'
+import type { Tag } from '$lib/features/tags'
+import { tagStore } from '$lib/features/tags'
 
-	let tags = $derived(tagStore.state.tags);
-	let isLoading = $derived(tagStore.state.isLoading);
-	let error = $derived(tagStore.state.error);
+let tags = $derived(tagStore.state.tags)
+let isLoading = $derived(tagStore.state.isLoading)
+let error = $derived(tagStore.state.error)
 
-	let showForm = $state(false);
-	let editingTag = $state<Tag | null>(null);
-	let name = $state('');
-	let color = $state('#3B82F6');
-	let isSubmitting = $state(false);
+let showForm = $state(false)
+let editingTag = $state<null | Tag>(null)
+let name = $state('')
+let color = $state('#3B82F6')
+let isSubmitting = $state(false)
 
-	const predefinedColors = [
-		'#3B82F6', // blue
-		'#10B981', // green
-		'#F59E0B', // yellow
-		'#EF4444', // red
-		'#8B5CF6', // purple
-		'#EC4899', // pink
-		'#6366F1', // indigo
-		'#14B8A6'  // teal
-	];
+const predefinedColors = [
+	'#3B82F6', // blue
+	'#10B981', // green
+	'#F59E0B', // yellow
+	'#EF4444', // red
+	'#8B5CF6', // purple
+	'#EC4899', // pink
+	'#6366F1', // indigo
+	'#14B8A6', // teal
+]
 
-	/**
-	 * Load tags on mount
-	 */
-	onMount(() => {
-		tagStore.fetchTags();
-	});
+/**
+ * Load tags on mount
+ */
+onMount(() => {
+	tagStore.fetchTags()
+})
 
-	/**
-	 * Handle tag creation
-	 */
-	async function handleCreateTag(): Promise<void> {
-		if (!name.trim()) return;
+/**
+ * Handle create button click
+ */
+function handleCreateClick(): void {
+	editingTag = null
+	name = ''
+	color = '#3B82F6'
+	showForm = true
+}
 
-		isSubmitting = true;
-		try {
-			await tagStore.createTag({ name: name.trim(), color });
-			name = '';
-			color = '#3B82F6';
-			showForm = false;
-		} catch (error) {
-			console.error('Failed to create tag:', error);
-		} finally {
-			isSubmitting = false;
-		}
+/**
+ * Handle tag creation
+ */
+async function handleCreateTag(): Promise<void> {
+	if (!name.trim()) return
+
+	isSubmitting = true
+	try {
+		await tagStore.createTag({ color, name: name.trim() })
+		name = ''
+		color = '#3B82F6'
+		showForm = false
+	} catch (error) {
+		console.error('Failed to create tag:', error)
+	} finally {
+		isSubmitting = false
 	}
+}
 
-	/**
-	 * Handle tag update
-	 */
-	async function handleUpdateTag(): Promise<void> {
-		if (!editingTag || !name.trim()) return;
+/**
+ * Handle tag deletion
+ */
+async function handleDeleteTag(tag: Tag): Promise<void> {
+	if (!confirm(`Are you sure you want to delete "${tag.name}"?`)) return
 
-		isSubmitting = true;
-		try {
-			await tagStore.updateTag(editingTag.id, { name: name.trim(), color });
-			editingTag = null;
-			showForm = false;
-			name = '';
-			color = '#3B82F6';
-		} catch (error) {
-			console.error('Failed to update tag:', error);
-		} finally {
-			isSubmitting = false;
-		}
+	try {
+		await tagStore.deleteTag(tag.id)
+	} catch (error) {
+		console.error('Failed to delete tag:', error)
 	}
+}
 
-	/**
-	 * Handle tag deletion
-	 */
-	async function handleDeleteTag(tag: Tag): Promise<void> {
-		if (!confirm(`Are you sure you want to delete "${tag.name}"?`)) return;
+/**
+ * Handle edit button click
+ */
+function handleEditTag(tag: Tag): void {
+	editingTag = tag
+	name = tag.name
+	color = tag.color || '#3B82F6'
+	showForm = true
+}
 
-		try {
-			await tagStore.deleteTag(tag.id);
-		} catch (error) {
-			console.error('Failed to delete tag:', error);
-		}
+/**
+ * Handle form cancel
+ */
+function handleFormCancel(): void {
+	showForm = false
+	editingTag = null
+	name = ''
+	color = '#3B82F6'
+}
+
+/**
+ * Handle tag update
+ */
+async function handleUpdateTag(): Promise<void> {
+	if (!editingTag || !name.trim()) return
+
+	isSubmitting = true
+	try {
+		await tagStore.updateTag(editingTag.id, { color, name: name.trim() })
+		editingTag = null
+		showForm = false
+		name = ''
+		color = '#3B82F6'
+	} catch (error) {
+		console.error('Failed to update tag:', error)
+	} finally {
+		isSubmitting = false
 	}
-
-	/**
-	 * Handle edit button click
-	 */
-	function handleEditTag(tag: Tag): void {
-		editingTag = tag;
-		name = tag.name;
-		color = tag.color || '#3B82F6';
-		showForm = true;
-	}
-
-	/**
-	 * Handle form cancel
-	 */
-	function handleFormCancel(): void {
-		showForm = false;
-		editingTag = null;
-		name = '';
-		color = '#3B82F6';
-	}
-
-	/**
-	 * Handle create button click
-	 */
-	function handleCreateClick(): void {
-		editingTag = null;
-		name = '';
-		color = '#3B82F6';
-		showForm = true;
-	}
+}
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -121,7 +121,7 @@
 			<p class="text-gray-600 mt-1">Manage your task tags</p>
 		</div>
 		<button
-			onclick={handleCreateClick}
+			onclick={() => handleCreateClick()}
 			class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
 		>
 			<svg class="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -166,7 +166,7 @@
 							disabled={isSubmitting}
 						/>
 						<div class="flex gap-2 flex-wrap">
-							{#each predefinedColors as presetColor}
+							{#each predefinedColors as presetColor (presetColor)}
 								<button
 									type="button"
 									onclick={() => (color = presetColor)}
@@ -183,7 +183,7 @@
 				<div class="flex gap-3 pt-4">
 					<button
 						type="button"
-						onclick={editingTag ? handleUpdateTag : handleCreateTag}
+						onclick={() => editingTag ? handleUpdateTag() : handleCreateTag()}
 						disabled={isSubmitting}
 						class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
 					>
@@ -191,7 +191,7 @@
 					</button>
 					<button
 						type="button"
-						onclick={handleFormCancel}
+						onclick={() => handleFormCancel()}
 						disabled={isSubmitting}
 						class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
 					>
@@ -217,7 +217,7 @@
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each tags as tag}
+			{#each tags as tag (tag.id)}
 				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 border-l-4" style:border-left-color={tag.color || '#3B82F6'}>
 					<div class="flex items-start justify-between mb-2">
 						<div class="flex items-center gap-2">

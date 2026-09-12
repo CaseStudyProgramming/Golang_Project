@@ -28,11 +28,11 @@ func NewTaskService(model models.TaskModelInterface, tagModel models.TagModelInt
 
 func (s *TaskService) Create(userID int64, task *models.Task, ipAddress string, userAgent string) (*models.Task, error) {
 	if task.Title == "" {
-		return nil, errors.New("Title tidak boleh kosong")
+		return nil, utils.ErrMissingRequired
 	}
 
 	if task.DueDate != nil && *task.DueDate < utils.CurrentEpochMillis() {
-		return nil, errors.New("Due date must be equal or greater than current date")
+		return nil, utils.NewPublicError("Due date must be equal or greater than current date", 400)
 	}
 
 	// Set default priority if not provided
@@ -185,7 +185,7 @@ func (s *TaskService) Update(userID int64, id int64, task *models.Task, ipAddres
 	task.ID = id
 	task.UserID = userID
 	if task.DueDate != nil && *task.DueDate < utils.CurrentEpochMillis() {
-		return nil, errors.New("Due date must be equal or greater than current date")
+		return nil, utils.NewPublicError("Due date must be equal or greater than current date", 400)
 	}
 
 	// Check if task exists

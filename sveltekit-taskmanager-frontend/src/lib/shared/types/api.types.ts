@@ -3,22 +3,22 @@
  */
 
 export interface ApiResponse<T> {
-	data: T;
-	error?: string;
-	message?: string;
+	data: T
+	error?: string
+	message?: string
 }
 
 export interface PaginatedResponse<T> {
-	data: T[];
-	total: number;
-	page: number;
-	limit: number;
-	totalPages: number;
+	data: T[]
+	total: number
+	page: number
+	limit: number
+	totalPages: number
 }
 
 export interface PaginationParams {
-	page?: number;
-	limit?: number;
-	sort?: string;
-	order?: 'asc' | 'desc';
+	page?: number
+	limit?: number
+	sort?: string
+	order?: 'asc' | 'desc'
 }

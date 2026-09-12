@@ -28,11 +28,11 @@ type MetricStats struct {
 
 // MetricsResponse represents the complete metrics response
 type MetricsResponse struct {
-	TotalRequests    int64            `json:"total_requests"`
-	TotalErrors      int64            `json:"total_errors"`
-	LastRequestTime  time.Time        `json:"last_request_time"`
-	EndpointMetrics  []MetricStats    `json:"endpoint_metrics"`
-	SlowEndpoints    []MetricStats    `json:"slow_endpoints"` // Endpoints with P95 > 50ms
+	TotalRequests   int64         `json:"total_requests"`
+	TotalErrors     int64         `json:"total_errors"`
+	LastRequestTime time.Time     `json:"last_request_time"`
+	EndpointMetrics []MetricStats `json:"endpoint_metrics"`
+	SlowEndpoints   []MetricStats `json:"slow_endpoints"` // Endpoints with P95 > 50ms
 }
 
 // GetMetricsHandler returns performance metrics

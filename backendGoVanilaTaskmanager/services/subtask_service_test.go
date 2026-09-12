@@ -182,8 +182,8 @@ func TestCreateSubtask_EmptyTitle(t *testing.T) {
 		t.Error("Expected error for empty title, got nil")
 	}
 
-	if err.Error() != "Subtask title cannot be empty" {
-		t.Errorf("Expected 'Subtask title cannot be empty' error, got %v", err)
+	if err != utils.ErrMissingRequired {
+		t.Errorf("Expected ErrMissingRequired error, got %v", err)
 	}
 }
 
@@ -386,8 +386,8 @@ func TestUpdateSubtask_EmptyTitle(t *testing.T) {
 		t.Error("Expected error for empty title, got nil")
 	}
 
-	if err.Error() != "Subtask title cannot be empty" {
-		t.Errorf("Expected 'Subtask title cannot be empty' error, got %v", err)
+	if err != utils.ErrMissingRequired {
+		t.Errorf("Expected ErrMissingRequired error, got %v", err)
 	}
 }
 

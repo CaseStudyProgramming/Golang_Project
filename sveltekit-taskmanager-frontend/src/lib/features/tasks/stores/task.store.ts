@@ -3,15 +3,11 @@
  * Manages tasks list, filters, and pagination
  */
 
-import type { PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types';
+import type { PaginatedResponse, PaginationParams } from '$lib/shared/types/api.types'
 
-import { httpClient } from '$lib/shared/utils/api.utils';
-import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
-import { z } from 'zod';
-
-import type { Subtask, Task, TaskFilters, TaskSort, TaskState } from '../types/task.types';
-
-import { createTaskSchema, updateTaskSchema } from '../schemas/task.schemas';
+import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils'
+import { createTaskSchema, updateTaskSchema } from '../schemas/task.schemas'
+import type { Subtask, Task, TaskFilters, TaskSort, TaskState } from '../types/task.types'
 
 /**
  * Create task store with Svelte 5 runes
@@ -26,40 +22,42 @@ function createTaskStore() {
 			limit: 10,
 			page: 1,
 			total: 0,
-			totalPages: 0
+			totalPages: 0,
 		},
 		sort: { field: 'createdAt', order: 'desc' },
-		tasks: []
-	});
+		tasks: [],
+	})
 
 	/**
 	 * Fetch tasks with filters and pagination
 	 */
 	async function fetchTasks(params?: PaginationParams): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
-				const queryParams = new URLSearchParams();
+				const queryParams = new URLSearchParams()
 
 				// Add pagination
-				queryParams.append('page', (params?.page || state.pagination.page).toString());
-				queryParams.append('limit', (params?.limit || state.pagination.limit).toString());
+				queryParams.append('page', (params?.page || state.pagination.page).toString())
+				queryParams.append('limit', (params?.limit || state.pagination.limit).toString())
 
 				// Add sort
-				queryParams.append('sort', state.sort.field);
-				queryParams.append('order', state.sort.order);
+				queryParams.append('sort', state.sort.field)
+				queryParams.append('order', state.sort.order)
 
 				// Add filters
-				if (state.filters.status) queryParams.append('status', state.filters.status);
-				if (state.filters.priority) queryParams.append('priority', state.filters.priority);
-				if (state.filters.categoryId) queryParams.append('categoryId', state.filters.categoryId);
-				if (state.filters.search) queryParams.append('search', state.filters.search);
-				if (state.filters.dueDateFrom) queryParams.append('dueDateFrom', state.filters.dueDateFrom);
-				if (state.filters.dueDateTo) queryParams.append('dueDateTo', state.filters.dueDateTo);
+				if (state.filters.status) queryParams.append('status', state.filters.status)
+				if (state.filters.priority) queryParams.append('priority', state.filters.priority)
+				if (state.filters.categoryId) queryParams.append('categoryId', state.filters.categoryId)
+				if (state.filters.search) queryParams.append('search', state.filters.search)
+				if (state.filters.dueDateFrom) queryParams.append('dueDateFrom', state.filters.dueDateFrom)
+				if (state.filters.dueDateTo) queryParams.append('dueDateTo', state.filters.dueDateTo)
 				if (state.filters.tags?.length) {
-					state.filters.tags.forEach(tag => queryParams.append('tags', tag));
+					state.filters.tags.forEach((tag) => {
+						queryParams.append('tags', tag)
+					})
 				}
 
 				// This would be replaced with actual API call
@@ -71,22 +69,22 @@ function createTaskStore() {
 					limit: state.pagination.limit,
 					page: state.pagination.page,
 					total: 0,
-					totalPages: 0
-				};
+					totalPages: 0,
+				}
 
-				state.tasks = mockResponse.data;
+				state.tasks = mockResponse.data
 				state.pagination = {
 					limit: mockResponse.limit,
 					page: mockResponse.page,
 					total: mockResponse.total,
-					totalPages: mockResponse.totalPages
-				};
-			}, 'Failed to fetch tasks');
+					totalPages: mockResponse.totalPages,
+				}
+			}, 'Failed to fetch tasks')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch tasks';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch tasks'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -94,8 +92,8 @@ function createTaskStore() {
 	 * Fetch single task by ID
 	 */
 	async function fetchTaskById(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
@@ -110,16 +108,16 @@ function createTaskStore() {
 					status: 'todo',
 					title: 'Mock Task',
 					updatedAt: new Date().toISOString(),
-					userId: '1'
-				};
+					userId: '1',
+				}
 
-				state.currentTask = mockTask;
-			}, 'Failed to fetch task');
+				state.currentTask = mockTask
+			}, 'Failed to fetch task')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch task';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch task'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -127,14 +125,14 @@ function createTaskStore() {
 	 * Create new task with optimistic UI update
 	 */
 	async function createTask(payload: unknown): Promise<Task> {
-		state.error = null;
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedPayload = createTaskSchema.parse(payload);
+			const validatedPayload = createTaskSchema.parse(payload)
 
 			// Optimistic update: create temporary task with generated ID
-			const tempId = `temp-${Date.now()}`;
+			const tempId = `temp-${Date.now()}`
 			const optimisticTask: Task = {
 				categoryId: validatedPayload.categoryId,
 				createdAt: new Date().toISOString(),
@@ -146,12 +144,12 @@ function createTaskStore() {
 				tags: validatedPayload.tags,
 				title: validatedPayload.title,
 				updatedAt: new Date().toISOString(),
-				userId: '1'
-			};
+				userId: '1',
+			}
 
 			// Add to state immediately
-			state.tasks = [optimisticTask, ...state.tasks];
-			state.pagination.total += 1;
+			state.tasks = [optimisticTask, ...state.tasks]
+			state.pagination.total += 1
 
 			const newTask = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -160,29 +158,27 @@ function createTaskStore() {
 				// Mock response for development
 				const mockTask: Task = {
 					...optimisticTask,
-					id: Date.now().toString() // Replace temp ID with real ID
-				};
+					id: Date.now().toString(), // Replace temp ID with real ID
+				}
 
 				// Replace optimistic task with real task
-				state.tasks = state.tasks.map((task) => 
-					task.id === tempId ? mockTask : task
-				);
+				state.tasks = state.tasks.map((task) => (task.id === tempId ? mockTask : task))
 
-				return mockTask;
-			}, 'Failed to create task');
+				return mockTask
+			}, 'Failed to create task')
 
-			return newTask;
+			return newTask
 		} catch (error) {
 			// Rollback optimistic update on error
-			state.tasks = state.tasks.filter(task => !task.id.startsWith('temp-'));
-			state.pagination.total -= 1;
+			state.tasks = state.tasks.filter((task) => !task.id.startsWith('temp-'))
+			state.pagination.total -= 1
 
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('task', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('task', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Failed to create task';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to create task'
+			throw error
 		}
 	}
 
@@ -190,26 +186,26 @@ function createTaskStore() {
 	 * Update existing task with optimistic UI update
 	 */
 	async function updateTask(id: string, payload: unknown): Promise<Task> {
-		state.error = null;
+		state.error = null
 
 		// Store previous state for rollback
-		const previousTask = state.tasks.find((t) => t.id === id);
-		const previousCurrentTask = state.currentTask?.id === id ? { ...state.currentTask } : null;
+		const previousTask = state.tasks.find((t) => t.id === id)
+		const previousCurrentTask = state.currentTask?.id === id ? { ...state.currentTask } : null
 
 		try {
 			// Validate input with Zod
-			const validatedPayload = updateTaskSchema.parse(payload);
+			const validatedPayload = updateTaskSchema.parse(payload)
 
 			// Optimistic update
 			const optimisticTask: Task = {
 				...previousTask!,
 				...validatedPayload,
-				updatedAt: new Date().toISOString()
-			};
+				updatedAt: new Date().toISOString(),
+			}
 
-			state.tasks = state.tasks.map((task) => (task.id === id ? optimisticTask : task));
+			state.tasks = state.tasks.map((task) => (task.id === id ? optimisticTask : task))
 			if (state.currentTask?.id === id) {
-				state.currentTask = optimisticTask;
+				state.currentTask = optimisticTask
 			}
 
 			const updatedTask = await withErrorHandling(async () => {
@@ -219,33 +215,33 @@ function createTaskStore() {
 				// Mock response for development
 				const mockTask: Task = {
 					...optimisticTask,
-					updatedAt: new Date().toISOString()
-				};
-
-				state.tasks = state.tasks.map((task) => (task.id === id ? mockTask : task));
-				if (state.currentTask?.id === id) {
-					state.currentTask = mockTask;
+					updatedAt: new Date().toISOString(),
 				}
 
-				return mockTask;
-			}, 'Failed to update task');
+				state.tasks = state.tasks.map((task) => (task.id === id ? mockTask : task))
+				if (state.currentTask?.id === id) {
+					state.currentTask = mockTask
+				}
 
-			return updatedTask;
+				return mockTask
+			}, 'Failed to update task')
+
+			return updatedTask
 		} catch (error) {
 			// Rollback optimistic update on error
 			if (previousTask) {
-				state.tasks = state.tasks.map((task) => (task.id === id ? { ...previousTask } : task));
+				state.tasks = state.tasks.map((task) => (task.id === id ? { ...previousTask } : task))
 			}
 			if (previousCurrentTask) {
-				state.currentTask = previousCurrentTask;
+				state.currentTask = previousCurrentTask
 			}
 
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('task', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('task', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Failed to update task';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to update task'
+			throw error
 		}
 	}
 
@@ -253,11 +249,11 @@ function createTaskStore() {
 	 * Delete task (soft delete) with optimistic UI update
 	 */
 	async function deleteTask(id: string): Promise<void> {
-		state.error = null;
+		state.error = null
 
 		// Store previous state for rollback
-		const previousTask = state.tasks.find((t) => t.id === id);
-		const previousCurrentTask = state.currentTask?.id === id ? { ...state.currentTask } : null;
+		const previousTask = state.tasks.find((t) => t.id === id)
+		const previousCurrentTask = state.currentTask?.id === id ? { ...state.currentTask } : null
 
 		try {
 			// Optimistic update: soft delete by updating status
@@ -265,29 +261,29 @@ function createTaskStore() {
 				task.id === id
 					? { ...task, status: 'deleted' as const, updatedAt: new Date().toISOString() }
 					: task
-			);
-			state.pagination.total -= 1;
+			)
+			state.pagination.total -= 1
 
 			if (state.currentTask?.id === id) {
-				state.currentTask = null;
+				state.currentTask = null
 			}
 
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call for soft delete
 				// await httpClient.patch(`/tasks/${id}`, { status: 'deleted' });
-			}, 'Failed to delete task');
+			}, 'Failed to delete task')
 		} catch (error) {
 			// Rollback optimistic update on error
 			if (previousTask) {
-				state.tasks = state.tasks.map((task) => (task.id === id ? { ...previousTask } : task));
-				state.pagination.total += 1;
+				state.tasks = state.tasks.map((task) => (task.id === id ? { ...previousTask } : task))
+				state.pagination.total += 1
 			}
 			if (previousCurrentTask) {
-				state.currentTask = previousCurrentTask;
+				state.currentTask = previousCurrentTask
 			}
 
-			state.error = error instanceof Error ? error.message : 'Failed to delete task';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to delete task'
+			throw error
 		}
 	}
 
@@ -295,26 +291,26 @@ function createTaskStore() {
 	 * Restore deleted task
 	 */
 	async function restoreTask(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.patch(`/tasks/${id}`, { status: 'todo' });
 
-				state.tasks = state.tasks.map(task =>
+				state.tasks = state.tasks.map((task) =>
 					task.id === id
 						? { ...task, status: 'todo' as const, updatedAt: new Date().toISOString() }
 						: task
-				);
-				state.pagination.total += 1;
-			}, 'Failed to restore task');
+				)
+				state.pagination.total += 1
+			}, 'Failed to restore task')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to restore task';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to restore task'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -322,24 +318,24 @@ function createTaskStore() {
 	 * Permanently delete task
 	 */
 	async function permanentDeleteTask(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/tasks/${id}/permanent`);
 
-				state.tasks = state.tasks.filter(task => task.id !== id);
+				state.tasks = state.tasks.filter((task) => task.id !== id)
 				if (state.currentTask?.id === id) {
-					state.currentTask = null;
+					state.currentTask = null
 				}
-			}, 'Failed to permanently delete task');
+			}, 'Failed to permanently delete task')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to permanently delete task';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to permanently delete task'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -347,45 +343,45 @@ function createTaskStore() {
 	 * Update filters
 	 */
 	function setFilters(filters: Partial<TaskFilters>): void {
-		state.filters = { ...state.filters, ...filters };
-		state.pagination.page = 1; // Reset to first page when filters change
+		state.filters = { ...state.filters, ...filters }
+		state.pagination.page = 1 // Reset to first page when filters change
 	}
 
 	/**
 	 * Clear all filters
 	 */
 	function clearFilters(): void {
-		state.filters = {};
-		state.pagination.page = 1;
+		state.filters = {}
+		state.pagination.page = 1
 	}
 
 	/**
 	 * Update sort
 	 */
 	function setSort(sort: TaskSort): void {
-		state.sort = sort;
+		state.sort = sort
 	}
 
 	/**
 	 * Change pagination page
 	 */
 	function setPage(page: number): void {
-		state.pagination.page = page;
+		state.pagination.page = page
 	}
 
 	/**
 	 * Change pagination limit
 	 */
 	function setLimit(limit: number): void {
-		state.pagination.limit = limit;
-		state.pagination.page = 1; // Reset to first page when limit changes
+		state.pagination.limit = limit
+		state.pagination.page = 1 // Reset to first page when limit changes
 	}
 
 	/**
 	 * Clear error state
 	 */
 	function clearError(): void {
-		state.error = null;
+		state.error = null
 	}
 
 	/**
@@ -404,32 +400,32 @@ function createTaskStore() {
 					isCompleted: false,
 					taskId,
 					title: title.trim(),
-					updatedAt: new Date().toISOString()
-				};
-
-				// Update task's subtasks and progress
-				state.tasks = state.tasks.map(task => {
-					if (task.id === taskId) {
-						const updatedSubtasks = [...(task.subtasks || []), mockSubtask];
-						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, progress, subtasks: updatedSubtasks };
-					}
-					return task;
-				});
-
-				if (state.currentTask?.id === taskId) {
-					const updatedSubtasks = [...(state.currentTask.subtasks || []), mockSubtask];
-					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+					updatedAt: new Date().toISOString(),
 				}
 
-				return mockSubtask;
-			}, 'Failed to add subtask');
+				// Update task's subtasks and progress
+				state.tasks = state.tasks.map((task) => {
+					if (task.id === taskId) {
+						const updatedSubtasks = [...(task.subtasks || []), mockSubtask]
+						const progress = calculateProgress(updatedSubtasks)
+						return { ...task, progress, subtasks: updatedSubtasks }
+					}
+					return task
+				})
 
-			return subtask;
+				if (state.currentTask?.id === taskId) {
+					const updatedSubtasks = [...(state.currentTask.subtasks || []), mockSubtask]
+					const progress = calculateProgress(updatedSubtasks)
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks }
+				}
+
+				return mockSubtask
+			}, 'Failed to add subtask')
+
+			return subtask
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to add subtask';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to add subtask'
+			throw error
 		}
 	}
 
@@ -438,8 +434,8 @@ function createTaskStore() {
 	 */
 	async function toggleSubtask(taskId: string, subtaskId: string): Promise<void> {
 		// Store previous state for rollback
-		const previousTask = state.tasks.find((t) => t.id === taskId);
-		const previousCurrentTask = state.currentTask?.id === taskId ? { ...state.currentTask } : null;
+		const previousTask = state.tasks.find((t) => t.id === taskId)
+		const previousCurrentTask = state.currentTask?.id === taskId ? { ...state.currentTask } : null
 
 		try {
 			// Optimistic update
@@ -451,15 +447,15 @@ function createTaskStore() {
 								? {
 										...subtask,
 										isCompleted: !subtask.isCompleted,
-										updatedAt: new Date().toISOString()
+										updatedAt: new Date().toISOString(),
 									}
 								: subtask
-						) || [];
-					const progress = calculateProgress(updatedSubtasks);
-					return { ...task, progress, subtasks: updatedSubtasks };
+						) || []
+					const progress = calculateProgress(updatedSubtasks)
+					return { ...task, progress, subtasks: updatedSubtasks }
 				}
-				return task;
-			});
+				return task
+			})
 
 			if (state.currentTask?.id === taskId) {
 				const updatedSubtasks =
@@ -468,29 +464,29 @@ function createTaskStore() {
 							? {
 									...subtask,
 									isCompleted: !subtask.isCompleted,
-									updatedAt: new Date().toISOString()
+									updatedAt: new Date().toISOString(),
 								}
 							: subtask
-					) || [];
-				const progress = calculateProgress(updatedSubtasks);
-				state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+					) || []
+				const progress = calculateProgress(updatedSubtasks)
+				state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks }
 			}
 
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.patch(`/tasks/${taskId}/subtasks/${subtaskId}`, { isCompleted: !isCompleted });
-			}, 'Failed to toggle subtask');
+			}, 'Failed to toggle subtask')
 		} catch (error) {
 			// Rollback optimistic update on error
 			if (previousTask) {
-				state.tasks = state.tasks.map((task) => (task.id === taskId ? { ...previousTask } : task));
+				state.tasks = state.tasks.map((task) => (task.id === taskId ? { ...previousTask } : task))
 			}
 			if (previousCurrentTask) {
-				state.currentTask = previousCurrentTask;
+				state.currentTask = previousCurrentTask
 			}
 
-			state.error = error instanceof Error ? error.message : 'Failed to toggle subtask';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to toggle subtask'
+			throw error
 		}
 	}
 
@@ -504,26 +500,26 @@ function createTaskStore() {
 				// await httpClient.delete(`/tasks/${taskId}/subtasks/${subtaskId}`);
 
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map(task => {
+				state.tasks = state.tasks.map((task) => {
 					if (task.id === taskId) {
 						const updatedSubtasks =
-							task.subtasks?.filter(subtask => subtask.id !== subtaskId) || [];
-						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, progress, subtasks: updatedSubtasks };
+							task.subtasks?.filter((subtask) => subtask.id !== subtaskId) || []
+						const progress = calculateProgress(updatedSubtasks)
+						return { ...task, progress, subtasks: updatedSubtasks }
 					}
-					return task;
-				});
+					return task
+				})
 
 				if (state.currentTask?.id === taskId) {
 					const updatedSubtasks =
-						state.currentTask.subtasks?.filter(subtask => subtask.id !== subtaskId) || [];
-					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+						state.currentTask.subtasks?.filter((subtask) => subtask.id !== subtaskId) || []
+					const progress = calculateProgress(updatedSubtasks)
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks }
 				}
-			}, 'Failed to delete subtask');
+			}, 'Failed to delete subtask')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to delete subtask';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to delete subtask'
+			throw error
 		}
 	}
 
@@ -537,34 +533,34 @@ function createTaskStore() {
 				// await httpClient.post(`/tasks/${taskId}/subtasks/bulk-complete`, { subtaskIds });
 
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map(task => {
+				state.tasks = state.tasks.map((task) => {
 					if (task.id === taskId) {
 						const updatedSubtasks =
-							task.subtasks?.map(subtask =>
+							task.subtasks?.map((subtask) =>
 								subtaskIds.includes(subtask.id)
 									? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
 									: subtask
-							) || [];
-						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, progress, subtasks: updatedSubtasks };
+							) || []
+						const progress = calculateProgress(updatedSubtasks)
+						return { ...task, progress, subtasks: updatedSubtasks }
 					}
-					return task;
-				});
+					return task
+				})
 
 				if (state.currentTask?.id === taskId) {
 					const updatedSubtasks =
-						state.currentTask.subtasks?.map(subtask =>
+						state.currentTask.subtasks?.map((subtask) =>
 							subtaskIds.includes(subtask.id)
 								? { ...subtask, isCompleted: true, updatedAt: new Date().toISOString() }
 								: subtask
-						) || [];
-					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+						) || []
+					const progress = calculateProgress(updatedSubtasks)
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks }
 				}
-			}, 'Failed to bulk complete subtasks');
+			}, 'Failed to bulk complete subtasks')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to bulk complete subtasks';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to bulk complete subtasks'
+			throw error
 		}
 	}
 
@@ -578,26 +574,26 @@ function createTaskStore() {
 				// await httpClient.post(`/tasks/${taskId}/subtasks/bulk-delete`, { subtaskIds });
 
 				// Update task's subtasks and progress
-				state.tasks = state.tasks.map(task => {
+				state.tasks = state.tasks.map((task) => {
 					if (task.id === taskId) {
 						const updatedSubtasks =
-							task.subtasks?.filter(subtask => !subtaskIds.includes(subtask.id)) || [];
-						const progress = calculateProgress(updatedSubtasks);
-						return { ...task, progress, subtasks: updatedSubtasks };
+							task.subtasks?.filter((subtask) => !subtaskIds.includes(subtask.id)) || []
+						const progress = calculateProgress(updatedSubtasks)
+						return { ...task, progress, subtasks: updatedSubtasks }
 					}
-					return task;
-				});
+					return task
+				})
 
 				if (state.currentTask?.id === taskId) {
 					const updatedSubtasks =
-						state.currentTask.subtasks?.filter(subtask => !subtaskIds.includes(subtask.id)) || [];
-					const progress = calculateProgress(updatedSubtasks);
-					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks };
+						state.currentTask.subtasks?.filter((subtask) => !subtaskIds.includes(subtask.id)) || []
+					const progress = calculateProgress(updatedSubtasks)
+					state.currentTask = { ...state.currentTask, progress, subtasks: updatedSubtasks }
 				}
-			}, 'Failed to bulk delete subtasks');
+			}, 'Failed to bulk delete subtasks')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to bulk delete subtasks';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to bulk delete subtasks'
+			throw error
 		}
 	}
 
@@ -605,27 +601,27 @@ function createTaskStore() {
 	 * Calculate progress percentage based on completed subtasks
 	 */
 	function calculateProgress(subtasks: Subtask[]): number {
-		if (subtasks.length === 0) return 0;
-		const completed = subtasks.filter(s => s.isCompleted).length;
-		return Math.round((completed / subtasks.length) * 100);
+		if (subtasks.length === 0) return 0
+		const completed = subtasks.filter((s) => s.isCompleted).length
+		return Math.round((completed / subtasks.length) * 100)
 	}
 
 	/**
 	 * Reset store state
 	 */
 	function reset(): void {
-		state.tasks = [];
-		state.currentTask = null;
-		state.filters = {};
-		state.sort = { field: 'createdAt', order: 'desc' };
+		state.tasks = []
+		state.currentTask = null
+		state.filters = {}
+		state.sort = { field: 'createdAt', order: 'desc' }
 		state.pagination = {
 			limit: 10,
 			page: 1,
 			total: 0,
-			totalPages: 0
-		};
-		state.isLoading = false;
-		state.error = null;
+			totalPages: 0,
+		}
+		state.isLoading = false
+		state.error = null
 	}
 
 	return {
@@ -647,27 +643,27 @@ function createTaskStore() {
 		setPage,
 		setSort,
 		get state() {
-			return state;
+			return state
 		},
 		toggleSubtask,
-		updateTask
-	};
+		updateTask,
+	}
 }
 
 /**
  * Export task store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let taskStoreInstance: null | ReturnType<typeof createTaskStore> = null;
+let taskStoreInstance: null | ReturnType<typeof createTaskStore> = null
 
 export const taskStore = new Proxy({} as ReturnType<typeof createTaskStore>, {
 	get(_target, prop) {
 		if (!taskStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('taskStore can only be accessed on the client side');
+				throw new Error('taskStore can only be accessed on the client side')
 			}
-			taskStoreInstance = createTaskStore();
+			taskStoreInstance = createTaskStore()
 		}
-		return taskStoreInstance[prop as keyof ReturnType<typeof createTaskStore>];
-	}
-});
+		return taskStoreInstance[prop as keyof ReturnType<typeof createTaskStore>]
+	},
+})

@@ -1,9 +1,9 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 	"taskmanager/models"
+	"taskmanager/utils"
 )
 
 type SubtaskService struct {
@@ -21,7 +21,7 @@ func NewSubtaskService(subtaskModel models.SubtaskModelInterface, taskModel mode
 func (s *SubtaskService) Create(userID int64, taskID int64, subtask *models.Subtask) (*models.Subtask, error) {
 	// Validate subtask title
 	if subtask.Title == "" {
-		return nil, errors.New("Subtask title cannot be empty")
+		return nil, utils.ErrMissingRequired
 	}
 
 	// Check if task exists and belongs to user
@@ -79,7 +79,7 @@ func (s *SubtaskService) GetByID(userID int64, id int64) (*models.Subtask, error
 func (s *SubtaskService) Update(userID int64, id int64, subtask *models.Subtask) (*models.Subtask, error) {
 	// Validate subtask title
 	if subtask.Title == "" {
-		return nil, errors.New("Subtask title cannot be empty")
+		return nil, utils.ErrMissingRequired
 	}
 
 	// Get existing subtask to verify access
