@@ -652,15 +652,38 @@ function createTaskStore() {
 
 /**
  * Export task store instance
- * Only create store instance on client side to avoid SSR issues
+ * Return default values during SSR to avoid hydration issues
  */
 let taskStoreInstance: null | ReturnType<typeof createTaskStore> = null
+
+// Default state for SSR
+const defaultState = {
+	tasks: [],
+	isLoading: false,
+	error: null,
+	filters: {
+		search: undefined,
+		status: undefined,
+		priority: undefined,
+		categoryId: undefined,
+		tags: undefined
+	},
+	pagination: {
+		page: 1,
+		limit: 10,
+		total: 0,
+		totalPages: 0
+	}
+}
 
 export const taskStore = new Proxy({} as ReturnType<typeof createTaskStore>, {
 	get(_target, prop) {
 		if (!taskStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('taskStore can only be accessed on the client side')
+				// Return default values during SSR instead of throwing error
+				// This allows SSR to render successfully
+				if (prop === 'state') return defaultState
+				return () => {} // Return no-op functions for SSR
 			}
 			taskStoreInstance = createTaskStore()
 		}

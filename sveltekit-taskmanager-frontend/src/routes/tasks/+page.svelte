@@ -10,10 +10,8 @@ import TaskForm from '$lib/features/tasks/components/TaskForm.svelte'
 
 let showCreateModal = $state(false)
 let searchQuery = $state('')
-let isClient = $state(false)
 
 onMount(async () => {
-	isClient = true
 	try {
 		await taskStore.fetchTasks()
 	} catch (error) {
@@ -121,33 +119,31 @@ function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
 		/>
 	</div>
 
-	{#if isClient}
-		<TaskFilters
-			bind:filters={taskStore.state.filters}
-			onFilterChange={handleFilterChange}
-			onClearFilters={handleClearFilters}
-		/>
+	<TaskFilters
+		bind:filters={taskStore.state.filters}
+		onFilterChange={handleFilterChange}
+		onClearFilters={handleClearFilters}
+	/>
 
-		<TaskList
-			tasks={taskStore.state.tasks}
-			isLoading={taskStore.state.isLoading}
-			onViewTask={handleViewTask}
-			onEditTask={handleEditTask}
-			onDeleteTask={handleDeleteTask}
-		/>
+	<TaskList
+		tasks={taskStore.state.tasks}
+		isLoading={taskStore.state.isLoading}
+		onViewTask={handleViewTask}
+		onEditTask={handleEditTask}
+		onDeleteTask={handleDeleteTask}
+	/>
 
-		{#if taskStore.state.pagination.totalPages > 1}
-		<div class="mt-6">
-			<Pagination
-				bind:currentPage={taskStore.state.pagination.page}
-				totalPages={taskStore.state.pagination.totalPages}
-				onPageChange={handlePageChange}
-			/>
-		</div>
-		{/if}
+	{#if taskStore.state.pagination.totalPages > 1}
+	<div class="mt-6">
+		<Pagination
+			bind:currentPage={taskStore.state.pagination.page}
+			totalPages={taskStore.state.pagination.totalPages}
+			onPageChange={handlePageChange}
+		/>
+	</div>
 	{/if}
 
-	{#if isClient && showCreateModal}
+	{#if showCreateModal}
 		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 			<div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
 				<div class="p-6">
