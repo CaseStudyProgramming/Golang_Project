@@ -1,50 +1,49 @@
 <script lang="ts">
-	import type { TimePeriod } from '$lib/features/analytics';
-	import type { TaskStatistics } from '$lib/features/analytics/types/analytics.types';
-	import type { Task } from '$lib/features/tasks/types/task.types';
+import { onMount } from 'svelte'
+import type { TimePeriod } from '$lib/features/analytics'
+import { analyticsStore } from '$lib/features/analytics'
+import type { TaskStatistics } from '$lib/features/analytics/types/analytics.types'
+import TimePeriodSelector from '$lib/features/analytics/components/TimePeriodSelector.svelte'
+import StatisticsCards from '$lib/features/analytics/components/StatisticsCards.svelte'
+import ChartSkeleton from '$lib/features/analytics/components/ChartSkeleton.svelte'
+import CompletionRateChart from '$lib/features/analytics/components/CompletionRateChart.svelte'
+import PriorityChart from '$lib/features/analytics/components/PriorityChart.svelte'
+import CategoryChart from '$lib/features/analytics/components/CategoryChart.svelte'
+import OverdueTasksSummary from '$lib/features/analytics/components/OverdueTasksSummary.svelte'
+import ProductivityInsights from '$lib/features/analytics/components/ProductivityInsights.svelte'
+import { taskStore } from '$lib/features/tasks'
+import type { Task } from '$lib/features/tasks/types/task.types'
+import { authStore } from '$lib/features/auth'
+import EmptyState from '$lib/shared/components/EmptyState.svelte'
 
-	import { analyticsStore } from '$lib/features/analytics';
-	import CategoryChart from '$lib/features/analytics/components/CategoryChart.svelte';
-	import ChartSkeleton from '$lib/features/analytics/components/ChartSkeleton.svelte';
-	import CompletionRateChart from '$lib/features/analytics/components/CompletionRateChart.svelte';
-	import OverdueTasksSummary from '$lib/features/analytics/components/OverdueTasksSummary.svelte';
-	import PriorityChart from '$lib/features/analytics/components/PriorityChart.svelte';
-	import ProductivityInsights from '$lib/features/analytics/components/ProductivityInsights.svelte';
-	import StatisticsCards from '$lib/features/analytics/components/StatisticsCards.svelte';
-	import TimePeriodSelector from '$lib/features/analytics/components/TimePeriodSelector.svelte';
-	import { authStore } from '$lib/features/auth';
-	import { taskStore } from '$lib/features/tasks';
-	import { EmptyState } from '$lib/shared/components';
-	import { onMount } from 'svelte';
-
-	onMount(async () => {
-		try {
-			await taskStore.fetchTasks();
-			await analyticsStore.refreshAnalytics();
-		} catch (error) {
-			console.error('Failed to fetch data:', error);
-		}
-	});
-
-	function handlePeriodChange(period: TimePeriod) {
-		analyticsStore.setPeriod(period);
+onMount(async () => {
+	try {
+		await taskStore.fetchTasks()
+		await analyticsStore.refreshAnalytics()
+	} catch (error) {
+		console.error('Failed to fetch data:', error)
 	}
+})
 
-	const overdueTasks = $derived(
-		taskStore.state.tasks.filter(
-			(t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
-		)
-	);
+function handlePeriodChange(period: TimePeriod): void {
+	analyticsStore.setPeriod(period)
+}
 
-	const defaultStatistics: TaskStatistics = {
-		cancelled: 0,
-		completed: 0,
-		completionRate: 0,
-		inProgress: 0,
-		overdue: 0,
-		todo: 0,
-		total: 0
-	};
+const overdueTasks = $derived(
+	taskStore.state.tasks.filter(
+		(t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
+	)
+)
+
+const defaultStatistics: TaskStatistics = {
+	cancelled: 0,
+	completed: 0,
+	completionRate: 0,
+	inProgress: 0,
+	overdue: 0,
+	todo: 0,
+	total: 0,
+}
 </script>
 
 <div class="mb-6 sm:mb-8">
@@ -52,7 +51,7 @@
 		<h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
 		<TimePeriodSelector
 			selectedPeriod={analyticsStore.state.selectedPeriod}
-			onPeriodChange={handlePeriodChange}
+			onPeriodChange={(period: TimePeriod) => handlePeriodChange(period)}
 		/>
 	</div>
 	<p class="text-gray-600 text-sm sm:text-base">

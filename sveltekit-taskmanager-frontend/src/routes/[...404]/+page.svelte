@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+import { goto } from '$app/navigation'
 
-	async function goHome() {
-		await goto('/');
-	}
+async function goHome() {
+	await goto('/')
+}
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -16,7 +16,7 @@
 		</p>
 
 		<button
-			onclick={goHome}
+			onclick={() => goHome()}
 			class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
 		>
 			Go Home

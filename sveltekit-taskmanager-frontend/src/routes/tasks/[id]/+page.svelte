@@ -1,181 +1,190 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { categoryStore } from '$lib/features/categories';
-	import { tagStore } from '$lib/features/tags';
-	import { ActivityLog, SubtaskList, TaskForm, taskStore } from '$lib/features/tasks';
-	import { activityStore } from '$lib/features/tasks';
-	import { onMount } from 'svelte';
+import { onMount } from 'svelte'
+import { goto } from '$app/navigation'
+import { page } from '$app/stores'
+import { categoryStore } from '$lib/features/categories'
+import { tagStore } from '$lib/features/tags'
+import { activityStore, taskStore } from '$lib/features/tasks'
+import ActivityLog from '$lib/features/tasks/components/ActivityLog.svelte'
+import SubtaskList from '$lib/features/tasks/components/SubtaskList.svelte'
+import TaskForm from '$lib/features/tasks/components/TaskForm.svelte'
 
-	let taskId = $derived($page.params.id || '');
-	let isEditing = $state(false);
-	let showDeleteConfirm = $state(false);
+let taskId = $derived($page.params.id || '')
+let isEditing = $state(false)
+let showDeleteConfirm = $state(false)
 
-	let categories = $derived(categoryStore.state.categories);
-	let tags = $derived(tagStore.state.tags);
+let categories = $derived(categoryStore.state.categories)
+let tags = $derived(tagStore.state.tags)
 
-	onMount(async () => {
-		if (!taskId) return;
-		try {
-			await taskStore.fetchTaskById(taskId);
-			await activityStore.fetchActivities({ taskId });
-			await categoryStore.fetchCategories();
-			await tagStore.fetchTags();
-		} catch (error) {
-			console.error('Failed to fetch task:', error);
-		}
-	});
-
-	/**
-	 * Format date for display
-	 */
-	function formatDate(dateString?: string): string {
-		if (!dateString) return 'Not set';
-		return new Date(dateString).toLocaleDateString('en-US', {
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-			month: 'long',
-			year: 'numeric'
-		});
+onMount(async () => {
+	if (!taskId) return
+	try {
+		await taskStore.fetchTaskById(taskId)
+		await activityStore.fetchActivities({ taskId })
+		await categoryStore.fetchCategories()
+		await tagStore.fetchTags()
+	} catch (error) {
+		console.error('Failed to fetch task:', error)
 	}
+})
 
-	/**
-	 * Get category object by ID
-	 */
-	function getCategory(categoryId?: string) {
-		if (!categoryId) return null;
-		return categories.find((c) => c.id === categoryId) || null;
-	}
+/**
+ * Format date for display
+ */
+function formatDate(dateString?: string): string {
+	if (!dateString) return 'Not set'
+	return new Date(dateString).toLocaleDateString('en-US', {
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+		month: 'long',
+		year: 'numeric',
+	})
+}
 
-	/**
-	 * Get priority color class
-	 */
-	function getPriorityColor(priority: string): string {
-		const colors = {
-			high: 'bg-orange-100 text-orange-800',
-			low: 'bg-green-100 text-green-800',
-			medium: 'bg-yellow-100 text-yellow-800',
-			urgent: 'bg-red-100 text-red-800'
-		};
-		return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-	}
+/**
+ * Get category object by ID
+ */
+function getCategory(categoryId?: string) {
+	if (!categoryId) return null
+	return categories.find((c) => c.id === categoryId) || null
+}
 
-	/**
-	 * Get status color class
-	 */
-	function getStatusColor(status: string): string {
-		const colors = {
-			cancelled: 'bg-red-100 text-red-800',
-			completed: 'bg-green-100 text-green-800',
-			deleted: 'bg-gray-300 text-gray-600',
-			in_progress: 'bg-blue-100 text-blue-800',
-			todo: 'bg-gray-100 text-gray-800'
-		};
-		return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+/**
+ * Get priority color class
+ */
+function getPriorityColor(priority: string): string {
+	const colors = {
+		high: 'bg-orange-100 text-orange-800',
+		low: 'bg-green-100 text-green-800',
+		medium: 'bg-yellow-100 text-yellow-800',
+		urgent: 'bg-red-100 text-red-800',
 	}
+	return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
 
-	/**
-	 * Get tag objects by IDs
-	 */
-	function getTagObjects(tagIds?: string[]) {
-		if (!tagIds || tagIds.length === 0) return [];
-		return tagIds
-			.map((id) => tags.find((t) => t.id === id))
-			.filter((tag): tag is typeof tags[0] => tag !== undefined);
+/**
+ * Get status color class
+ */
+function getStatusColor(status: string): string {
+	const colors = {
+		cancelled: 'bg-red-100 text-red-800',
+		completed: 'bg-green-100 text-green-800',
+		deleted: 'bg-gray-300 text-gray-600',
+		in_progress: 'bg-blue-100 text-blue-800',
+		todo: 'bg-gray-100 text-gray-800',
 	}
+	return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
 
-	/**
-	 * Handle add subtask
-	 */
-	async function handleAddSubtask(title: string): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.addSubtask(taskId, title);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to add subtask:', error);
-		}
-	}
+/**
+ * Get tag objects by IDs
+ */
+function getTagObjects(tagIds?: string[]) {
+	if (!tagIds || tagIds.length === 0) return []
+	return tagIds
+		.map((id) => tags.find((t) => t.id === id))
+		.filter((tag): tag is (typeof tags)[0] => tag !== undefined)
+}
 
-	/**
-	 * Handle bulk complete subtasks
-	 */
-	async function handleBulkComplete(subtaskIds: string[]): Promise<void> {
-		if (!taskId || subtaskIds.length === 0) return;
-		try {
-			await taskStore.bulkCompleteSubtasks(taskId, subtaskIds);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to bulk complete subtasks:', error);
-		}
+/**
+ * Handle add subtask
+ */
+async function handleAddSubtask(title: string): Promise<void> {
+	if (!taskId) return
+	try {
+		await taskStore.addSubtask(taskId, title)
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to add subtask:', error)
 	}
+}
 
-	/**
-	 * Handle bulk delete subtasks
-	 */
-	async function handleBulkDelete(subtaskIds: string[]): Promise<void> {
-		if (!taskId || subtaskIds.length === 0) return;
-		try {
-			await taskStore.bulkDeleteSubtasks(taskId, subtaskIds);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to bulk delete subtasks:', error);
-		}
+/**
+ * Handle bulk complete subtasks
+ */
+async function handleBulkComplete(subtaskIds: string[]): Promise<void> {
+	if (!taskId || subtaskIds.length === 0) return
+	try {
+		await taskStore.bulkCompleteSubtasks(taskId, subtaskIds)
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to bulk complete subtasks:', error)
 	}
+}
 
-	/**
-	 * Handle delete subtask
-	 */
-	async function handleDeleteSubtask(subtaskId: string): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.deleteSubtask(taskId, subtaskId);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to delete subtask:', error);
-		}
+/**
+ * Handle bulk delete subtasks
+ */
+async function handleBulkDelete(subtaskIds: string[]): Promise<void> {
+	if (!taskId || subtaskIds.length === 0) return
+	try {
+		await taskStore.bulkDeleteSubtasks(taskId, subtaskIds)
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to bulk delete subtasks:', error)
 	}
+}
 
-	/**
-	 * Handle delete task
-	 */
-	async function handleDeleteTask(): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.deleteTask(taskId);
-			goto('/tasks');
-		} catch (error) {
-			console.error('Failed to delete task:', error);
-		}
+/**
+ * Handle delete subtask
+ */
+async function handleDeleteSubtask(subtaskId: string): Promise<void> {
+	if (!taskId) return
+	try {
+		await taskStore.deleteSubtask(taskId, subtaskId)
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to delete subtask:', error)
 	}
+}
 
-	/**
-	 * Handle toggle subtask
-	 */
-	async function handleToggleSubtask(subtaskId: string): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.toggleSubtask(taskId, subtaskId);
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to toggle subtask:', error);
-		}
+/**
+ * Handle delete task
+ */
+async function handleDeleteTask(): Promise<void> {
+	if (!taskId) return
+	try {
+		await taskStore.deleteTask(taskId)
+		goto('/tasks')
+	} catch (error) {
+		console.error('Failed to delete task:', error)
 	}
+}
 
-	/**
-	 * Handle update task
-	 */
-	async function handleUpdateTask(data: { categoryId?: string; description?: string; dueDate?: string; priority?: string; tags?: string[]; title: string }): Promise<void> {
-		if (!taskId) return;
-		try {
-			await taskStore.updateTask(taskId, data);
-			isEditing = false;
-			await taskStore.fetchTaskById(taskId);
-		} catch (error) {
-			console.error('Failed to update task:', error);
-		}
+/**
+ * Handle toggle subtask
+ */
+async function handleToggleSubtask(subtaskId: string): Promise<void> {
+	if (!taskId) return
+	try {
+		await taskStore.toggleSubtask(taskId, subtaskId)
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to toggle subtask:', error)
 	}
+}
+
+/**
+ * Handle update task
+ */
+async function handleUpdateTask(data: {
+	categoryId?: string
+	description?: string
+	dueDate?: string
+	priority?: string
+	tags?: string[]
+	title: string
+}): Promise<void> {
+	if (!taskId) return
+	try {
+		await taskStore.updateTask(taskId, data)
+		isEditing = false
+		await taskStore.fetchTaskById(taskId)
+	} catch (error) {
+		console.error('Failed to update task:', error)
+	}
+}
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -356,7 +365,7 @@
 						Cancel
 					</button>
 					<button
-						onclick={handleDeleteTask}
+						onclick={() => handleDeleteTask()}
 						class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
 					>
 						Delete

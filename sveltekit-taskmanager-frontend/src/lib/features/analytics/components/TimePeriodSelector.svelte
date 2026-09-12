@@ -1,16 +1,19 @@
 <script lang="ts">
-	import type { TimePeriod } from '../types/analytics.types';
+import type { TimePeriod } from '../types/analytics.types'
 
-	let { onPeriodChange, selectedPeriod }: {
-		onPeriodChange: (period: TimePeriod) => void;
-		selectedPeriod: TimePeriod;
-	} = $props();
+let {
+	onPeriodChange,
+	selectedPeriod,
+}: {
+	onPeriodChange: (period: TimePeriod) => void
+	selectedPeriod: TimePeriod
+} = $props()
 
-	const periods: { label: string; value: TimePeriod; }[] = [
-		{ label: 'Last 7 days', value: 'daily' },
-		{ label: 'Last 30 days', value: 'weekly' },
-		{ label: 'Last 90 days', value: 'monthly' }
-	];
+const periods: { label: string; value: TimePeriod }[] = [
+	{ label: 'Last 7 days', value: 'daily' },
+	{ label: 'Last 30 days', value: 'weekly' },
+	{ label: 'Last 90 days', value: 'monthly' },
+]
 </script>
 
 <div class="flex items-center gap-2">

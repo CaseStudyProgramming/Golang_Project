@@ -1,111 +1,111 @@
 <script lang="ts">
-	import { categoryStore } from '$lib/features/categories';
-	import { tagStore } from '$lib/features/tags';
-	import { EmptyState, LoadingSpinner, ProgressBar } from '$lib/shared/components';
-	import { confirmStore } from '$lib/shared/stores';
+import { categoryStore } from '$lib/features/categories'
+import { tagStore } from '$lib/features/tags'
+import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
+import EmptyState from '$lib/shared/components/EmptyState.svelte'
+import ProgressBar from '$lib/shared/components/ProgressBar.svelte'
+import { confirmStore } from '$lib/shared/stores'
+import { taskStore } from '../stores/task.store'
+import type { Task } from '../types/task.types'
 
-	import type { Task } from '../types/task.types';
+let {
+	isLoading = $bindable(taskStore.state.isLoading),
+	onDeleteTask,
+	onEditTask,
+	onViewTask,
+	tasks = $bindable(taskStore.state.tasks),
+}: {
+	isLoading?: boolean
+	onDeleteTask?: (task: Task) => void
+	onEditTask?: (task: Task) => void
+	onViewTask?: (task: Task) => void
+	tasks?: Task[]
+} = $props()
 
-	import { taskStore } from '../stores/task.store';
+let categories = $derived(categoryStore.state.categories)
+let tags = $derived(tagStore.state.tags)
 
-	let { 
-		isLoading = $bindable(taskStore.state.isLoading),
-		onDeleteTask,
-		onEditTask,
-		onViewTask,
-		tasks = $bindable(taskStore.state.tasks)
-	}: {
-		isLoading?: boolean;
-		onDeleteTask?: (task: Task) => void;
-		onEditTask?: (task: Task) => void;
-		onViewTask?: (task: Task) => void;
-		tasks?: Task[];
-	} = $props();
+/**
+ * Initialize categories and tags on mount
+ */
+$effect(() => {
+	categoryStore.fetchCategories()
+	tagStore.fetchTags()
+})
 
-	let categories = $derived(categoryStore.state.categories);
-	let tags = $derived(tagStore.state.tags);
+/**
+ * Format date for display
+ */
+function formatDate(dateString?: string): string {
+	if (!dateString) return 'No due date'
+	return new Date(dateString).toLocaleDateString('en-US', {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+	})
+}
 
-	/**
-	 * Initialize categories and tags on mount
-	 */
-	$effect(() => {
-		categoryStore.fetchCategories();
-		tagStore.fetchTags();
-	});
+/**
+ * Get category by ID
+ */
+function getCategory(categoryId?: string) {
+	if (!categoryId) return null
+	return categories.find((c) => c.id === categoryId) || null
+}
 
-	/**
-	 * Format date for display
-	 */
-	function formatDate(dateString?: string): string {
-		if (!dateString) return 'No due date';
-		return new Date(dateString).toLocaleDateString('en-US', {
-			day: 'numeric',
-			month: 'short',
-			year: 'numeric'
-		});
+/**
+ * Get priority color class
+ */
+function getPriorityColor(priority: string): string {
+	const colors = {
+		high: 'bg-orange-100 text-orange-800',
+		low: 'bg-green-100 text-green-800',
+		medium: 'bg-yellow-100 text-yellow-800',
+		urgent: 'bg-red-100 text-red-800',
 	}
+	return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
 
-	/**
-	 * Get category by ID
-	 */
-	function getCategory(categoryId?: string) {
-		if (!categoryId) return null;
-		return categories.find((c) => c.id === categoryId) || null;
+/**
+ * Get status color class
+ */
+function getStatusColor(status: string): string {
+	const colors = {
+		cancelled: 'bg-red-100 text-red-800',
+		completed: 'bg-green-100 text-green-800',
+		deleted: 'bg-gray-300 text-gray-600',
+		in_progress: 'bg-blue-100 text-blue-800',
+		todo: 'bg-gray-100 text-gray-800',
 	}
+	return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+}
 
-	/**
-	 * Get priority color class
-	 */
-	function getPriorityColor(priority: string): string {
-		const colors = {
-			high: 'bg-orange-100 text-orange-800',
-			low: 'bg-green-100 text-green-800',
-			medium: 'bg-yellow-100 text-yellow-800',
-			urgent: 'bg-red-100 text-red-800'
-		};
-		return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+/**
+ * Get tag objects by IDs
+ */
+function getTagObjects(tagIds?: string[]) {
+	if (!tagIds || tagIds.length === 0) return []
+	return tagIds
+		.map((id) => tags.find((t) => t.id === id))
+		.filter((tag): tag is (typeof tags)[0] => tag !== undefined)
+}
+
+/**
+ * Handle delete task with confirmation
+ */
+async function handleDeleteTask(task: Task) {
+	const confirmed = await confirmStore.showConfirm({
+		cancelText: 'Cancel',
+		confirmText: 'Delete',
+		message: `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
+		title: 'Delete Task',
+		type: 'danger',
+	})
+
+	if (confirmed && onDeleteTask) {
+		onDeleteTask(task)
 	}
-
-	/**
-	 * Get status color class
-	 */
-	function getStatusColor(status: string): string {
-		const colors = {
-			cancelled: 'bg-red-100 text-red-800',
-			completed: 'bg-green-100 text-green-800',
-			deleted: 'bg-gray-300 text-gray-600',
-			in_progress: 'bg-blue-100 text-blue-800',
-			todo: 'bg-gray-100 text-gray-800'
-		};
-		return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-	}
-
-	/**
-	 * Get tag objects by IDs
-	 */
-	function getTagObjects(tagIds?: string[]) {
-		if (!tagIds || tagIds.length === 0) return [];
-		return tagIds
-			.map((id) => tags.find((t) => t.id === id))
-			.filter((tag): tag is typeof tags[0] => tag !== undefined);
-	}
-
-	/**
-	 * Handle delete task with confirmation
-	 */
-	async function handleDeleteTask(task: Task) {
-		const confirmed = await confirmStore.showConfirm({
-			cancelText: 'Cancel',
-			confirmText: 'Delete',
-			message: `Are you sure you want to delete "${task.title}"? This action cannot be undone.`,
-			title: 'Delete Task',
-			type: 'danger'
-		});
-
-		if (confirmed && onDeleteTask) {
-			onDeleteTask(task);
-		}
-	}
+}
 </script>
 
 <div class="space-y-3 sm:space-y-4">

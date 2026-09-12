@@ -1,41 +1,41 @@
 <script lang="ts">
-	let {
-		debounceMs = 300,
-		onSearch,
-		placeholder = 'Search tasks...',
-		searchQuery = $bindable('')
-	}: {
-		debounceMs?: number;
-		onSearch?: (query: string) => void;
-		placeholder?: string;
-		searchQuery?: string;
-	} = $props();
+let {
+	debounceMs = 300,
+	onSearch,
+	placeholder = 'Search tasks...',
+	searchQuery = $bindable(''),
+}: {
+	debounceMs?: number
+	onSearch?: (query: string) => void
+	placeholder?: string
+	searchQuery?: string
+} = $props()
 
-	let debounceTimer: null | ReturnType<typeof setTimeout> = null;
+let debounceTimer: null | ReturnType<typeof setTimeout> = null
 
-	/**
-	 * Clear search
-	 */
-	function clearSearch(): void {
-		searchQuery = '';
-		onSearch?.('');
+/**
+ * Clear search
+ */
+function clearSearch(): void {
+	searchQuery = ''
+	onSearch?.('')
+}
+
+/**
+ * Handle search input with debouncing
+ */
+function handleSearchInput(event: Event): void {
+	const target = event.target as HTMLInputElement
+	searchQuery = target.value
+
+	if (debounceTimer) {
+		clearTimeout(debounceTimer)
 	}
 
-	/**
-	 * Handle search input with debouncing
-	 */
-	function handleSearchInput(event: Event): void {
-		const target = event.target as HTMLInputElement;
-		searchQuery = target.value;
-
-		if (debounceTimer) {
-			clearTimeout(debounceTimer);
-		}
-
-		debounceTimer = setTimeout(() => {
-			onSearch?.(searchQuery);
-		}, debounceMs);
-	}
+	debounceTimer = setTimeout(() => {
+		onSearch?.(searchQuery)
+	}, debounceMs)
+}
 </script>
 
 <div class="relative">
@@ -55,7 +55,7 @@
 		{#if searchQuery}
 			<button
 				type="button"
-				onclick={clearSearch}
+				onclick={() => clearSearch()}
 				class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
 				title="Clear search"
 			>

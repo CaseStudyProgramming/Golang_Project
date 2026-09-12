@@ -1,49 +1,49 @@
 <script lang="ts">
-	import { authApi } from '$lib/features/auth';
-	import { forgotPasswordSchema } from '$lib/features/auth/schemas/auth.schemas';
-	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
-	import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils';
+import { authApi } from '$lib/features/auth'
+import { forgotPasswordSchema } from '$lib/features/auth/schemas/auth.schemas'
+import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils'
+import ErrorToast from '$lib/shared/components/ErrorToast.svelte'
 
-	let email = $state('');
-	let isLoading = $state(false);
-	let isSuccess = $state(false);
-	let error = $state('');
-	let fieldErrors = $state<Record<string, string>>({});
-	let toastError = $state('');
+let email = $state('')
+let isLoading = $state(false)
+let isSuccess = $state(false)
+let error = $state('')
+let fieldErrors = $state<Record<string, string>>({})
+let toastError = $state('')
 
-	function dismissToast() {
-		toastError = '';
-	}
+function dismissToast() {
+	toastError = ''
+}
 
-	async function handleForgotPassword(e: Event) {
-		e.preventDefault();
-		isLoading = true;
-		error = '';
-		fieldErrors = {};
-		toastError = '';
+async function handleForgotPassword(e: Event) {
+	e.preventDefault()
+	isLoading = true
+	error = ''
+	fieldErrors = {}
+	toastError = ''
 
-		try {
-			const validatedData = forgotPasswordSchema.parse({ email });
-			await authApi.forgotPassword(validatedData);
-			isSuccess = true;
-		} catch (err) {
-			if (err instanceof Error && err.name === 'ZodError') {
-				const zodError = err as unknown as { errors: Array<{ message: string }> };
-				if (zodError.errors && zodError.errors[0]) {
-					fieldErrors.email = zodError.errors[0].message;
-					error = 'Please fix the errors below.';
-				}
-			} else if (isValidationError(err)) {
-				fieldErrors[err.field] = err.message;
-				error = 'Please fix the errors below.';
-			} else {
-				error = getErrorMessage(err);
-				toastError = getErrorMessage(err);
+	try {
+		const validatedData = forgotPasswordSchema.parse({ email })
+		await authApi.forgotPassword(validatedData)
+		isSuccess = true
+	} catch (err) {
+		if (err instanceof Error && err.name === 'ZodError') {
+			const zodError = err as unknown as { errors: Array<{ message: string }> }
+			if (zodError.errors?.[0]) {
+				fieldErrors.email = zodError.errors[0].message
+				error = 'Please fix the errors below.'
 			}
-		} finally {
-			isLoading = false;
+		} else if (isValidationError(err)) {
+			fieldErrors[err.field] = err.message
+			error = 'Please fix the errors below.'
+		} else {
+			error = getErrorMessage(err)
+			toastError = getErrorMessage(err)
 		}
+	} finally {
+		isLoading = false
 	}
+}
 </script>
 
 <div class="bg-white rounded-lg shadow-lg p-8">
@@ -67,7 +67,7 @@
 			</div>
 		{/if}
 
-		<form onsubmit={handleForgotPassword} class="space-y-4">
+		<form onsubmit={(e) => handleForgotPassword(e)} class="space-y-4">
 			<div>
 				<label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
 				<input

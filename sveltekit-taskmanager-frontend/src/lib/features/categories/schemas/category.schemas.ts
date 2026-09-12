@@ -2,7 +2,7 @@
  * Category schemas with Zod validation for OWASP compliance
  */
 
-import { z } from 'zod';
+import { z } from 'zod'
 
 /**
  * Name validation schema
@@ -11,7 +11,7 @@ const nameSchema = z
 	.string()
 	.min(1, 'Name is required')
 	.max(100, 'Name is too long')
-	.transform(val => val.trim());
+	.transform((val) => val.trim())
 
 /**
  * Description validation schema
@@ -19,8 +19,8 @@ const nameSchema = z
 const descriptionSchema = z
 	.string()
 	.max(500, 'Description is too long')
-	.transform(val => val.trim())
-	.optional();
+	.transform((val) => val.trim())
+	.optional()
 
 /**
  * Color validation schema (hex color)
@@ -28,7 +28,7 @@ const descriptionSchema = z
 const colorSchema = z
 	.string()
 	.regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format. Use hex format like #FF0000')
-	.optional();
+	.optional()
 
 /**
  * Create category validation schema
@@ -37,8 +37,8 @@ export const createCategorySchema = z.object({
 	color: colorSchema,
 	description: descriptionSchema,
 	icon: z.string().max(50, 'Icon is too long').optional(),
-	name: nameSchema
-});
+	name: nameSchema,
+})
 
 /**
  * Update category validation schema
@@ -47,15 +47,15 @@ export const updateCategorySchema = z.object({
 	color: colorSchema,
 	description: descriptionSchema,
 	icon: z.string().max(50, 'Icon is too long').optional(),
-	name: nameSchema.optional()
-});
+	name: nameSchema.optional(),
+})
 
 /**
  * Type inference for create category payload
  */
-export type CreateCategoryPayload = z.infer<typeof createCategorySchema>;
+export type CreateCategoryPayload = z.infer<typeof createCategorySchema>
 
 /**
  * Type inference for update category payload
  */
-export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>;
+export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>

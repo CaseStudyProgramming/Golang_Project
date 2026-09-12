@@ -1,143 +1,142 @@
 <script lang="ts">
-	import { toastStore } from '$lib/shared/stores';
+import { toastStore } from '$lib/shared/stores'
+import { tagStore } from '../stores/tag.store'
+import type { Tag } from '../types/tag.types'
 
-	import type { Tag } from '../types/tag.types';
+let {
+	availableTags = $bindable(tagStore.state.tags),
+	onCreateTag,
+	placeholder = 'Add tags...',
+	selectedTags = $bindable([]),
+}: {
+	availableTags?: Tag[]
+	onCreateTag?: (name: string) => Promise<void>
+	placeholder?: string
+	selectedTags?: string[]
+} = $props()
 
-	import { tagStore } from '../stores/tag.store';
+let input = $state('')
+let isOpen = $state(false)
+let highlightedIndex = $state(-1)
+let isLoading = $state(false)
 
-	let {
-		availableTags = $bindable(tagStore.state.tags),
-		onCreateTag,
-		placeholder = 'Add tags...',
-		selectedTags = $bindable([])
-	}: {
-		availableTags?: Tag[];
-		onCreateTag?: (name: string) => Promise<void>;
-		placeholder?: string;
-		selectedTags?: string[];
-	} = $props();
+/**
+ * Get filtered available tags
+ */
+const filteredTags = $derived(
+	!input.trim()
+		? availableTags
+		: availableTags.filter((tag) => tag.name.toLowerCase().includes(input.toLowerCase()))
+)
 
-	let input = $state('');
-	let isOpen = $state(false);
-	let highlightedIndex = $state(-1);
-	let isLoading = $state(false);
+/**
+ * Get selected tag objects
+ */
+const selectedTagObjects = $derived(availableTags.filter((tag) => selectedTags.includes(tag.id)))
 
-	/**
-	 * Get filtered available tags
-	 */
-	const filteredTags = $derived(
-		!input.trim() ? availableTags : availableTags.filter((tag) =>
-			tag.name.toLowerCase().includes(input.toLowerCase())
+/**
+ * Handle blur with delay to allow click events
+ */
+function handleBlur() {
+	setTimeout(() => {
+		isOpen = false
+		highlightedIndex = -1
+	}, 200)
+}
+
+/**
+ * Handle creating new tag
+ */
+async function handleCreateTag() {
+	if (!input.trim() || !onCreateTag) return
+
+	isLoading = true
+	try {
+		await onCreateTag(input.trim())
+		toastStore.success('Tag created', `Tag "${input.trim()}" has been created successfully`)
+		input = ''
+		isOpen = false
+	} catch (error) {
+		console.error('Failed to create tag:', error)
+		toastStore.error(
+			'Failed to create tag',
+			error instanceof Error ? error.message : 'An unexpected error occurred'
 		)
-	);
-
-	/**
-	 * Get selected tag objects
-	 */
-	const selectedTagObjects = $derived(
-		availableTags.filter((tag) => selectedTags.includes(tag.id))
-	);
-
-	/**
-	 * Handle blur with delay to allow click events
-	 */
-	function handleBlur() {
-		setTimeout(() => {
-			isOpen = false;
-			highlightedIndex = -1;
-		}, 200);
+	} finally {
+		isLoading = false
 	}
+}
 
-	/**
-	 * Handle creating new tag
-	 */
-	async function handleCreateTag() {
-		if (!input.trim() || !onCreateTag) return;
+/**
+ * Handle input change
+ */
+function handleInput(e: Event) {
+	input = (e.target as HTMLInputElement).value
+	isOpen = true
+	highlightedIndex = -1
+}
 
-		isLoading = true;
-		try {
-			await onCreateTag(input.trim());
-			toastStore.success('Tag created', `Tag "${input.trim()}" has been created successfully`);
-			input = '';
-			isOpen = false;
-		} catch (error) {
-			console.error('Failed to create tag:', error);
-			toastStore.error('Failed to create tag', error instanceof Error ? error.message : 'An unexpected error occurred');
-		} finally {
-			isLoading = false;
+/**
+ * Handle keyboard navigation
+ */
+function handleKeydown(e: KeyboardEvent) {
+	if (!isOpen) {
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			isOpen = true
 		}
+		return
 	}
 
-	/**
-	 * Handle input change
-	 */
-	function handleInput(e: Event) {
-		input = (e.target as HTMLInputElement).value;
-		isOpen = true;
-		highlightedIndex = -1;
-	}
-
-	/**
-	 * Handle keyboard navigation
-	 */
-	function handleKeydown(e: KeyboardEvent) {
-		if (!isOpen) {
-			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-				isOpen = true;
+	switch (e.key) {
+		case 'ArrowDown':
+			e.preventDefault()
+			highlightedIndex = Math.min(highlightedIndex + 1, filteredTags.length - 1)
+			break
+		case 'ArrowUp':
+			e.preventDefault()
+			highlightedIndex = Math.max(highlightedIndex - 1, 0)
+			break
+		case 'Backspace':
+			if (!input && selectedTags.length > 0) {
+				removeTag(selectedTags[selectedTags.length - 1])
 			}
-			return;
-		}
-
-		switch (e.key) {
-			case 'ArrowDown':
-				e.preventDefault();
-				highlightedIndex = Math.min(highlightedIndex + 1, filteredTags.length - 1);
-				break;
-			case 'ArrowUp':
-				e.preventDefault();
-				highlightedIndex = Math.max(highlightedIndex - 1, 0);
-				break;
-			case 'Backspace':
-				if (!input && selectedTags.length > 0) {
-					removeTag(selectedTags[selectedTags.length - 1]);
-				}
-				break;
-			case 'Enter':
-				e.preventDefault();
-				if (highlightedIndex >= 0 && filteredTags[highlightedIndex]) {
-					selectTag(filteredTags[highlightedIndex]);
-				} else if (input.trim()) {
-					handleCreateTag();
-				}
-				break;
-			case 'Escape':
-				isOpen = false;
-				highlightedIndex = -1;
-				break;
-			case 'Tab':
-				isOpen = false;
-				highlightedIndex = -1;
-				break;
-		}
+			break
+		case 'Enter':
+			e.preventDefault()
+			if (highlightedIndex >= 0 && filteredTags[highlightedIndex]) {
+				selectTag(filteredTags[highlightedIndex])
+			} else if (input.trim()) {
+				handleCreateTag()
+			}
+			break
+		case 'Escape':
+			isOpen = false
+			highlightedIndex = -1
+			break
+		case 'Tab':
+			isOpen = false
+			highlightedIndex = -1
+			break
 	}
+}
 
-	/**
-	 * Handle tag removal
-	 */
-	function removeTag(tagId: string) {
-		selectedTags = selectedTags.filter((id) => id !== tagId);
-	}
+/**
+ * Handle tag removal
+ */
+function removeTag(tagId: string) {
+	selectedTags = selectedTags.filter((id) => id !== tagId)
+}
 
-	/**
-	 * Handle tag selection
-	 */
-	function selectTag(tag: Tag) {
-		if (!selectedTags.includes(tag.id)) {
-			selectedTags = [...selectedTags, tag.id];
-		}
-		input = '';
-		isOpen = false;
+/**
+ * Handle tag selection
+ */
+function selectTag(tag: Tag) {
+	if (!selectedTags.includes(tag.id)) {
+		selectedTags = [...selectedTags, tag.id]
 	}
+	input = ''
+	isOpen = false
+}
 </script>
 
 <div class="relative">

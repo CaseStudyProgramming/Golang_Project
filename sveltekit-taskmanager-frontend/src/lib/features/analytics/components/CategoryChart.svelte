@@ -1,86 +1,78 @@
 <script lang="ts">
-	import { Chart } from 'chart.js/auto';
-	import { onMount } from 'svelte';
+import { Chart } from 'chart.js/auto'
+import { onMount } from 'svelte'
 
-	import type { CategoryDistribution } from '../types/analytics.types';
+import type { CategoryDistribution } from '../types/analytics.types'
 
-	let { categoryDistribution }: { categoryDistribution: CategoryDistribution[] } = $props();
-	let canvasElement = $state<HTMLCanvasElement>();
-	let chart: Chart | null = null;
+let { categoryDistribution }: { categoryDistribution: CategoryDistribution[] } = $props()
+let canvasElement = $state<HTMLCanvasElement>()
+let chart: Chart | null = null
 
-	onMount(() => {
-		if (canvasElement) {
-			const ctx = canvasElement.getContext('2d');
-			if (ctx) {
-				const colors = [
-					'#3B82F6',
-					'#10B981',
-					'#F59E0B',
-					'#EF4444',
-					'#8B5CF6',
-					'#EC4899',
-					'#06B6D4'
-				];
+onMount(() => {
+	if (canvasElement) {
+		const ctx = canvasElement.getContext('2d')
+		if (ctx) {
+			const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4']
 
-				chart = new Chart(ctx, {
-					data: {
-						datasets: [
-							{
-								backgroundColor: colors,
-								borderRadius: 4,
-								data: categoryDistribution.map((c) => c.count),
-								label: 'Total'
-							},
-							{
-								backgroundColor: colors.map((c) => c + '80'),
-								borderRadius: 4,
-								data: categoryDistribution.map((c) => c.completed),
-								label: 'Completed'
-							}
-						],
-						labels: categoryDistribution.map((c) => c.categoryName)
-					},
-					options: {
-						maintainAspectRatio: false,
-						plugins: {
-							legend: {
-								labels: {
-									padding: 20,
-									usePointStyle: true
-								},
-								position: 'top'
-							}
+			chart = new Chart(ctx, {
+				data: {
+					datasets: [
+						{
+							backgroundColor: colors,
+							borderRadius: 4,
+							data: categoryDistribution.map((c) => c.count),
+							label: 'Total',
 						},
-						responsive: true,
-						scales: {
-							y: {
-								beginAtZero: true,
-								ticks: {
-									precision: 0
-								}
-							}
-						}
+						{
+							backgroundColor: colors.map((c) => `${c}80`),
+							borderRadius: 4,
+							data: categoryDistribution.map((c) => c.completed),
+							label: 'Completed',
+						},
+					],
+					labels: categoryDistribution.map((c) => c.categoryName),
+				},
+				options: {
+					maintainAspectRatio: false,
+					plugins: {
+						legend: {
+							labels: {
+								padding: 20,
+								usePointStyle: true,
+							},
+							position: 'top',
+						},
 					},
-					type: 'bar'
-				});
-			}
+					responsive: true,
+					scales: {
+						y: {
+							beginAtZero: true,
+							ticks: {
+								precision: 0,
+							},
+						},
+					},
+				},
+				type: 'bar',
+			})
 		}
+	}
 
-		return () => {
-			if (chart) {
-				chart.destroy();
-			}
-		};
-	});
-
-	$effect(() => {
+	return () => {
 		if (chart) {
-			chart.data.labels = categoryDistribution.map((c) => c.categoryName);
-			chart.data.datasets[0].data = categoryDistribution.map((c) => c.count);
-			chart.data.datasets[1].data = categoryDistribution.map((c) => c.completed);
-			chart.update();
+			chart.destroy()
 		}
-	});
+	}
+})
+
+$effect(() => {
+	if (chart) {
+		chart.data.labels = categoryDistribution.map((c) => c.categoryName)
+		chart.data.datasets[0].data = categoryDistribution.map((c) => c.count)
+		chart.data.datasets[1].data = categoryDistribution.map((c) => c.completed)
+		chart.update()
+	}
+})
 </script>
 
 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">

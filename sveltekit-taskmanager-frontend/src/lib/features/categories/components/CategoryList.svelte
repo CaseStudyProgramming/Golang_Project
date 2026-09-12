@@ -1,41 +1,40 @@
 <script lang="ts">
-	import { EmptyState, LoadingSpinner } from '$lib/shared/components';
-	import { confirmStore } from '$lib/shared/stores';
+import { confirmStore } from '$lib/shared/stores'
+import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
+import EmptyState from '$lib/shared/components/EmptyState.svelte'
+import { categoryStore } from '../stores/category.store'
+import type { Category } from '../types/category.types'
 
-	import type { Category } from '../types/category.types';
+let {
+	categories = $bindable(categoryStore.state.categories),
+	isLoading = $bindable(categoryStore.state.isLoading),
+	onDeleteCategory,
+	onEditCategory,
+	onSelectCategory,
+}: {
+	categories?: Category[]
+	isLoading?: boolean
+	onDeleteCategory?: (category: Category) => void
+	onEditCategory?: (category: Category) => void
+	onSelectCategory?: (category: Category) => void
+} = $props()
 
-	import { categoryStore } from '../stores/category.store';
+/**
+ * Handle delete category with confirmation
+ */
+async function handleDeleteCategory(category: Category) {
+	const confirmed = await confirmStore.showConfirm({
+		cancelText: 'Cancel',
+		confirmText: 'Delete',
+		message: `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
+		title: 'Delete Category',
+		type: 'danger',
+	})
 
-	let {
-		categories = $bindable(categoryStore.state.categories),
-		isLoading = $bindable(categoryStore.state.isLoading),
-		onDeleteCategory,
-		onEditCategory,
-		onSelectCategory
-	}: {
-		categories?: Category[];
-		isLoading?: boolean;
-		onDeleteCategory?: (category: Category) => void;
-		onEditCategory?: (category: Category) => void;
-		onSelectCategory?: (category: Category) => void;
-	} = $props();
-
-	/**
-	 * Handle delete category with confirmation
-	 */
-	async function handleDeleteCategory(category: Category) {
-		const confirmed = await confirmStore.showConfirm({
-			cancelText: 'Cancel',
-			confirmText: 'Delete',
-			message: `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
-			title: 'Delete Category',
-			type: 'danger'
-		});
-
-		if (confirmed && onDeleteCategory) {
-			onDeleteCategory(category);
-		}
+	if (confirmed && onDeleteCategory) {
+		onDeleteCategory(category)
 	}
+}
 </script>
 
 <div class="space-y-3 sm:space-y-4">

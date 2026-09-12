@@ -1,116 +1,116 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
+import { SvelteSet } from 'svelte/reactivity'
 
-	import type { Subtask } from '../types/task.types';
+import type { Subtask } from '../types/task.types'
 
-	let {
-		onAddSubtask,
-		onBulkComplete,
-		onBulkDelete,
-		onDeleteSubtask,
-		onToggleSubtask,
-		subtasks = $bindable([])
-	}: {
-		onAddSubtask?: (title: string) => Promise<void>;
-		onBulkComplete?: (subtaskIds: string[]) => Promise<void>;
-		onBulkDelete?: (subtaskIds: string[]) => Promise<void>;
-		onDeleteSubtask?: (subtaskId: string) => Promise<void>;
-		onToggleSubtask?: (subtaskId: string) => Promise<void>;
-		subtasks?: Subtask[];
-	} = $props();
+let {
+	onAddSubtask,
+	onBulkComplete,
+	onBulkDelete,
+	onDeleteSubtask,
+	onToggleSubtask,
+	subtasks = $bindable([]),
+}: {
+	onAddSubtask?: (title: string) => Promise<void>
+	onBulkComplete?: (subtaskIds: string[]) => Promise<void>
+	onBulkDelete?: (subtaskIds: string[]) => Promise<void>
+	onDeleteSubtask?: (subtaskId: string) => Promise<void>
+	onToggleSubtask?: (subtaskId: string) => Promise<void>
+	subtasks?: Subtask[]
+} = $props()
 
-	let newSubtaskTitle = $state('');
-	let isAdding = $state(false);
-	let selectedSubtasks = new SvelteSet<string>();
+let newSubtaskTitle = $state('')
+let isAdding = $state(false)
+let selectedSubtasks = new SvelteSet<string>()
 
-	/**
-	 * Calculate progress percentage
-	 */
-	const progress = $derived(() => {
-		if (subtasks.length === 0) return 0;
-		const completed = subtasks.filter((s) => s.isCompleted).length;
-		return Math.round((completed / subtasks.length) * 100);
-	});
+/**
+ * Calculate progress percentage
+ */
+const progress = $derived(() => {
+	if (subtasks.length === 0) return 0
+	const completed = subtasks.filter((s) => s.isCompleted).length
+	return Math.round((completed / subtasks.length) * 100)
+})
 
-	/**
-	 * Handle adding new subtask
-	 */
-	async function handleAddSubtask() {
-		if (!newSubtaskTitle.trim() || !onAddSubtask) return;
+/**
+ * Handle adding new subtask
+ */
+async function handleAddSubtask() {
+	if (!newSubtaskTitle.trim() || !onAddSubtask) return
 
-		try {
-			await onAddSubtask(newSubtaskTitle.trim());
-			newSubtaskTitle = '';
-			isAdding = false;
-		} catch (error) {
-			console.error('Failed to add subtask:', error);
-		}
+	try {
+		await onAddSubtask(newSubtaskTitle.trim())
+		newSubtaskTitle = ''
+		isAdding = false
+	} catch (error) {
+		console.error('Failed to add subtask:', error)
 	}
+}
 
-	/**
-	 * Handle bulk complete
-	 */
-	async function handleBulkComplete() {
-		if (!onBulkComplete || selectedSubtasks.size === 0) return;
+/**
+ * Handle bulk complete
+ */
+async function handleBulkComplete() {
+	if (!onBulkComplete || selectedSubtasks.size === 0) return
 
-		try {
-			await onBulkComplete(Array.from(selectedSubtasks));
-			selectedSubtasks.clear();
-		} catch (error) {
-			console.error('Failed to bulk complete subtasks:', error);
-		}
+	try {
+		await onBulkComplete(Array.from(selectedSubtasks))
+		selectedSubtasks.clear()
+	} catch (error) {
+		console.error('Failed to bulk complete subtasks:', error)
 	}
+}
 
-	/**
-	 * Handle bulk delete
-	 */
-	async function handleBulkDelete() {
-		if (!onBulkDelete || selectedSubtasks.size === 0) return;
+/**
+ * Handle bulk delete
+ */
+async function handleBulkDelete() {
+	if (!onBulkDelete || selectedSubtasks.size === 0) return
 
-		try {
-			await onBulkDelete(Array.from(selectedSubtasks));
-			selectedSubtasks.clear();
-		} catch (error) {
-			console.error('Failed to bulk delete subtasks:', error);
-		}
+	try {
+		await onBulkDelete(Array.from(selectedSubtasks))
+		selectedSubtasks.clear()
+	} catch (error) {
+		console.error('Failed to bulk delete subtasks:', error)
 	}
+}
 
-	/**
-	 * Handle deleting subtask
-	 */
-	async function handleDeleteSubtask(subtaskId: string) {
-		if (!onDeleteSubtask) return;
+/**
+ * Handle deleting subtask
+ */
+async function handleDeleteSubtask(subtaskId: string) {
+	if (!onDeleteSubtask) return
 
-		try {
-			await onDeleteSubtask(subtaskId);
-		} catch (error) {
-			console.error('Failed to delete subtask:', error);
-		}
+	try {
+		await onDeleteSubtask(subtaskId)
+	} catch (error) {
+		console.error('Failed to delete subtask:', error)
 	}
+}
 
-	/**
-	 * Handle toggling subtask completion
-	 */
-	async function handleToggleSubtask(subtaskId: string) {
-		if (!onToggleSubtask) return;
+/**
+ * Handle toggling subtask completion
+ */
+async function handleToggleSubtask(subtaskId: string) {
+	if (!onToggleSubtask) return
 
-		try {
-			await onToggleSubtask(subtaskId);
-		} catch (error) {
-			console.error('Failed to toggle subtask:', error);
-		}
+	try {
+		await onToggleSubtask(subtaskId)
+	} catch (error) {
+		console.error('Failed to toggle subtask:', error)
 	}
+}
 
-	/**
-	 * Handle subtask selection
-	 */
-	function toggleSelection(subtaskId: string) {
-		if (selectedSubtasks.has(subtaskId)) {
-			selectedSubtasks.delete(subtaskId);
-		} else {
-			selectedSubtasks.add(subtaskId);
-		}
+/**
+ * Handle subtask selection
+ */
+function toggleSelection(subtaskId: string) {
+	if (selectedSubtasks.has(subtaskId)) {
+		selectedSubtasks.delete(subtaskId)
+	} else {
+		selectedSubtasks.add(subtaskId)
 	}
+}
 </script>
 
 <div class="bg-gray-50 rounded-lg p-4 mt-4">
@@ -147,7 +147,7 @@
 				onkeydown={(e) => e.key === 'Enter' && handleAddSubtask()}
 			/>
 			<button
-				onclick={handleAddSubtask}
+				onclick={() => handleAddSubtask()}
 				class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
 			>
 				Add
@@ -198,13 +198,13 @@
 		{#if selectedSubtasks.size > 0}
 			<div class="flex gap-2 mt-4 pt-4 border-t border-gray-200">
 				<button
-					onclick={handleBulkComplete}
+					onclick={() => handleBulkComplete()}
 					class="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
 				>
 					Complete Selected ({selectedSubtasks.size})
 				</button>
 				<button
-					onclick={handleBulkDelete}
+					onclick={() => handleBulkDelete()}
 					class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700"
 				>
 					Delete Selected ({selectedSubtasks.size})

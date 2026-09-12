@@ -1,57 +1,61 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { authStore } from '$lib/features/auth';
-	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
-	import { getErrorMessage, isAuthenticationError, isValidationError } from '$lib/shared/utils/error.utils';
+import { page } from '$app/stores'
+import { authStore } from '$lib/features/auth'
+import {
+	getErrorMessage,
+	isAuthenticationError,
+	isValidationError,
+} from '$lib/shared/utils/error.utils'
+import ErrorToast from '$lib/shared/components/ErrorToast.svelte'
 
-	let email = $state('');
-	let password = $state('');
-	let isLoading = $state(false);
-	let error = $state('');
-	let fieldErrors = $state<Record<string, string>>({});
-	let toastError = $state('');
+let email = $state('')
+let password = $state('')
+let isLoading = $state(false)
+let error = $state('')
+let fieldErrors = $state<Record<string, string>>({})
+let toastError = $state('')
 
-	// Get redirect URL from query params
-	const getRedirectTo = () => {
-		const urlParams = new URLSearchParams($page.url.search);
-		return urlParams.get('redirectTo');
-	};
+// Get redirect URL from query params
+const getRedirectTo = () => {
+	const urlParams = new URLSearchParams($page.url.search)
+	return urlParams.get('redirectTo')
+}
 
-	function dismissToast() {
-		toastError = '';
+function dismissToast() {
+	toastError = ''
+}
+
+async function handleLogin(e: Event) {
+	e.preventDefault()
+	isLoading = true
+	error = ''
+	fieldErrors = {}
+	toastError = ''
+
+	// Save redirect URL before login
+	const redirectTo = getRedirectTo()
+	if (redirectTo) {
+		authStore.saveRedirectUrl(redirectTo)
 	}
 
-	async function handleLogin(e: Event) {
-		e.preventDefault();
-		isLoading = true;
-		error = '';
-		fieldErrors = {};
-		toastError = '';
-
-		// Save redirect URL before login
-		const redirectTo = getRedirectTo();
-		if (redirectTo) {
-			authStore.saveRedirectUrl(redirectTo);
+	try {
+		await authStore.login({ email, password })
+		await authStore.redirectAfterAuth()
+	} catch (err) {
+		if (isValidationError(err)) {
+			fieldErrors[err.field] = err.message
+			error = 'Please fix the errors below.'
+		} else if (isAuthenticationError(err)) {
+			error = err.message
+			toastError = err.message
+		} else {
+			error = getErrorMessage(err)
+			toastError = getErrorMessage(err)
 		}
-
-		try {
-			await authStore.login({ email, password });
-			await authStore.redirectAfterAuth();
-		} catch (err) {
-			if (isValidationError(err)) {
-				fieldErrors[err.field] = err.message;
-				error = 'Please fix the errors below.';
-			} else if (isAuthenticationError(err)) {
-				error = err.message;
-				toastError = err.message;
-			} else {
-				error = getErrorMessage(err);
-				toastError = getErrorMessage(err);
-			}
-		} finally {
-			isLoading = false;
-		}
+	} finally {
+		isLoading = false
 	}
+}
 </script>
 
 <div class="bg-white rounded-lg shadow-lg p-8">
@@ -66,7 +70,7 @@
 		</div>
 	{/if}
 
-	<form onsubmit={handleLogin} class="space-y-4">
+	<form onsubmit={(e) => handleLogin(e)} class="space-y-4">
 		<div>
 			<label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
 			<input

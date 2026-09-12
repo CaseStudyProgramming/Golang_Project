@@ -1,44 +1,47 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/features/auth';
-	import { LoadingSpinner } from '$lib/shared/components';
-	import { confirmStore, toastStore } from '$lib/shared/stores';
+import { goto } from '$app/navigation'
+import { authStore } from '$lib/features/auth'
+import { confirmStore, toastStore } from '$lib/shared/stores'
+import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
 
-	let { children } = $props();
-	let isLoggingOut = $state(false);
-	let isMobileMenuOpen = $state(false);
+let { children } = $props()
+let isLoggingOut = $state(false)
+let isMobileMenuOpen = $state(false)
 
-	function closeMobileMenu() {
-		isMobileMenuOpen = false;
+function closeMobileMenu() {
+	isMobileMenuOpen = false
+}
+
+async function handleLogout() {
+	const confirmed = await confirmStore.showConfirm({
+		cancelText: 'Cancel',
+		confirmText: 'Logout',
+		message: 'Are you sure you want to logout?',
+		title: 'Logout',
+		type: 'info',
+	})
+
+	if (!confirmed) return
+
+	isLoggingOut = true
+	try {
+		await authStore.logout()
+		toastStore.success('Logged out', 'You have been logged out successfully')
+		await goto('/auth/login')
+	} catch (error) {
+		console.error('Logout failed:', error)
+		toastStore.error(
+			'Logout failed',
+			error instanceof Error ? error.message : 'An unexpected error occurred'
+		)
+	} finally {
+		isLoggingOut = false
 	}
+}
 
-	async function handleLogout() {
-		const confirmed = await confirmStore.showConfirm({
-			cancelText: 'Cancel',
-			confirmText: 'Logout',
-			message: 'Are you sure you want to logout?',
-			title: 'Logout',
-			type: 'info'
-		});
-
-		if (!confirmed) return;
-
-		isLoggingOut = true;
-		try {
-			await authStore.logout();
-			toastStore.success('Logged out', 'You have been logged out successfully');
-			await goto('/auth/login');
-		} catch (error) {
-			console.error('Logout failed:', error);
-			toastStore.error('Logout failed', error instanceof Error ? error.message : 'An unexpected error occurred');
-		} finally {
-			isLoggingOut = false;
-		}
-	}
-
-	function toggleMobileMenu() {
-		isMobileMenuOpen = !isMobileMenuOpen;
-	}
+function toggleMobileMenu() {
+	isMobileMenuOpen = !isMobileMenuOpen
+}
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -70,7 +73,7 @@
 						Tasks
 					</a>
 					<button
-						onclick={handleLogout}
+						onclick={() => handleLogout()}
 						disabled={isLoggingOut}
 						class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 					>
@@ -84,7 +87,7 @@
 				<!-- Mobile menu button -->
 				<div class="md:hidden flex items-center">
 					<button
-						onclick={toggleMobileMenu}
+						onclick={() => toggleMobileMenu()}
 						class="text-gray-600 hover:text-gray-900 p-3 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 active:bg-gray-100 min-w-[44px] min-h-[44px]"
 						aria-label="Toggle menu"
 						aria-expanded={isMobileMenuOpen}
@@ -120,7 +123,7 @@
 						Tasks
 					</a>
 					<button
-						onclick={handleLogout}
+						onclick={() => handleLogout()}
 						disabled={isLoggingOut}
 						class="w-full text-left text-gray-600 hover:text-gray-900 hover:bg-gray-50 active:bg-gray-100 px-3 py-3 rounded-md text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center gap-2"
 					>

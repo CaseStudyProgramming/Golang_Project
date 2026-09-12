@@ -1,17 +1,17 @@
 <script lang="ts">
-	let { 
-		actionLabel = '',
-		description = 'There is no data to display.',
-		icon = '',
-		onAction,
-		title = 'No data'
-	}: {
-		actionLabel?: string;
-		description?: string;
-		icon?: string;
-		onAction?: () => void;
-		title?: string;
-	} = $props();
+let {
+	actionLabel = '',
+	description = 'There is no data to display.',
+	icon = '',
+	onAction,
+	title = 'No data',
+}: {
+	actionLabel?: string
+	description?: string
+	icon?: string
+	onAction?: () => void
+	title?: string
+} = $props()
 </script>
 
 <div class="text-center py-8 sm:py-12 px-4">

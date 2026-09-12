@@ -1,72 +1,71 @@
 <script lang="ts">
-	import type { TaskStatistics } from '../types/analytics.types';
+import type { TaskStatistics } from '../types/analytics.types'
+import StatisticsCardsSkeleton from './StatisticsCardsSkeleton.svelte'
 
-	import StatisticsCardsSkeleton from './StatisticsCardsSkeleton.svelte';
+let {
+	isLoading = false,
+	statistics,
+}: {
+	isLoading?: boolean
+	statistics: TaskStatistics
+} = $props()
 
-	let { 
-		isLoading = false,
-		statistics 
-	}: { 
-		isLoading?: boolean;
-		statistics: TaskStatistics;
-	} = $props();
+type CardColor = 'blue' | 'emerald' | 'green' | 'orange' | 'purple' | 'red'
 
-	type CardColor = 'blue' | 'emerald' | 'green' | 'orange' | 'purple' | 'red';
+interface StatCard {
+	label: string
+	value: number | string
+	color: CardColor
+	icon: string
+}
 
-	interface StatCard {
-		label: string;
-		value: number | string;
-		color: CardColor;
-		icon: string;
-	}
+const cards: StatCard[] = $derived([
+	{
+		color: 'blue',
+		icon: '📋',
+		label: 'Total Tasks',
+		value: statistics.total,
+	},
+	{
+		color: 'green',
+		icon: '✅',
+		label: 'Completed',
+		value: statistics.completed,
+	},
+	{
+		color: 'orange',
+		icon: '🔄',
+		label: 'In Progress',
+		value: statistics.inProgress,
+	},
+	{
+		color: 'purple',
+		icon: '📝',
+		label: 'To Do',
+		value: statistics.todo,
+	},
+	{
+		color: 'red',
+		icon: '⚠️',
+		label: 'Overdue',
+		value: statistics.overdue,
+	},
+	{
+		color: 'emerald',
+		icon: '📊',
+		label: 'Completion Rate',
+		value: `${statistics.completionRate}%`,
+	},
+])
 
-	const cards: StatCard[] = $derived([
-		{
-			color: 'blue',
-			icon: '📋',
-			label: 'Total Tasks',
-			value: statistics.total
-		},
-		{
-			color: 'green',
-			icon: '✅',
-			label: 'Completed',
-			value: statistics.completed
-		},
-		{
-			color: 'orange',
-			icon: '🔄',
-			label: 'In Progress',
-			value: statistics.inProgress
-		},
-		{
-			color: 'purple',
-			icon: '📝',
-			label: 'To Do',
-			value: statistics.todo
-		},
-		{
-			color: 'red',
-			icon: '⚠️',
-			label: 'Overdue',
-			value: statistics.overdue
-		},
-		{
-			color: 'emerald',
-			icon: '📊',
-			label: 'Completion Rate',
-			value: `${statistics.completionRate}%`
-		}
-	]);
-
-	const colorClasses: Record<CardColor, string> = {
-		blue: 'text-blue-600 bg-blue-50',
-		emerald: 'text-emerald-600 bg-emerald-50',
-		green: 'text-green-600 bg-green-50',
-		orange: 'text-orange-600 bg-orange-50',
-		purple: 'text-purple-600 bg-purple-50',
-		red: 'text-red-600 bg-red-50'
-	};
+const colorClasses: Record<CardColor, string> = {
+	blue: 'text-blue-600 bg-blue-50',
+	emerald: 'text-emerald-600 bg-emerald-50',
+	green: 'text-green-600 bg-green-50',
+	orange: 'text-orange-600 bg-orange-50',
+	purple: 'text-purple-600 bg-purple-50',
+	red: 'text-red-600 bg-red-50',
+}
 </script>
 
 {#if isLoading}

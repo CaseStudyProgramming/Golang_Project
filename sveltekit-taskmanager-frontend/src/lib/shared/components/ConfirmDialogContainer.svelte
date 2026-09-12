@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { ConfirmDialogComponent } from '$lib/shared/components';
-	import { confirmStore } from '$lib/shared/stores';
+import { confirmStore } from '$lib/shared/stores'
+import ConfirmDialogComponent from './ConfirmDialog.svelte'
 </script>
 
 {#if confirmStore.state.dialog}

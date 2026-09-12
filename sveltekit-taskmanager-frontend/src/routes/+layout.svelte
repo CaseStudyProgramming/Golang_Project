@@ -1,29 +1,31 @@
 <script lang="ts">
-	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
-	import { authStore } from '$lib/features/auth';
-	import { ConfirmDialogContainer, ToastContainer } from '$lib/shared/components';
-	import { onDestroy, onMount } from 'svelte';
+import './layout.css'
+import { onDestroy, onMount } from 'svelte'
+import { authStore } from '$lib/features/auth'
+import ToastContainer from '$lib/shared/components/ToastContainer.svelte'
+import ConfirmDialogContainer from '$lib/shared/components/ConfirmDialogContainer.svelte'
 
-	let { children } = $props();
+let { children } = $props()
 
-	onMount(() => {
-		// Initialize auth store on client side
-		try {
-			authStore.initialize();
-		} catch {
-			// Store will initialize on first access
-		}
-	});
+const favicon = $derived('/favicon.ico')
 
-	onDestroy(() => {
-		// Cleanup auth store when component unmounts
-		try {
-			authStore.cleanup();
-		} catch {
-			// Ignore cleanup errors
-		}
-	});
+onMount(() => {
+	// Initialize auth store on client side
+	try {
+		authStore.initialize()
+	} catch {
+		// Store will initialize on first access
+	}
+})
+
+onDestroy(() => {
+	// Cleanup auth store when component unmounts
+	try {
+		authStore.cleanup()
+	} catch {
+		// Ignore cleanup errors
+	}
+})
 </script>
 
 <svelte:head>

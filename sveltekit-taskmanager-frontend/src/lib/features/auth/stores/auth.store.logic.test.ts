@@ -1,126 +1,126 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest'
 
 describe('Auth Store Logic', () => {
 	describe('Token Management', () => {
 		it('calculates token expiry time correctly', () => {
-			const expiresIn = 3600; // 1 hour
-			const expiryTime = Date.now() + expiresIn * 1000;
+			const expiresIn = 3600 // 1 hour
+			const expiryTime = Date.now() + expiresIn * 1000
 
-			expect(expiryTime).toBeGreaterThan(Date.now());
-			expect(expiryTime).toBeLessThan(Date.now() + 4000000);
-		});
+			expect(expiryTime).toBeGreaterThan(Date.now())
+			expect(expiryTime).toBeLessThan(Date.now() + 4000000)
+		})
 
 		it('checks if token is expired', () => {
-			const pastExpiry = Date.now() - 1000;
-			const futureExpiry = Date.now() + 1000000;
+			const pastExpiry = Date.now() - 1000
+			const futureExpiry = Date.now() + 1000000
 
-			const isPastExpired = Date.now() > pastExpiry;
-			const isFutureExpired = Date.now() > futureExpiry;
+			const isPastExpired = Date.now() > pastExpiry
+			const isFutureExpired = Date.now() > futureExpiry
 
-			expect(isPastExpired).toBe(true);
-			expect(isFutureExpired).toBe(false);
-		});
-	});
+			expect(isPastExpired).toBe(true)
+			expect(isFutureExpired).toBe(false)
+		})
+	})
 
 	describe('Redirect URL Management', () => {
 		it('saves and retrieves redirect URL', () => {
 			const sessionStorageMock = {
-				getItem: vi.fn((key: string) => key === 'auth_redirect' ? '/protected/page' : null),
+				getItem: vi.fn((key: string) => (key === 'auth_redirect' ? '/protected/page' : null)),
 				removeItem: vi.fn(),
-				setItem: vi.fn()
-			};
+				setItem: vi.fn(),
+			}
 
-			sessionStorageMock.setItem('auth_redirect', '/protected/page');
-			const url = sessionStorageMock.getItem('auth_redirect');
-			sessionStorageMock.removeItem('auth_redirect');
+			sessionStorageMock.setItem('auth_redirect', '/protected/page')
+			const url = sessionStorageMock.getItem('auth_redirect')
+			sessionStorageMock.removeItem('auth_redirect')
 
-			expect(url).toBe('/protected/page');
-			expect(sessionStorageMock.removeItem).toHaveBeenCalledWith('auth_redirect');
-		});
+			expect(url).toBe('/protected/page')
+			expect(sessionStorageMock.removeItem).toHaveBeenCalledWith('auth_redirect')
+		})
 
 		it('returns null when no redirect URL is saved', () => {
 			const sessionStorageMock = {
 				getItem: vi.fn((_key: string) => null),
 				removeItem: vi.fn(),
-				setItem: vi.fn()
-			};
+				setItem: vi.fn(),
+			}
 
-			const url = sessionStorageMock.getItem('auth_redirect');
+			const url = sessionStorageMock.getItem('auth_redirect')
 
-			expect(url).toBe(null);
-		});
-	});
+			expect(url).toBe(null)
+		})
+	})
 
 	describe('User State Management', () => {
 		it('updates user data partially', () => {
 			const user = {
 				email: 'test@example.com',
 				id: '1',
-				name: 'Test User'
-			};
+				name: 'Test User',
+			}
 
-			const updatedUser = { ...user, name: 'Updated Name' };
+			const updatedUser = { ...user, name: 'Updated Name' }
 
-			expect(updatedUser.name).toBe('Updated Name');
-			expect(updatedUser.email).toBe('test@example.com');
-			expect(updatedUser.id).toBe('1');
-		});
+			expect(updatedUser.name).toBe('Updated Name')
+			expect(updatedUser.email).toBe('test@example.com')
+			expect(updatedUser.id).toBe('1')
+		})
 
 		it('clears user state on logout', () => {
 			type AuthState = {
-				isAuthenticated: boolean;
-				token: null | string;
-				user: null | { email: string; id: string; name: string };
-			};
+				isAuthenticated: boolean
+				token: null | string
+				user: null | { email: string; id: string; name: string }
+			}
 
 			const _state: AuthState = {
 				isAuthenticated: true,
 				token: 'auth-token',
-				user: { email: 'test@example.com', id: '1', name: 'Test' }
-			};
+				user: { email: 'test@example.com', id: '1', name: 'Test' },
+			}
 
 			const clearedState: AuthState = {
 				isAuthenticated: false,
 				token: null,
-				user: null
-			};
+				user: null,
+			}
 
-			expect(clearedState.user).toBe(null);
-			expect(clearedState.token).toBe(null);
-			expect(clearedState.isAuthenticated).toBe(false);
-		});
-	});
+			expect(clearedState.user).toBe(null)
+			expect(clearedState.token).toBe(null)
+			expect(clearedState.isAuthenticated).toBe(false)
+		})
+	})
 
 	describe('Error Handling', () => {
 		it('sets error message on failure', () => {
-			const error = new Error('Invalid credentials');
-			const errorMessage = error.message;
+			const error = new Error('Invalid credentials')
+			const errorMessage = error.message
 
-			expect(errorMessage).toBe('Invalid credentials');
-		});
+			expect(errorMessage).toBe('Invalid credentials')
+		})
 
 		it('clears error state', () => {
-			type ErrorState = { error: null | string };
-			const state: ErrorState = { error: 'Test error' };
-			state.error = null;
+			type ErrorState = { error: null | string }
+			const state: ErrorState = { error: 'Test error' }
+			state.error = null
 
-			expect(state.error).toBe(null);
-		});
-	});
+			expect(state.error).toBe(null)
+		})
+	})
 
 	describe('Loading States', () => {
 		it('sets loading state during operation', () => {
-			const state = { isLoading: false };
-			state.isLoading = true;
+			const state = { isLoading: false }
+			state.isLoading = true
 
-			expect(state.isLoading).toBe(true);
-		});
+			expect(state.isLoading).toBe(true)
+		})
 
 		it('clears loading state after operation', () => {
-			const state = { isLoading: true };
-			state.isLoading = false;
+			const state = { isLoading: true }
+			state.isLoading = false
 
-			expect(state.isLoading).toBe(false);
-		});
-	});
-});
+			expect(state.isLoading).toBe(false)
+		})
+	})
+})

@@ -19,7 +19,7 @@ export default defineConfig({
 			adapter: adapter()
 		})
 	],
-	
+
 	// Build optimizations for production
 	build: {
 		// Enable source maps for production debugging
@@ -45,12 +45,12 @@ export default defineConfig({
 		// Minify output
 		minify: 'terser'
 	},
-	
+
 	// Optimize dependencies
 	optimizeDeps: {
 		include: ['chart.js', 'svelte-chartjs', 'zod']
 	},
-	
+
 	// Server configuration
 	server: {
 		port: 5173,
@@ -60,7 +60,7 @@ export default defineConfig({
 			overlay: true
 		}
 	},
-	
+
 	// Preview configuration
 	preview: {
 		port: 4173,

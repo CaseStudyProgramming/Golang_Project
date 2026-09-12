@@ -1,92 +1,92 @@
 /**
  * Base API configuration and utilities
  */
-import { publicEnv } from '$lib/env';
+import { publicEnv } from '$lib/env'
 
 import {
 	authRequestInterceptor,
 	authResponseInterceptor,
-	errorLoggingInterceptor
-} from './auth.interceptors';
-import { ApiError } from './error.utils';
+	errorLoggingInterceptor,
+} from './auth.interceptors'
+import { ApiError } from './error.utils'
 
-const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL;
+const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL
 
 /**
  * HTTP client configuration options
  */
 interface HttpClientOptions {
-	retries?: number;
-	retryDelay?: number;
-	timeout?: number;
-	headers?: Record<string, string>;
+	retries?: number
+	retryDelay?: number
+	timeout?: number
+	headers?: Record<string, string>
 }
 
 /**
  * Request interceptor function type
  */
-type RequestInterceptor = (request: RequestInit) => Promise<RequestInit> | RequestInit;
+type RequestInterceptor = (request: RequestInit) => Promise<RequestInit> | RequestInit
 
 /**
  * Request options for HTTP methods
  */
 interface RequestOptions {
-	headers?: Record<string, string>;
-	signal?: AbortSignal;
-	method?: string;
-	body?: string;
+	headers?: Record<string, string>
+	signal?: AbortSignal
+	method?: string
+	body?: string
 }
 
 /**
  * Response interceptor function type
  */
-type ResponseInterceptor = (response: Response) => Promise<Response> | Response;
+type ResponseInterceptor = (response: Response) => Promise<Response> | Response
 
 /**
  * HTTP client class with interceptors and retry logic
  */
 export class HttpClient {
-	private baseUrl: string;
-	private defaultOptions: HttpClientOptions;
-	private requestInterceptors: RequestInterceptor[] = [];
-	private responseInterceptors: ResponseInterceptor[] = [];
+	private baseUrl: string
+	private defaultOptions: HttpClientOptions
+	private requestInterceptors: RequestInterceptor[] = []
+	private responseInterceptors: ResponseInterceptor[] = []
 
 	constructor(baseUrl: string, options: HttpClientOptions = {}) {
-		this.baseUrl = baseUrl;
+		this.baseUrl = baseUrl
 		this.defaultOptions = {
 			retries: 3,
 			retryDelay: 1000,
 			timeout: 30000,
-			...options
-		};
+			...options,
+		}
 	}
 
 	/**
 	 * Add a request interceptor
 	 */
 	addRequestInterceptor(interceptor: RequestInterceptor): void {
-		this.requestInterceptors.push(interceptor);
+		this.requestInterceptors.push(interceptor)
 	}
 
 	/**
 	 * Add a response interceptor
 	 */
 	addResponseInterceptor(interceptor: ResponseInterceptor): void {
-		this.responseInterceptors.push(interceptor);
+		this.responseInterceptors.push(interceptor)
 	}
 
 	/**
 	 * DELETE request
 	 */
 	async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+		return this.request<T>(endpoint, { ...options, method: 'DELETE' })
 	}
 
 	/**
 	 * GET request
 	 */
 	async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-		return this.request<T>(endpoint, { ...options, method: 'GET' });
+		return this.request<T>(endpoint, { ...options, method: 'GET' })
 	}
 
 	/**
@@ -96,8 +96,8 @@ export class HttpClient {
 		return this.request<T>(endpoint, {
 			...options,
 			body: JSON.stringify(data),
-			method: 'PATCH'
-		});
+			method: 'PATCH',
+		})
 	}
 
 	/**
@@ -107,8 +107,8 @@ export class HttpClient {
 		return this.request<T>(endpoint, {
 			...options,
 			body: JSON.stringify(data),
-			method: 'POST'
-		});
+			method: 'POST',
+		})
 	}
 
 	/**
@@ -118,39 +118,39 @@ export class HttpClient {
 		return this.request<T>(endpoint, {
 			...options,
 			body: JSON.stringify(data),
-			method: 'PUT'
-		});
+			method: 'PUT',
+		})
 	}
 
 	/**
 	 * Apply request interceptors
 	 */
 	private async applyRequestInterceptors(options: RequestInit): Promise<RequestInit> {
-		let processedOptions = options;
+		let processedOptions = options
 		for (const interceptor of this.requestInterceptors) {
-			processedOptions = await interceptor(processedOptions);
+			processedOptions = await interceptor(processedOptions)
 		}
-		return processedOptions;
+		return processedOptions
 	}
 
 	/**
 	 * Apply response interceptors
 	 */
 	private async applyResponseInterceptors(response: Response): Promise<Response> {
-		let processedResponse = response;
+		let processedResponse = response
 		for (const interceptor of this.responseInterceptors) {
-			processedResponse = await interceptor(processedResponse);
+			processedResponse = await interceptor(processedResponse)
 		}
-		return processedResponse;
+		return processedResponse
 	}
 
 	/**
 	 * Create an abort controller with timeout
 	 */
 	private createTimeoutController(timeout: number): AbortController {
-		const controller = new AbortController();
-		setTimeout(() => controller.abort(), timeout);
-		return controller;
+		const controller = new AbortController()
+		setTimeout(() => controller.abort(), timeout)
+		return controller
 	}
 
 	/**
@@ -158,9 +158,9 @@ export class HttpClient {
 	 */
 	private async parseErrorData(response: Response): Promise<unknown> {
 		try {
-			return await response.json();
+			return await response.json()
 		} catch {
-			return { message: response.statusText };
+			return { message: response.statusText }
 		}
 	}
 
@@ -168,37 +168,35 @@ export class HttpClient {
 	 * Perform HTTP request with retry logic
 	 */
 	private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-		const url = `${this.baseUrl}${endpoint}`;
-		const maxRetries = this.defaultOptions.retries || 0;
-		let lastError: Error | null = null;
+		const url = `${this.baseUrl}${endpoint}`
+		const maxRetries = this.defaultOptions.retries || 0
+		let lastError: Error | null = null
 
 		for (let attempt = 0; attempt <= maxRetries; attempt++) {
 			try {
-				const timeoutController = this.createTimeoutController(
-					this.defaultOptions.timeout || 30000
-				);
+				const timeoutController = this.createTimeoutController(this.defaultOptions.timeout || 30000)
 
 				const processedOptions = await this.applyRequestInterceptors({
 					...options,
 					headers: {
 						'Content-Type': 'application/json',
 						...this.defaultOptions.headers,
-						...options.headers
+						...options.headers,
 					},
-					signal: timeoutController.signal
-				});
+					signal: timeoutController.signal,
+				})
 
-				let response = await fetch(url, processedOptions);
-				response = await this.applyResponseInterceptors(response);
+				let response = await fetch(url, processedOptions)
+				response = await this.applyResponseInterceptors(response)
 
 				if (!response.ok) {
-					const errorData = await this.parseErrorData(response);
-					throw new ApiError(response.status, response.statusText, errorData);
+					const errorData = await this.parseErrorData(response)
+					throw new ApiError(response.status, response.statusText, errorData)
 				}
 
-				return await response.json();
+				return await response.json()
 			} catch (error) {
-				lastError = error as Error;
+				lastError = error as Error
 
 				// Don't retry on abort or 4xx errors (except 429)
 				if (
@@ -209,25 +207,25 @@ export class HttpClient {
 							error.status < 500 &&
 							error.status !== 429))
 				) {
-					break;
+					break
 				}
 
 				// Retry with exponential backoff
 				if (attempt < maxRetries) {
-					const delay = (this.defaultOptions.retryDelay || 1000) * Math.pow(2, attempt);
-					await this.sleep(delay);
+					const delay = (this.defaultOptions.retryDelay || 1000) * 2 ** attempt
+					await this.sleep(delay)
 				}
 			}
 		}
 
-		throw lastError || new Error('Request failed');
+		throw lastError || new Error('Request failed')
 	}
 
 	/**
 	 * Sleep for retry delay
 	 */
 	private async sleep(ms: number): Promise<void> {
-		return new Promise(resolve => setTimeout(resolve, ms));
+		return new Promise((resolve) => setTimeout(resolve, ms))
 	}
 }
 
@@ -235,26 +233,26 @@ export class HttpClient {
  * Create HTTP client instance with interceptors
  * Only create client instance on client side to avoid SSR issues
  */
-let httpClientInstance: HttpClient | null = null;
+let httpClientInstance: HttpClient | null = null
 
 export const httpClient = new Proxy({} as HttpClient, {
 	get(_target, prop) {
 		if (!httpClientInstance) {
-			httpClientInstance = new HttpClient(API_BASE_URL);
+			httpClientInstance = new HttpClient(API_BASE_URL)
 			// Add authentication interceptors
-			httpClientInstance.addRequestInterceptor(authRequestInterceptor);
-			httpClientInstance.addResponseInterceptor(authResponseInterceptor);
-			httpClientInstance.addResponseInterceptor(errorLoggingInterceptor);
+			httpClientInstance.addRequestInterceptor(authRequestInterceptor)
+			httpClientInstance.addResponseInterceptor(authResponseInterceptor)
+			httpClientInstance.addResponseInterceptor(errorLoggingInterceptor)
 		}
-		return httpClientInstance[prop as keyof HttpClient];
-	}
-});
+		return httpClientInstance[prop as keyof HttpClient]
+	},
+})
 
 /**
  * Legacy fetchJson function for backward compatibility
  * @deprecated Use httpClient methods instead
  */
 export async function fetchJson<T>(url: string, options?: RequestOptions): Promise<T> {
-	const client = httpClient as HttpClient;
-	return client.get<T>(url, options);
+	const client = httpClient as HttpClient
+	return client.get<T>(url, options)
 }

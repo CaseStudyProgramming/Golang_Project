@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 describe('TagInput accessibility', () => {
 	it('ensures combobox has required ARIA attributes', () => {
@@ -15,13 +15,13 @@ describe('TagInput accessibility', () => {
 			'aria-expanded',
 			'aria-controls',
 			'aria-haspopup="listbox"',
-			'aria-autocomplete="list"'
-		];
+			'aria-autocomplete="list"',
+		]
 
-		requiredAttributes.forEach(attr => {
-			expect(attr).toBeDefined();
-		});
-	});
+		requiredAttributes.forEach((attr) => {
+			expect(attr).toBeDefined()
+		})
+	})
 
 	it('ensures option buttons have required ARIA attributes', () => {
 		// The option buttons in the dropdown should have:
@@ -29,18 +29,18 @@ describe('TagInput accessibility', () => {
 		// - aria-selected attribute
 		// - tabindex={-1}
 
-		const requiredAttributes = ['role="option"', 'aria-selected', 'tabindex'];
+		const requiredAttributes = ['role="option"', 'aria-selected', 'tabindex']
 
-		requiredAttributes.forEach(attr => {
-			expect(attr).toBeDefined();
-		});
-	});
+		requiredAttributes.forEach((attr) => {
+			expect(attr).toBeDefined()
+		})
+	})
 
 	it('ensures listbox has id for combobox aria-controls', () => {
 		// The listbox should have an id that matches the combobox aria-controls
 		// This allows screen readers to associate the input with its dropdown
 
-		const listboxId = 'tag-listbox';
-		expect(listboxId).toBe('tag-listbox');
-	});
-});
+		const listboxId = 'tag-listbox'
+		expect(listboxId).toBe('tag-listbox')
+	})
+})

@@ -1,167 +1,166 @@
 <script lang="ts">
-	import { categoryStore } from '$lib/features/categories';
-	import { tagStore } from '$lib/features/tags';
-	import { TagInput } from '$lib/features/tags';
-	import { LoadingSpinner } from '$lib/shared/components';
-	import { toastStore } from '$lib/shared/stores';
+import { categoryStore } from '$lib/features/categories'
+import { tagStore } from '$lib/features/tags'
+import TagInput from '$lib/features/tags/components/TagInput.svelte'
+import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
+import { toastStore } from '$lib/shared/stores'
+import { type CreateTaskPayload, createTaskSchema } from '../schemas/task.schemas'
+import { taskStore } from '../stores/task.store'
+import type { TaskPriority } from '../types/task.types'
 
-	import type { TaskPriority } from '../types/task.types';
+let {
+	initialData,
+	mode = 'create',
+	onCancel,
+	onSubmit,
+}: {
+	initialData?: Partial<CreateTaskPayload>
+	mode?: 'create' | 'edit'
+	onCancel?: () => void
+	onSubmit?: (data: CreateTaskPayload) => Promise<void>
+} = $props()
 
-	import { type CreateTaskPayload, createTaskSchema } from '../schemas/task.schemas';
-	import { taskStore } from '../stores/task.store';
+let title = $state('')
+let description = $state('')
+let priority = $state<TaskPriority>('medium')
+let dueDate = $state('')
+let categoryId = $state('')
+let tags = $state<string[]>([])
+let errors = $state<Record<string, string>>({})
+let isSubmitting = $state(false)
 
-	let {
-		initialData,
-		mode = 'create',
-		onCancel,
-		onSubmit
-	}: {
-		initialData?: Partial<CreateTaskPayload>;
-		mode?: 'create' | 'edit';
-		onCancel?: () => void;
-		onSubmit?: (data: CreateTaskPayload) => Promise<void>;
-	} = $props();
+/**
+ * Get derived values from initialData
+ */
+const initialTitle = $derived(initialData?.title || '')
+const initialDescription = $derived(initialData?.description || '')
+const initialPriority = $derived<TaskPriority>(initialData?.priority || 'medium')
+const initialDueDate = $derived(initialData?.dueDate || '')
+const initialCategoryId = $derived(initialData?.categoryId || '')
+const initialTags = $derived<string[]>(initialData?.tags || [])
 
-	let title = $state('');
-	let description = $state('');
-	let priority = $state<TaskPriority>('medium');
-	let dueDate = $state('');
-	let categoryId = $state('');
-	let tags = $state<string[]>([]);
-	let errors = $state<Record<string, string>>({});
-	let isSubmitting = $state(false);
+/**
+ * Sync form state when initialData changes
+ */
+$effect(() => {
+	title = initialTitle
+	description = initialDescription
+	priority = initialPriority
+	dueDate = initialDueDate
+	categoryId = initialCategoryId
+	tags = initialTags
+})
 
-	/**
-	 * Get derived values from initialData
-	 */
-	const initialTitle = $derived(initialData?.title || '');
-	const initialDescription = $derived(initialData?.description || '');
-	const initialPriority = $derived<TaskPriority>(initialData?.priority || 'medium');
-	const initialDueDate = $derived(initialData?.dueDate || '');
-	const initialCategoryId = $derived(initialData?.categoryId || '');
-	const initialTags = $derived<string[]>(initialData?.tags || []);
+let categories = $derived(categoryStore.state.categories)
 
-	/**
-	 * Sync form state when initialData changes
-	 */
-	$effect(() => {
-		title = initialTitle;
-		description = initialDescription;
-		priority = initialPriority;
-		dueDate = initialDueDate;
-		categoryId = initialCategoryId;
-		tags = initialTags;
-	});
+/**
+ * Initialize categories and tags on mount
+ */
+$effect(() => {
+	categoryStore.fetchCategories()
+	tagStore.fetchTags()
+})
 
-	let categories = $derived(categoryStore.state.categories);
-	let availableTags = $derived(tagStore.state.tags);
+/**
+ * Handle cancel
+ */
+function handleCancel(): void {
+	onCancel?.()
+}
 
-	/**
-	 * Initialize categories and tags on mount
-	 */
-	$effect(() => {
-		categoryStore.fetchCategories();
-		tagStore.fetchTags();
-	});
+/**
+ * Handle creating new tag
+ */
+async function handleCreateTag(name: string): Promise<void> {
+	try {
+		const newTag = await tagStore.createTag({ name })
+		tags = [...tags, newTag.id]
+	} catch (error) {
+		console.error('Failed to create tag:', error)
+	}
+}
 
-	/**
-	 * Handle cancel
-	 */
-	function handleCancel(): void {
-		onCancel?.();
+/**
+ * Handle form submission
+ */
+async function handleSubmit(): Promise<void> {
+	if (!validateForm()) {
+		return
 	}
 
-	/**
-	 * Handle creating new tag
-	 */
-	async function handleCreateTag(name: string): Promise<void> {
-		try {
-			const newTag = await tagStore.createTag({ name });
-			tags = [...tags, newTag.id];
-		} catch (error) {
-			console.error('Failed to create tag:', error);
+	isSubmitting = true
+	try {
+		const payload: CreateTaskPayload = {
+			categoryId: categoryId || undefined,
+			description,
+			dueDate: dueDate || undefined,
+			priority,
+			tags,
+			title,
 		}
+
+		if (onSubmit) {
+			await onSubmit(payload)
+		} else {
+			await taskStore.createTask(payload)
+		}
+
+		// Show success toast
+		toastStore.success(
+			mode === 'create' ? 'Task created' : 'Task updated',
+			mode === 'create'
+				? 'Your task has been created successfully'
+				: 'Your task has been updated successfully'
+		)
+
+		// Reset form on success
+		if (mode === 'create') {
+			title = ''
+			description = ''
+			priority = 'medium'
+			dueDate = ''
+			categoryId = ''
+			tags = []
+		}
+	} catch (error) {
+		console.error('Failed to submit task:', error)
+		toastStore.error(
+			mode === 'create' ? 'Failed to create task' : 'Failed to update task',
+			error instanceof Error ? error.message : 'An unexpected error occurred'
+		)
+	} finally {
+		isSubmitting = false
 	}
+}
 
-	/**
-	 * Handle form submission
-	 */
-	async function handleSubmit(): Promise<void> {
-		if (!validateForm()) {
-			return;
+/**
+ * Validate form
+ */
+function validateForm(): boolean {
+	try {
+		createTaskSchema.parse({
+			categoryId: categoryId || undefined,
+			description,
+			dueDate: dueDate || undefined,
+			priority,
+			tags,
+			title,
+		})
+		errors = {}
+		return true
+	} catch (error: unknown) {
+		if (error instanceof Error && error.name === 'ZodError') {
+			const zodError = error as unknown as { errors: Array<{ message: string; path: string[] }> }
+			const newErrors: Record<string, string> = {}
+			zodError.errors.forEach((err) => {
+				const path = err.path.join('.')
+				newErrors[path] = err.message
+			})
+			errors = newErrors
 		}
-
-		isSubmitting = true;
-		try {
-			const payload: CreateTaskPayload = {
-				categoryId: categoryId || undefined,
-				description,
-				dueDate: dueDate || undefined,
-				priority,
-				tags,
-				title
-			};
-
-			if (onSubmit) {
-				await onSubmit(payload);
-			} else {
-				await taskStore.createTask(payload);
-			}
-
-			// Show success toast
-			toastStore.success(
-				mode === 'create' ? 'Task created' : 'Task updated',
-				mode === 'create' ? 'Your task has been created successfully' : 'Your task has been updated successfully'
-			);
-
-			// Reset form on success
-			if (mode === 'create') {
-				title = '';
-				description = '';
-				priority = 'medium';
-				dueDate = '';
-				categoryId = '';
-				tags = [];
-			}
-		} catch (error) {
-			console.error('Failed to submit task:', error);
-			toastStore.error(
-				mode === 'create' ? 'Failed to create task' : 'Failed to update task',
-				error instanceof Error ? error.message : 'An unexpected error occurred'
-			);
-		} finally {
-			isSubmitting = false;
-		}
+		return false
 	}
-
-	/**
-	 * Validate form
-	 */
-	function validateForm(): boolean {
-		try {
-			createTaskSchema.parse({
-				categoryId: categoryId || undefined,
-				description,
-				dueDate: dueDate || undefined,
-				priority,
-				tags,
-				title
-			});
-			errors = {};
-			return true;
-		} catch (error: unknown) {
-			if (error instanceof Error && error.name === 'ZodError') {
-				const zodError = error as unknown as { errors: Array<{ message: string; path: string[] }> };
-				const newErrors: Record<string, string> = {};
-				zodError.errors.forEach((err) => {
-					const path = err.path.join('.');
-					newErrors[path] = err.message;
-				});
-				errors = newErrors;
-			}
-			return false;
-		}
-	}
+}
 </script>
 
 <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4 sm:space-y-6">
@@ -241,7 +240,6 @@
 		<label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
 		<TagInput
 			bind:selectedTags={tags}
-			bind:availableTags={availableTags}
 			onCreateTag={handleCreateTag}
 			placeholder="Add tags..."
 		/>
@@ -251,7 +249,7 @@
 		{#if onCancel}
 			<button
 				type="button"
-				onclick={handleCancel}
+				onclick={() => handleCancel()}
 				disabled={isSubmitting}
 				class="w-full sm:w-auto px-4 py-3 sm:px-4 sm:py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50 transition-colors min-h-[44px]"
 			>

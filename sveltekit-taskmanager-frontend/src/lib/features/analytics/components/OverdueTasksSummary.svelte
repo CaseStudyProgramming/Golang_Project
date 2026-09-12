@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { Task } from '$lib/features/tasks/types/task.types';
+import type { Task } from '$lib/features/tasks/types/task.types'
 
-	let { overdueTasks }: { overdueTasks: Task[] } = $props();
+let { overdueTasks }: { overdueTasks: Task[] } = $props()
 </script>
 
 <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">

@@ -1,118 +1,116 @@
 <script lang="ts">
-	import { toastStore } from '$lib/shared/stores';
+import { toastStore } from '$lib/shared/stores'
 
-	import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas';
-	import type { Category } from '../types/category.types';
+import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas'
+import { categoryStore } from '../stores/category.store'
+import type { Category } from '../types/category.types'
 
-	import { categoryStore } from '../stores/category.store';
+let {
+	initialData,
+	onCancel,
+	onSubmit,
+}: {
+	initialData?: Category
+	onCancel?: () => void
+	onSubmit?: (data: CreateCategoryPayload | UpdateCategoryPayload) => Promise<void>
+} = $props()
 
-	let {
-		initialData,
-		onCancel,
-		onSubmit
-	}: {
-		initialData?: Category;
-		onCancel?: () => void;
-		onSubmit?: (data: CreateCategoryPayload | UpdateCategoryPayload) => Promise<void>;
-	} = $props();
+let name = $state('')
+let description = $state('')
+let color = $state('#3B82F6')
+let icon = $state('')
+let isSubmitting = $state(false)
+let error = $state('')
 
-	let name = $state('');
-	let description = $state('');
-	let color = $state('#3B82F6');
-	let icon = $state('');
-	let isSubmitting = $state(false);
-	let error = $state('');
+/**
+ * Sync form state when initialData reference changes
+ */
+$effect(() => {
+	if (initialData) {
+		name = initialData.name
+		description = initialData.description || ''
+		color = initialData.color || '#3B82F6'
+		icon = initialData.icon || ''
+	} else {
+		name = ''
+		description = ''
+		color = '#3B82F6'
+		icon = ''
+	}
+})
 
-	/**
-	 * Sync form state when initialData reference changes
-	 */
-	$effect(() => {
-		if (initialData) {
-			name = initialData.name;
-			description = initialData.description || '';
-			color = initialData.color || '#3B82F6';
-			icon = initialData.icon || '';
+const predefinedColors = [
+	'#3B82F6', // blue
+	'#10B981', // green
+	'#F59E0B', // yellow
+	'#EF4444', // red
+	'#8B5CF6', // purple
+	'#EC4899', // pink
+	'#6366F1', // indigo
+	'#14B8A6', // teal
+]
+
+/**
+ * Handle cancel
+ */
+function handleCancel() {
+	if (onCancel) {
+		onCancel()
+	}
+}
+
+/**
+ * Handle form submission
+ */
+async function handleSubmit() {
+	if (!name.trim()) {
+		error = 'Name is required'
+		return
+	}
+
+	isSubmitting = true
+	error = ''
+
+	try {
+		const payload = {
+			color: color || undefined,
+			description: description.trim() || undefined,
+			icon: icon.trim() || undefined,
+			name: name.trim(),
+		}
+
+		if (onSubmit) {
+			await onSubmit(payload)
 		} else {
-			name = '';
-			description = '';
-			color = '#3B82F6';
-			icon = '';
-		}
-	});
-
-	const predefinedColors = [
-		'#3B82F6', // blue
-		'#10B981', // green
-		'#F59E0B', // yellow
-		'#EF4444', // red
-		'#8B5CF6', // purple
-		'#EC4899', // pink
-		'#6366F1', // indigo
-		'#14B8A6'  // teal
-	];
-
-	/**
-	 * Handle cancel
-	 */
-	function handleCancel() {
-		if (onCancel) {
-			onCancel();
-		}
-	}
-
-	/**
-	 * Handle form submission
-	 */
-	async function handleSubmit() {
-		if (!name.trim()) {
-			error = 'Name is required';
-			return;
-		}
-
-		isSubmitting = true;
-		error = '';
-
-		try {
-			const payload = {
-				color: color || undefined,
-				description: description.trim() || undefined,
-				icon: icon.trim() || undefined,
-				name: name.trim()
-			};
-
-			if (onSubmit) {
-				await onSubmit(payload);
+			if (initialData) {
+				await categoryStore.updateCategory(initialData.id, payload)
 			} else {
-				if (initialData) {
-					await categoryStore.updateCategory(initialData.id, payload);
-				} else {
-					await categoryStore.createCategory(payload);
-				}
+				await categoryStore.createCategory(payload)
 			}
-
-			// Show success toast
-			toastStore.success(
-				initialData ? 'Category updated' : 'Category created',
-				initialData ? 'Your category has been updated successfully' : 'Your category has been created successfully'
-			);
-
-			// Reset form if creating new category
-			if (!initialData) {
-				name = '';
-				description = '';
-				color = '#3B82F6';
-				icon = '';
-			}
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to save category';
-			toastStore.error(
-				initialData ? 'Failed to update category' : 'Failed to create category',
-				error
-			);
-		} finally {
-			isSubmitting = false;
 		}
+
+		// Show success toast
+		toastStore.success(
+			initialData ? 'Category updated' : 'Category created',
+			initialData
+				? 'Your category has been updated successfully'
+				: 'Your category has been created successfully'
+		)
+
+		// Reset form if creating new category
+		if (!initialData) {
+			name = ''
+			description = ''
+			color = '#3B82F6'
+			icon = ''
+		}
+	} catch (err) {
+		error = err instanceof Error ? err.message : 'Failed to save category'
+		toastStore.error(initialData ? 'Failed to update category' : 'Failed to create category', error)
+	} finally {
+		isSubmitting = false
 	}
+}
 </script>
 
 <div class="bg-white rounded-lg shadow p-4 sm:p-6">
@@ -192,7 +190,7 @@
 		<div class="flex flex-col sm:flex-row gap-3 pt-4">
 			<button
 				type="button"
-				onclick={handleSubmit}
+				onclick={() => handleSubmit()}
 				disabled={isSubmitting}
 				class="flex-1 px-4 py-3 sm:px-4 sm:py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-h-[44px]"
 			>
@@ -201,7 +199,7 @@
 			{#if onCancel}
 				<button
 					type="button"
-					onclick={handleCancel}
+					onclick={() => handleCancel()}
 					disabled={isSubmitting}
 					class="px-4 py-3 sm:px-4 sm:py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors min-h-[44px]"
 				>

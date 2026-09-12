@@ -2,11 +2,9 @@
  * Category management store using Svelte 5 runes
  */
 
-import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils';
-
-import type { Category, CategoryState } from '../types/category.types';
-
-import { createCategorySchema, updateCategorySchema } from '../schemas/category.schemas';
+import { ValidationError, withErrorHandling } from '$lib/shared/utils/error.utils'
+import { createCategorySchema, updateCategorySchema } from '../schemas/category.schemas'
+import type { Category, CategoryState } from '../types/category.types'
 
 /**
  * Create category store with Svelte 5 runes
@@ -16,15 +14,15 @@ function createCategoryStore() {
 		categories: [],
 		currentCategory: null,
 		error: null,
-		isLoading: false
-	});
+		isLoading: false,
+	})
 
 	/**
 	 * Fetch all categories
 	 */
 	async function fetchCategories(): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
@@ -32,15 +30,15 @@ function createCategoryStore() {
 				// const response = await httpClient.get<Category[]>('/categories');
 
 				// Mock response for development
-				const mockCategories: Category[] = [];
+				const mockCategories: Category[] = []
 
-				state.categories = mockCategories;
-			}, 'Failed to fetch categories');
+				state.categories = mockCategories
+			}, 'Failed to fetch categories')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch categories';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch categories'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -48,8 +46,8 @@ function createCategoryStore() {
 	 * Fetch single category by ID
 	 */
 	async function fetchCategoryById(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
@@ -62,16 +60,16 @@ function createCategoryStore() {
 					id,
 					name: 'Mock Category',
 					updatedAt: new Date().toISOString(),
-					userId: '1'
-				};
+					userId: '1',
+				}
 
-				state.currentCategory = mockCategory;
-			}, 'Failed to fetch category');
+				state.currentCategory = mockCategory
+			}, 'Failed to fetch category')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to fetch category';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to fetch category'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -79,12 +77,12 @@ function createCategoryStore() {
 	 * Create new category
 	 */
 	async function createCategory(payload: unknown): Promise<Category> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedPayload = createCategorySchema.parse(payload);
+			const validatedPayload = createCategorySchema.parse(payload)
 
 			const newCategory = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -99,24 +97,24 @@ function createCategoryStore() {
 					id: Date.now().toString(),
 					name: validatedPayload.name,
 					updatedAt: new Date().toISOString(),
-					userId: '1'
-				};
+					userId: '1',
+				}
 
-				state.categories = [...state.categories, mockCategory];
+				state.categories = [...state.categories, mockCategory]
 
-				return mockCategory;
-			}, 'Failed to create category');
+				return mockCategory
+			}, 'Failed to create category')
 
-			return newCategory;
+			return newCategory
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('category', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('category', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Failed to create category';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to create category'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -124,12 +122,12 @@ function createCategoryStore() {
 	 * Update existing category
 	 */
 	async function updateCategory(id: string, payload: unknown): Promise<Category> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			// Validate input with Zod
-			const validatedPayload = updateCategorySchema.parse(payload);
+			const validatedPayload = updateCategorySchema.parse(payload)
 
 			const updatedCategory = await withErrorHandling(async () => {
 				// This would be replaced with actual API call
@@ -137,32 +135,32 @@ function createCategoryStore() {
 
 				// Mock response for development
 				const mockCategory: Category = {
-					...state.categories.find(c => c.id === id)!,
+					...state.categories.find((c) => c.id === id)!,
 					...validatedPayload,
-					updatedAt: new Date().toISOString()
-				};
-
-				state.categories = state.categories.map(category =>
-					category.id === id ? mockCategory : category
-				);
-
-				if (state.currentCategory?.id === id) {
-					state.currentCategory = mockCategory;
+					updatedAt: new Date().toISOString(),
 				}
 
-				return mockCategory;
-			}, 'Failed to update category');
+				state.categories = state.categories.map((category) =>
+					category.id === id ? mockCategory : category
+				)
 
-			return updatedCategory;
+				if (state.currentCategory?.id === id) {
+					state.currentCategory = mockCategory
+				}
+
+				return mockCategory
+			}, 'Failed to update category')
+
+			return updatedCategory
 		} catch (error) {
 			if (error instanceof Error && error.name === 'ZodError') {
-				state.error = 'Invalid input: ' + error.message;
-				throw new ValidationError('category', error.message);
+				state.error = `Invalid input: ${error.message}`
+				throw new ValidationError('category', error.message)
 			}
-			state.error = error instanceof Error ? error.message : 'Failed to update category';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to update category'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -170,25 +168,25 @@ function createCategoryStore() {
 	 * Delete category
 	 */
 	async function deleteCategory(id: string): Promise<void> {
-		state.isLoading = true;
-		state.error = null;
+		state.isLoading = true
+		state.error = null
 
 		try {
 			await withErrorHandling(async () => {
 				// This would be replaced with actual API call
 				// await httpClient.delete(`/categories/${id}`);
 
-				state.categories = state.categories.filter(category => category.id !== id);
+				state.categories = state.categories.filter((category) => category.id !== id)
 
 				if (state.currentCategory?.id === id) {
-					state.currentCategory = null;
+					state.currentCategory = null
 				}
-			}, 'Failed to delete category');
+			}, 'Failed to delete category')
 		} catch (error) {
-			state.error = error instanceof Error ? error.message : 'Failed to delete category';
-			throw error;
+			state.error = error instanceof Error ? error.message : 'Failed to delete category'
+			throw error
 		} finally {
-			state.isLoading = false;
+			state.isLoading = false
 		}
 	}
 
@@ -196,17 +194,17 @@ function createCategoryStore() {
 	 * Clear error state
 	 */
 	function clearError(): void {
-		state.error = null;
+		state.error = null
 	}
 
 	/**
 	 * Reset store state
 	 */
 	function reset(): void {
-		state.categories = [];
-		state.currentCategory = null;
-		state.isLoading = false;
-		state.error = null;
+		state.categories = []
+		state.currentCategory = null
+		state.isLoading = false
+		state.error = null
 	}
 
 	return {
@@ -217,26 +215,26 @@ function createCategoryStore() {
 		fetchCategoryById,
 		reset,
 		get state() {
-			return state;
+			return state
 		},
-		updateCategory
-	};
+		updateCategory,
+	}
 }
 
 /**
  * Export category store instance
  * Only create store instance on client side to avoid SSR issues
  */
-let categoryStoreInstance: null | ReturnType<typeof createCategoryStore> = null;
+let categoryStoreInstance: null | ReturnType<typeof createCategoryStore> = null
 
 export const categoryStore = new Proxy({} as ReturnType<typeof createCategoryStore>, {
 	get(_target, prop) {
 		if (!categoryStoreInstance) {
 			if (typeof window === 'undefined') {
-				throw new Error('categoryStore can only be accessed on the client side');
+				throw new Error('categoryStore can only be accessed on the client side')
 			}
-			categoryStoreInstance = createCategoryStore();
+			categoryStoreInstance = createCategoryStore()
 		}
-		return categoryStoreInstance[prop as keyof ReturnType<typeof createCategoryStore>];
-	}
-});
+		return categoryStoreInstance[prop as keyof ReturnType<typeof createCategoryStore>]
+	},
+})

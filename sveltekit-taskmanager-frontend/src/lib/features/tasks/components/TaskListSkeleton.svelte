@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Skeleton } from '$lib/shared/components';
+import Skeleton from '$lib/shared/components/Skeleton.svelte'
 </script>
 
 <div class="space-y-3">

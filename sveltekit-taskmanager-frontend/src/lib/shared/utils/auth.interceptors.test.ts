@@ -1,76 +1,73 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-	authResponseInterceptor,
-	errorLoggingInterceptor
-} from './auth.interceptors';
+import { authResponseInterceptor, errorLoggingInterceptor } from './auth.interceptors'
 
 describe('Auth Interceptors', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
-	});
+		vi.clearAllMocks()
+	})
 
 	describe('authResponseInterceptor', () => {
 		it('removes token on 401 response', async () => {
-			const response = new Response(null, { status: 401, statusText: 'Unauthorized' });
-			const result = await authResponseInterceptor(response);
-			
-			expect(result).toBe(response);
-		});
+			const response = new Response(null, { status: 401, statusText: 'Unauthorized' })
+			const result = await authResponseInterceptor(response)
+
+			expect(result).toBe(response)
+		})
 
 		it('handles 403 Forbidden response', async () => {
-			const response = new Response(null, { status: 403, statusText: 'Forbidden' });
-			const result = await authResponseInterceptor(response);
-			
+			const response = new Response(null, { status: 403, statusText: 'Forbidden' })
+			const result = await authResponseInterceptor(response)
+
 			if (globalThis.window?.location) {
-				expect(globalThis.window.location.href).toBeTruthy();
+				expect(globalThis.window.location.href).toBeTruthy()
 			}
-			expect(result).toBe(response);
-		});
+			expect(result).toBe(response)
+		})
 
 		it('passes through successful responses', async () => {
-			const response = new Response(null, { status: 200, statusText: 'OK' });
-			const result = await authResponseInterceptor(response);
-			
-			expect(result).toBe(response);
-		});
-	});
+			const response = new Response(null, { status: 200, statusText: 'OK' })
+			const result = await authResponseInterceptor(response)
+
+			expect(result).toBe(response)
+		})
+	})
 
 	describe('errorLoggingInterceptor', () => {
 		it('logs error responses', () => {
-			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			
-			const response = new Response('{"error": "test"}', { 
-				status: 500, 
-				statusText: 'Internal Server Error' 
-			});
-			Object.defineProperty(response, 'url', { value: 'http://test.com/api', writable: true });
-			
-			const result = errorLoggingInterceptor(response);
-			
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+			const response = new Response('{"error": "test"}', {
+				status: 500,
+				statusText: 'Internal Server Error',
+			})
+			Object.defineProperty(response, 'url', { value: 'http://test.com/api', writable: true })
+
+			const result = errorLoggingInterceptor(response)
+
 			expect(consoleSpy).toHaveBeenCalledWith(
 				'API Error: 500 Internal Server Error',
 				expect.objectContaining({
 					status: 500,
 					statusText: 'Internal Server Error',
-					url: 'http://test.com/api'
+					url: 'http://test.com/api',
 				})
-			);
-			expect(result).toBe(response);
-			
-			consoleSpy.mockRestore();
-		});
+			)
+			expect(result).toBe(response)
+
+			consoleSpy.mockRestore()
+		})
 
 		it('does not log successful responses', () => {
-			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-			
-			const response = new Response(null, { status: 200, statusText: 'OK' });
-			const result = errorLoggingInterceptor(response);
-			
-			expect(consoleSpy).not.toHaveBeenCalled();
-			expect(result).toBe(response);
-			
-			consoleSpy.mockRestore();
-		});
-	});
-});
+			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+			const response = new Response(null, { status: 200, statusText: 'OK' })
+			const result = errorLoggingInterceptor(response)
+
+			expect(consoleSpy).not.toHaveBeenCalled()
+			expect(result).toBe(response)
+
+			consoleSpy.mockRestore()
+		})
+	})
+})

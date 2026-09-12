@@ -2,5 +2,5 @@
  * Analytics feature exports
  */
 
-export * from './stores/analytics.store';
-export * from './types/analytics.types';
+export * from './stores/analytics.store'
+export * from './types/analytics.types'

@@ -1,87 +1,87 @@
 <script lang="ts">
-	import type { Category } from '$lib/features/categories';
+import { onMount } from 'svelte'
+import type { Category } from '$lib/features/categories'
+import { categoryStore } from '$lib/features/categories'
+import CategoryForm from '$lib/features/categories/components/CategoryForm.svelte'
+import CategoryList from '$lib/features/categories/components/CategoryList.svelte'
 
-	import { categoryStore } from '$lib/features/categories';
-	import { CategoryForm, CategoryList } from '$lib/features/categories';
-	import { onMount } from 'svelte';
+let categories = $derived(categoryStore.state.categories)
+let isLoading = $derived(categoryStore.state.isLoading)
+let error = $derived(categoryStore.state.error)
 
-	let categories = $derived(categoryStore.state.categories);
-	let isLoading = $derived(categoryStore.state.isLoading);
-	let error = $derived(categoryStore.state.error);
+let showForm = $state(false)
+let editingCategory = $state<Category | null>(null)
 
-	let showForm = $state(false);
-	let editingCategory = $state<Category | null>(null);
+/**
+ * Load categories on mount
+ */
+onMount(() => {
+	categoryStore.fetchCategories()
+})
 
-	/**
-	 * Load categories on mount
-	 */
-	onMount(() => {
-		categoryStore.fetchCategories();
-	});
-
-	/**
-	 * Handle category creation
-	 */
-	async function handleCreateCategory(data: unknown): Promise<void> {
-		try {
-			await categoryStore.createCategory(data);
-			showForm = false;
-		} catch (error) {
-			console.error('Failed to create category:', error);
-		}
+/**
+ * Handle category creation
+ */
+async function handleCreateCategory(data: unknown): Promise<void> {
+	try {
+		await categoryStore.createCategory(data)
+		showForm = false
+	} catch (error) {
+		console.error('Failed to create category:', error)
 	}
+}
 
-	/**
-	 * Handle create button click
-	 */
-	function handleCreateClick(): void {
-		editingCategory = null;
-		showForm = true;
+/**
+ * Handle create button click
+ */
+function handleCreateClick(): void {
+	editingCategory = null
+	showForm = true
+}
+
+/**
+ * Handle category deletion
+ */
+async function handleDeleteCategory(category: Category): Promise<void> {
+	if (!confirm(`Are you sure you want to delete "${category.name}"?`)) return
+
+	try {
+		await categoryStore.deleteCategory(category.id)
+	} catch (error) {
+		console.error('Failed to delete category:', error)
 	}
+}
 
-	/**
-	 * Handle category deletion
-	 */
-	async function handleDeleteCategory(category: Category): Promise<void> {
-		if (!confirm(`Are you sure you want to delete "${category.name}"?`)) return;
+/**
+ * Handle edit button click
+ */
+function handleEditCategory(category: Category): void {
+	editingCategory = category
+	showForm = true
+}
 
-		try {
-			await categoryStore.deleteCategory(category.id);
-		} catch (error) {
-			console.error('Failed to delete category:', error);
-		}
+/**
+ * Handle form cancel
+ */
+function handleFormCancel(): void {
+	showForm = false
+	editingCategory = null
+}
+
+/**
+ * Handle category update
+ */
+async function handleUpdateCategory(data: unknown): Promise<void> {
+	if (!editingCategory) return
+
+	try {
+		await categoryStore.updateCategory(editingCategory.id, data)
+		editingCategory = null
+		showForm = false
+	} catch (error) {
+		console.error('Failed to update category:', error)
 	}
-
-	/**
-	 * Handle edit button click
-	 */
-	function handleEditCategory(category: Category): void {
-		editingCategory = category;
-		showForm = true;
-	}
-
-	/**
-	 * Handle form cancel
-	 */
-	function handleFormCancel(): void {
-		showForm = false;
-		editingCategory = null;
-	}
-
-	/**
-	 * Handle category update
-	 */
-	async function handleUpdateCategory(data: unknown): Promise<void> {
-		if (!editingCategory) return;
-
-		try {
-			await categoryStore.updateCategory(editingCategory.id, data);
-			editingCategory = null;
-			showForm = false;
-		} catch (error) {
-			console.error('Failed to update category:', error);
-		}
-	}
+}
 </script>
 
 <div class="container mx-auto px-4 py-8">

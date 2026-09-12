@@ -1,76 +1,76 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { authApi } from '$lib/features/auth';
-	import { resetPasswordSchema } from '$lib/features/auth/schemas/auth.schemas';
-	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
-	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
-	import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils';
+import { goto } from '$app/navigation'
+import { page } from '$app/stores'
+import { authApi } from '$lib/features/auth'
+import { resetPasswordSchema } from '$lib/features/auth/schemas/auth.schemas'
+import { getErrorMessage, isValidationError } from '$lib/shared/utils/error.utils'
+import ErrorToast from '$lib/shared/components/ErrorToast.svelte'
+import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte'
 
-	let password = $state('');
-	let confirmPassword = $state('');
-	let isLoading = $state(false);
-	let isSuccess = $state(false);
-	let error = $state('');
-	let fieldErrors = $state<Record<string, string>>({});
-	let toastError = $state('');
+let password = $state('')
+let confirmPassword = $state('')
+let isLoading = $state(false)
+let isSuccess = $state(false)
+let error = $state('')
+let fieldErrors = $state<Record<string, string>>({})
+let toastError = $state('')
 
-	// Get reset token from URL
-	const getToken = () => {
-		const urlParams = new URLSearchParams($page.url.search);
-		return urlParams.get('token');
-	};
+// Get reset token from URL
+const getToken = () => {
+	const urlParams = new URLSearchParams($page.url.search)
+	return urlParams.get('token')
+}
 
-	// Redirect if no token
-	if (!getToken()) {
-		goto('/auth/forgot-password');
+// Redirect if no token
+if (!getToken()) {
+	goto('/auth/forgot-password')
+}
+
+function dismissToast() {
+	toastError = ''
+}
+
+async function handleResetPassword(e: Event) {
+	e.preventDefault()
+	isLoading = true
+	error = ''
+	fieldErrors = {}
+	toastError = ''
+
+	if (password !== confirmPassword) {
+		fieldErrors.confirmPassword = 'Passwords do not match'
+		error = 'Please fix the errors below.'
+		isLoading = false
+		return
 	}
 
-	function dismissToast() {
-		toastError = '';
-	}
-
-	async function handleResetPassword(e: Event) {
-		e.preventDefault();
-		isLoading = true;
-		error = '';
-		fieldErrors = {};
-		toastError = '';
-
-		if (password !== confirmPassword) {
-			fieldErrors.confirmPassword = 'Passwords do not match';
-			error = 'Please fix the errors below.';
-			isLoading = false;
-			return;
-		}
-
-		try {
-			const validatedData = resetPasswordSchema.parse({
-				confirmPassword,
-				password,
-				token: getToken()
-			});
-			await authApi.resetPassword(validatedData);
-			isSuccess = true;
-		} catch (err) {
-			if (err instanceof Error && err.name === 'ZodError') {
-				const zodError = err as unknown as { errors: Array<{ message: string; path: string[] }> };
-				if (zodError.errors && zodError.errors[0]) {
-					const field = zodError.errors[0].path[0] as string;
-					fieldErrors[field] = zodError.errors[0].message;
-					error = 'Please fix the errors below.';
-				}
-			} else if (isValidationError(err)) {
-				fieldErrors[err.field] = err.message;
-				error = 'Please fix the errors below.';
-			} else {
-				error = getErrorMessage(err);
-				toastError = getErrorMessage(err);
+	try {
+		const validatedData = resetPasswordSchema.parse({
+			confirmPassword,
+			password,
+			token: getToken(),
+		})
+		await authApi.resetPassword(validatedData)
+		isSuccess = true
+	} catch (err) {
+		if (err instanceof Error && err.name === 'ZodError') {
+			const zodError = err as unknown as { errors: Array<{ message: string; path: string[] }> }
+			if (zodError.errors?.[0]) {
+				const field = zodError.errors[0].path[0] as string
+				fieldErrors[field] = zodError.errors[0].message
+				error = 'Please fix the errors below.'
 			}
-		} finally {
-			isLoading = false;
+		} else if (isValidationError(err)) {
+			fieldErrors[err.field] = err.message
+			error = 'Please fix the errors below.'
+		} else {
+			error = getErrorMessage(err)
+			toastError = getErrorMessage(err)
 		}
+	} finally {
+		isLoading = false
 	}
+}
 </script>
 
 <div class="bg-white rounded-lg shadow-lg p-8">
@@ -94,7 +94,7 @@
 			</div>
 		{/if}
 
-		<form onsubmit={handleResetPassword} class="space-y-4">
+		<form onsubmit={(e) => handleResetPassword(e)} class="space-y-4">
 			<div>
 				<label for="password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
 				<input

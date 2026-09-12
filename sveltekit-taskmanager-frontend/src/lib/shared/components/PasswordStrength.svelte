@@ -1,38 +1,38 @@
 <script lang="ts">
-	let { password }: { password: string } = $props();
+let { password }: { password: string } = $props()
 
-	const strengthLevels = [
-		{ color: 'bg-red-500', label: 'Weak', minScore: 0 },
-		{ color: 'bg-orange-500', label: 'Fair', minScore: 2 },
-		{ color: 'bg-yellow-500', label: 'Good', minScore: 3 },
-		{ color: 'bg-green-500', label: 'Strong', minScore: 4 }
-	];
+const strengthLevels = [
+	{ color: 'bg-red-500', label: 'Weak', minScore: 0 },
+	{ color: 'bg-orange-500', label: 'Fair', minScore: 2 },
+	{ color: 'bg-yellow-500', label: 'Good', minScore: 3 },
+	{ color: 'bg-green-500', label: 'Strong', minScore: 4 },
+]
 
-	const requirements = [
-		{ label: 'At least 8 characters', test: (pwd: string) => pwd.length >= 8 },
-		{ label: 'Uppercase letter', test: (pwd: string) => /[A-Z]/.test(pwd) },
-		{ label: 'Lowercase letter', test: (pwd: string) => /[a-z]/.test(pwd) },
-		{ label: 'Number', test: (pwd: string) => /[0-9]/.test(pwd) },
-		{ label: 'Special character', test: (pwd: string) => /[^A-Za-z0-9]/.test(pwd) }
-	];
+const requirements = [
+	{ label: 'At least 8 characters', test: (pwd: string) => pwd.length >= 8 },
+	{ label: 'Uppercase letter', test: (pwd: string) => /[A-Z]/.test(pwd) },
+	{ label: 'Lowercase letter', test: (pwd: string) => /[a-z]/.test(pwd) },
+	{ label: 'Number', test: (pwd: string) => /[0-9]/.test(pwd) },
+	{ label: 'Special character', test: (pwd: string) => /[^A-Za-z0-9]/.test(pwd) },
+]
 
-	const getStrength = () => {
-		let score = 0;
-		for (const req of requirements) {
-			if (req.test(password)) score++;
+const getStrength = () => {
+	let score = 0
+	for (const req of requirements) {
+		if (req.test(password)) score++
+	}
+	return score
+}
+
+const getStrengthLevel = () => {
+	const strength = getStrength()
+	for (let i = strengthLevels.length - 1; i >= 0; i--) {
+		if (strength >= strengthLevels[i].minScore) {
+			return strengthLevels[i]
 		}
-		return score;
-	};
-
-	const getStrengthLevel = () => {
-		const strength = getStrength();
-		for (let i = strengthLevels.length - 1; i >= 0; i--) {
-			if (strength >= strengthLevels[i].minScore) {
-				return strengthLevels[i];
-			}
-		}
-		return strengthLevels[0];
-	};
+	}
+	return strengthLevels[0]
+}
 </script>
 
 <div class="space-y-3">

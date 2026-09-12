@@ -1,0 +1,137 @@
+{
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/.svelte-kit",
+			"!**/build",
+			"!**/coverage",
+			"!**/*.config.js",
+			"!**/*.config.ts",
+			"!**/playwright-report",
+			"!**/test-results"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"lineEnding": "lf"
+	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"a11y": {
+				"preset": "recommended"
+			},
+			"complexity": {
+				"preset": "recommended",
+				"noForEach": "off"
+			},
+			"correctness": {
+				"preset": "recommended"
+			},
+			"performance": {
+				"preset": "recommended"
+			},
+			"security": {
+				"preset": "recommended"
+			},
+			"style": {
+				"preset": "recommended",
+				"noNonNullAssertion": "off",
+				"useImportType": "warn"
+			},
+			"suspicious": {
+				"preset": "recommended",
+				"noExplicitAny": "warn"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"jsxQuoteStyle": "double",
+			"semicolons": "asNeeded",
+			"trailingCommas": "es5",
+			"arrowParentheses": "always"
+		},
+		"globals": ["browser", "document", "window", "localStorage", "sessionStorage"]
+	},
+	"json": {
+		"formatter": {
+			"enabled": true
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.svelte"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useConst": "off"
+					},
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*Skeleton*.svelte", "**/shared/components/*.svelte"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/+layout.svelte", "**/auth/+layout.svelte", "**/dashboard/+layout.svelte"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/auth.interceptors.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noDocumentCookie": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.test.ts", "**/*.spec.ts", "**/*.test.js", "**/*.spec.js"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off",
+						"useIterableCallbackReturn": "off",
+						"noImplicitAnyLet": "off"
+					}
+				}
+			}
+		}
+	]
+}

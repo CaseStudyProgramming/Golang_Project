@@ -3,61 +3,61 @@
  * Handles all authentication-related API calls
  */
 
-import { httpClient } from '$lib/shared/utils/api.utils';
+import { httpClient } from '$lib/shared/utils/api.utils'
 
-import type { User } from '../types/auth.types';
+import type { User } from '../types/auth.types'
 
 /**
  * Forgot password request interface
  */
 interface ForgotPasswordRequest {
-	email: string;
+	email: string
 }
 
 /**
  * Login credentials interface
  */
 interface LoginCredentials {
-	email: string;
-	password: string;
+	email: string
+	password: string
 }
 
 /**
  * Login response interface
  */
 interface LoginResponse {
-	user: User;
-	token: string;
-	refreshToken?: string;
-	expiresIn?: number;
+	user: User
+	token: string
+	refreshToken?: string
+	expiresIn?: number
 }
 
 /**
  * Register response interface
  */
 interface RegisterResponse {
-	user: User;
-	token: string;
-	refreshToken?: string;
-	expiresIn?: number;
+	user: User
+	token: string
+	refreshToken?: string
+	expiresIn?: number
 }
 
 /**
  * Registration data interface
  */
 interface RegistrationData {
-	email: string;
-	password: string;
-	name?: string;
+	email: string
+	password: string
+	name?: string
 }
 
 /**
  * Reset password request interface
  */
 interface ResetPasswordRequest {
-	token: string;
-	password: string;
-	confirmPassword: string;
+	token: string
+	password: string
+	confirmPassword: string
 }
 
 /**
@@ -68,28 +68,28 @@ export const authApi = {
 	 * Request password reset
 	 */
 	async forgotPassword(data: ForgotPasswordRequest): Promise<{ message: string }> {
-		return httpClient.post<{ message: string }>('/auth/forgot-password', data);
+		return httpClient.post<{ message: string }>('/auth/forgot-password', data)
 	},
 
 	/**
 	 * Get current user
 	 */
 	async getCurrentUser(): Promise<User> {
-		return httpClient.get<User>('/auth/me');
+		return httpClient.get<User>('/auth/me')
 	},
 
 	/**
 	 * Login user with credentials
 	 */
 	async login(credentials: LoginCredentials): Promise<LoginResponse> {
-		return httpClient.post<LoginResponse>('/auth/login', credentials);
+		return httpClient.post<LoginResponse>('/auth/login', credentials)
 	},
 
 	/**
 	 * Logout user
 	 */
 	async logout(): Promise<void> {
-		return httpClient.post<void>('/auth/logout');
+		return httpClient.post<void>('/auth/logout')
 	},
 
 	/**
@@ -101,20 +101,20 @@ export const authApi = {
 		return httpClient.post<{ expiresIn?: number; refreshToken?: string; token: string }>(
 			'/auth/refresh',
 			{ refreshToken }
-		);
+		)
 	},
 
 	/**
 	 * Register new user
 	 */
 	async register(data: RegistrationData): Promise<RegisterResponse> {
-		return httpClient.post<RegisterResponse>('/auth/register', data);
+		return httpClient.post<RegisterResponse>('/auth/register', data)
 	},
 
 	/**
 	 * Reset password with token
 	 */
 	async resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
-		return httpClient.post<{ message: string }>('/auth/reset-password', data);
-	}
-};
+		return httpClient.post<{ message: string }>('/auth/reset-password', data)
+	},
+}

@@ -1,67 +1,71 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { authStore } from '$lib/features/auth';
-	import ErrorToast from '$lib/shared/components/ErrorToast.svelte';
-	import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte';
-	import { getErrorMessage, isAuthenticationError, isValidationError } from '$lib/shared/utils/error.utils';
+import { page } from '$app/stores'
+import { authStore } from '$lib/features/auth'
+import {
+	getErrorMessage,
+	isAuthenticationError,
+	isValidationError,
+} from '$lib/shared/utils/error.utils'
+import ErrorToast from '$lib/shared/components/ErrorToast.svelte'
+import PasswordStrength from '$lib/shared/components/PasswordStrength.svelte'
 
-	let name = $state('');
-	let email = $state('');
-	let password = $state('');
-	let confirmPassword = $state('');
-	let isLoading = $state(false);
-	let error = $state('');
-	let fieldErrors = $state<Record<string, string>>({});
-	let toastError = $state('');
+let name = $state('')
+let email = $state('')
+let password = $state('')
+let confirmPassword = $state('')
+let isLoading = $state(false)
+let error = $state('')
+let fieldErrors = $state<Record<string, string>>({})
+let toastError = $state('')
 
-	// Get redirect URL from query params
-	const getRedirectTo = () => {
-		const urlParams = new URLSearchParams($page.url.search);
-		return urlParams.get('redirectTo');
-	};
+// Get redirect URL from query params
+const getRedirectTo = () => {
+	const urlParams = new URLSearchParams($page.url.search)
+	return urlParams.get('redirectTo')
+}
 
-	function dismissToast() {
-		toastError = '';
+function dismissToast() {
+	toastError = ''
+}
+
+async function handleRegister(e: Event) {
+	e.preventDefault()
+	isLoading = true
+	error = ''
+	fieldErrors = {}
+	toastError = ''
+
+	if (password !== confirmPassword) {
+		fieldErrors.confirmPassword = 'Passwords do not match'
+		error = 'Please fix the errors below.'
+		isLoading = false
+		return
 	}
 
-	async function handleRegister(e: Event) {
-		e.preventDefault();
-		isLoading = true;
-		error = '';
-		fieldErrors = {};
-		toastError = '';
-
-		if (password !== confirmPassword) {
-			fieldErrors.confirmPassword = 'Passwords do not match';
-			error = 'Please fix the errors below.';
-			isLoading = false;
-			return;
-		}
-
-		// Save redirect URL before registration
-		const redirectTo = getRedirectTo();
-		if (redirectTo) {
-			authStore.saveRedirectUrl(redirectTo);
-		}
-
-		try {
-			await authStore.register({ email, name, password });
-			await authStore.redirectAfterAuth();
-		} catch (err) {
-			if (isValidationError(err)) {
-				fieldErrors[err.field] = err.message;
-				error = 'Please fix the errors below.';
-			} else if (isAuthenticationError(err)) {
-				error = err.message;
-				toastError = err.message;
-			} else {
-				error = getErrorMessage(err);
-				toastError = getErrorMessage(err);
-			}
-		} finally {
-			isLoading = false;
-		}
+	// Save redirect URL before registration
+	const redirectTo = getRedirectTo()
+	if (redirectTo) {
+		authStore.saveRedirectUrl(redirectTo)
 	}
+
+	try {
+		await authStore.register({ email, name, password })
+		await authStore.redirectAfterAuth()
+	} catch (err) {
+		if (isValidationError(err)) {
+			fieldErrors[err.field] = err.message
+			error = 'Please fix the errors below.'
+		} else if (isAuthenticationError(err)) {
+			error = err.message
+			toastError = err.message
+		} else {
+			error = getErrorMessage(err)
+			toastError = getErrorMessage(err)
+		}
+	} finally {
+		isLoading = false
+	}
+}
 </script>
 
 <div class="bg-white rounded-lg shadow-lg p-8">
@@ -76,7 +80,7 @@
 		</div>
 	{/if}
 
-	<form onsubmit={handleRegister} class="space-y-4">
+	<form onsubmit={(e) => handleRegister(e)} class="space-y-4">
 		<div>
 			<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
 			<input

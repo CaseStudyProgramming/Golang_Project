@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/features/auth';
-	import { onMount } from 'svelte';
+import { onMount } from 'svelte'
+import { goto } from '$app/navigation'
+import { authStore } from '$lib/features/auth'
 
-	onMount(async () => {
-		if (authStore.state.isAuthenticated) {
-			await goto('/dashboard');
-		}
-	});
+onMount(async () => {
+	if (authStore.state.isAuthenticated) {
+		await goto('/dashboard')
+	}
+})
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

@@ -1,268 +1,268 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 describe('Routing and Navigation', () => {
 	describe('Route Structure', () => {
 		it('identifies public routes', () => {
-			const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
-			const currentRoute = '/login';
+			const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
+			const currentRoute = '/login'
 
-			const isPublic = publicRoutes.includes(currentRoute);
+			const isPublic = publicRoutes.includes(currentRoute)
 
-			expect(isPublic).toBe(true);
-		});
+			expect(isPublic).toBe(true)
+		})
 
 		it('identifies protected routes', () => {
-			const protectedRoutes = ['/dashboard', '/tasks', '/categories', '/settings'];
-			const currentRoute = '/dashboard';
+			const protectedRoutes = ['/dashboard', '/tasks', '/categories', '/settings']
+			const currentRoute = '/dashboard'
 
-			const isProtected = protectedRoutes.includes(currentRoute);
+			const isProtected = protectedRoutes.includes(currentRoute)
 
-			expect(isProtected).toBe(true);
-		});
+			expect(isProtected).toBe(true)
+		})
 
 		it('handles dynamic route parameters', () => {
-			const currentRoute = '/tasks/123';
+			const currentRoute = '/tasks/123'
 
-			const matches = currentRoute.startsWith('/tasks/') && currentRoute.length > '/tasks/'.length;
+			const matches = currentRoute.startsWith('/tasks/') && currentRoute.length > '/tasks/'.length
 
-			expect(matches).toBe(true);
-		});
+			expect(matches).toBe(true)
+		})
 
 		it('extracts route parameters', () => {
-			const currentRoute = '/tasks/123';
-			const segments = currentRoute.split('/');
-			const taskId = segments[segments.length - 1];
+			const currentRoute = '/tasks/123'
+			const segments = currentRoute.split('/')
+			const taskId = segments[segments.length - 1]
 
-			expect(taskId).toBe('123');
-		});
-	});
+			expect(taskId).toBe('123')
+		})
+	})
 
 	describe('Navigation Guards', () => {
 		it('prevents access to protected routes without authentication', () => {
-			const isAuthenticated = false;
-			const currentRoute: string = '/dashboard';
+			const isAuthenticated = false
+			const currentRoute: string = '/dashboard'
 
-			const canAccess = isAuthenticated || currentRoute === '/login';
+			const canAccess = isAuthenticated || currentRoute === '/login'
 
-			expect(canAccess).toBe(false);
-		});
+			expect(canAccess).toBe(false)
+		})
 
 		it('allows access to public routes without authentication', () => {
-			const isAuthenticated = false;
-			const currentRoute = '/login';
+			const isAuthenticated = false
+			const currentRoute = '/login'
 
-			const canAccess = isAuthenticated || currentRoute === '/login';
+			const canAccess = isAuthenticated || currentRoute === '/login'
 
-			expect(canAccess).toBe(true);
-		});
+			expect(canAccess).toBe(true)
+		})
 
 		it('redirects unauthenticated users to login', () => {
-			const isAuthenticated = false;
-			const currentRoute: string = '/dashboard';
-			const loginRoute: string = '/login';
+			const isAuthenticated = false
+			const currentRoute: string = '/dashboard'
+			const loginRoute: string = '/login'
 
-			const shouldRedirect = !isAuthenticated && currentRoute !== loginRoute;
+			const shouldRedirect = !isAuthenticated && currentRoute !== loginRoute
 
-			expect(shouldRedirect).toBe(true);
-		});
+			expect(shouldRedirect).toBe(true)
+		})
 
 		it('preserves redirect URL for post-login navigation', () => {
-			const currentRoute: string = '/dashboard/tasks/123';
-			const loginRoute: string = '/login';
+			const currentRoute: string = '/dashboard/tasks/123'
+			const loginRoute: string = '/login'
 
-			const redirectUrl = currentRoute !== loginRoute ? currentRoute : '/dashboard';
+			const redirectUrl = currentRoute !== loginRoute ? currentRoute : '/dashboard'
 
-			expect(redirectUrl).toBe('/dashboard/tasks/123');
-		});
-	});
+			expect(redirectUrl).toBe('/dashboard/tasks/123')
+		})
+	})
 
 	describe('Route Transitions', () => {
 		it('handles route changes', () => {
-			const currentRoute = '/tasks';
+			const currentRoute = '/tasks'
 
-			expect(currentRoute).toBe('/tasks');
-		});
+			expect(currentRoute).toBe('/tasks')
+		})
 
 		it('tracks navigation history', () => {
-			const history = ['/dashboard', '/tasks', '/tasks/123'];
-			const currentIndex = 2;
+			const history = ['/dashboard', '/tasks', '/tasks/123']
+			const currentIndex = 2
 
-			const canGoBack = currentIndex > 0;
-			const canGoForward = currentIndex < history.length - 1;
+			const canGoBack = currentIndex > 0
+			const canGoForward = currentIndex < history.length - 1
 
-			expect(canGoBack).toBe(true);
-			expect(canGoForward).toBe(false);
-		});
+			expect(canGoBack).toBe(true)
+			expect(canGoForward).toBe(false)
+		})
 
 		it('handles browser back button', () => {
-			const history = ['/dashboard', '/tasks', '/tasks/123'];
-			let currentIndex = 2;
+			const history = ['/dashboard', '/tasks', '/tasks/123']
+			let currentIndex = 2
 
 			if (currentIndex > 0) {
-				currentIndex--;
+				currentIndex--
 			}
 
-			const previousRoute = history[currentIndex];
+			const previousRoute = history[currentIndex]
 
-			expect(previousRoute).toBe('/tasks');
-		});
-	});
+			expect(previousRoute).toBe('/tasks')
+		})
+	})
 
 	describe('Route Loading States', () => {
 		it('sets loading state during navigation', () => {
-			const isLoading = true;
+			const isLoading = true
 
-			expect(isLoading).toBe(true);
-		});
+			expect(isLoading).toBe(true)
+		})
 
 		it('clears loading state after navigation completes', () => {
-			let isLoading = true;
-			const navigationComplete = true;
+			let isLoading = true
+			const navigationComplete = true
 
 			if (navigationComplete) {
-				isLoading = false;
+				isLoading = false
 			}
 
-			expect(isLoading).toBe(false);
-		});
-	});
+			expect(isLoading).toBe(false)
+		})
+	})
 
 	describe('Route Parameters and Query Strings', () => {
 		it('parses query parameters', () => {
-			const queryString = '?page=2&limit=10&sort=desc';
-			const searchParams = new URLSearchParams(queryString);
+			const queryString = '?page=2&limit=10&sort=desc'
+			const searchParams = new URLSearchParams(queryString)
 
-			const page = searchParams.get('page');
-			const limit = searchParams.get('limit');
-			const sort = searchParams.get('sort');
+			const page = searchParams.get('page')
+			const limit = searchParams.get('limit')
+			const sort = searchParams.get('sort')
 
-			expect(page).toBe('2');
-			expect(limit).toBe('10');
-			expect(sort).toBe('desc');
-		});
+			expect(page).toBe('2')
+			expect(limit).toBe('10')
+			expect(sort).toBe('desc')
+		})
 
 		it('builds query strings from objects', () => {
-			const params = { filter: 'active', limit: '10', page: '2' };
-			const queryString = new URLSearchParams(params).toString();
+			const params = { filter: 'active', limit: '10', page: '2' }
+			const queryString = new URLSearchParams(params).toString()
 
-			expect(queryString).toBe('filter=active&limit=10&page=2');
-		});
+			expect(queryString).toBe('filter=active&limit=10&page=2')
+		})
 
 		it('handles missing query parameters', () => {
-			const queryString = '?page=2';
-			const searchParams = new URLSearchParams(queryString);
+			const queryString = '?page=2'
+			const searchParams = new URLSearchParams(queryString)
 
-			const missingParam = searchParams.get('filter');
+			const missingParam = searchParams.get('filter')
 
-			expect(missingParam).toBe(null);
-		});
-	});
+			expect(missingParam).toBe(null)
+		})
+	})
 
 	describe('Route-Based Code Splitting', () => {
 		it('identifies lazy-loaded routes', () => {
-			const lazyRoutes = ['/dashboard', '/analytics', '/settings'];
-			const currentRoute = '/dashboard';
+			const lazyRoutes = ['/dashboard', '/analytics', '/settings']
+			const currentRoute = '/dashboard'
 
-			const isLazy = lazyRoutes.includes(currentRoute);
+			const isLazy = lazyRoutes.includes(currentRoute)
 
-			expect(isLazy).toBe(true);
-		});
+			expect(isLazy).toBe(true)
+		})
 
 		it('handles route chunk loading', () => {
-			const routeChunk = 'dashboard-chunk.js';
+			const routeChunk = 'dashboard-chunk.js'
 
 			// Simulate chunk loading
-			const chunkLoaded = routeChunk.endsWith('.js');
+			const chunkLoaded = routeChunk.endsWith('.js')
 
-			expect(chunkLoaded).toBe(true);
-		});
-	});
+			expect(chunkLoaded).toBe(true)
+		})
+	})
 
 	describe('Error Routes', () => {
 		it('handles 404 not found routes', () => {
-			const currentRoute: string = '/nonexistent-page';
-			const validRoutes = ['/dashboard', '/tasks', '/login'];
+			const currentRoute: string = '/nonexistent-page'
+			const validRoutes = ['/dashboard', '/tasks', '/login']
 
-			const isValid = validRoutes.includes(currentRoute);
+			const isValid = validRoutes.includes(currentRoute)
 
-			expect(isValid).toBe(false);
-		});
+			expect(isValid).toBe(false)
+		})
 
 		it('redirects to error page on route errors', () => {
-			const hasError = true;
+			const hasError = true
 
-			const shouldRedirect = hasError;
+			const shouldRedirect = hasError
 
-			expect(shouldRedirect).toBe(true);
-		});
-	});
+			expect(shouldRedirect).toBe(true)
+		})
+	})
 
 	describe('Route Preloading', () => {
 		it('identifies routes to preload', () => {
-		 const currentRoute = '/dashboard';
+			const currentRoute = '/dashboard'
 
-		 const shouldPreload = ['/categories', '/tasks'].includes(currentRoute);
+			const shouldPreload = ['/categories', '/tasks'].includes(currentRoute)
 
-		 expect(shouldPreload).toBe(false);
-		});
+			expect(shouldPreload).toBe(false)
+		})
 
 		it('handles link prefetching', () => {
-		 const isHovered = true;
+			const isHovered = true
 
-		 const shouldPrefetch = isHovered;
+			const shouldPrefetch = isHovered
 
-		 expect(shouldPrefetch).toBe(true);
-		});
-	});
+			expect(shouldPrefetch).toBe(true)
+		})
+	})
 
 	describe('Scroll Management', () => {
 		it('scrolls to top on route change', () => {
-			let scrollPosition = 0;
-			const routeChanged = true;
+			let scrollPosition = 0
+			const routeChanged = true
 
 			if (routeChanged) {
-				scrollPosition = 0;
+				scrollPosition = 0
 			}
 
-			expect(scrollPosition).toBe(0);
-		});
+			expect(scrollPosition).toBe(0)
+		})
 
 		it('preserves scroll position for same route navigation', () => {
-			let scrollPosition = 500;
-			const sameRouteNavigation = true;
+			let scrollPosition = 500
+			const sameRouteNavigation = true
 
 			if (!sameRouteNavigation) {
-				scrollPosition = 0;
+				scrollPosition = 0
 			}
 
-			expect(scrollPosition).toBe(500);
-		});
-	});
+			expect(scrollPosition).toBe(500)
+		})
+	})
 
 	describe('Route Metadata', () => {
 		it('extracts page titles from routes', () => {
 			const routeMetadata = {
 				'/dashboard': { title: 'Dashboard' },
 				'/settings': { title: 'Settings' },
-				'/tasks': { title: 'Tasks' }
-			};
+				'/tasks': { title: 'Tasks' },
+			}
 
-			const currentRoute = '/tasks';
-			const pageTitle = routeMetadata[currentRoute]?.title;
+			const currentRoute = '/tasks'
+			const pageTitle = routeMetadata[currentRoute]?.title
 
-			expect(pageTitle).toBe('Tasks');
-		});
+			expect(pageTitle).toBe('Tasks')
+		})
 
 		it('handles missing route metadata', () => {
-			type RouteMetadata = Record<string, { title: string }>;
+			type RouteMetadata = Record<string, { title: string }>
 			const routeMetadata: RouteMetadata = {
-				'/dashboard': { title: 'Dashboard' }
-			};
+				'/dashboard': { title: 'Dashboard' },
+			}
 
-			const currentRoute: string = '/nonexistent';
-			const pageTitle = routeMetadata[currentRoute]?.title;
+			const currentRoute: string = '/nonexistent'
+			const pageTitle = routeMetadata[currentRoute]?.title
 
-			expect(pageTitle).toBeUndefined();
-		});
-	});
-});
+			expect(pageTitle).toBeUndefined()
+		})
+	})
+})
