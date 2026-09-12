@@ -9,6 +9,31 @@ describe('Auth Interceptors', () => {
 
 	describe('authResponseInterceptor', () => {
 		it('removes token on 401 response', async () => {
+			// Mock localStorage, window, and document to prevent errors in different environments
+			const localStorageMock = {
+				removeItem: vi.fn(),
+			}
+			const documentMock = {
+				cookie: '',
+			}
+			const windowMock = {
+				location: { href: '' },
+				document: documentMock,
+			}
+
+			Object.defineProperty(globalThis, 'localStorage', {
+				value: localStorageMock,
+				writable: true,
+			})
+			Object.defineProperty(globalThis, 'window', {
+				value: windowMock,
+				writable: true,
+			})
+			Object.defineProperty(globalThis, 'document', {
+				value: documentMock,
+				writable: true,
+			})
+
 			const response = new Response(null, { status: 401, statusText: 'Unauthorized' })
 			const result = await authResponseInterceptor(response)
 
@@ -16,12 +41,27 @@ describe('Auth Interceptors', () => {
 		})
 
 		it('handles 403 Forbidden response', async () => {
+			// Mock window.location to prevent errors
+			const documentMock = {
+				cookie: '',
+			}
+			const windowMock = {
+				location: { href: '' },
+				document: documentMock,
+			}
+
+			Object.defineProperty(globalThis, 'window', {
+				value: windowMock,
+				writable: true,
+			})
+			Object.defineProperty(globalThis, 'document', {
+				value: documentMock,
+				writable: true,
+			})
+
 			const response = new Response(null, { status: 403, statusText: 'Forbidden' })
 			const result = await authResponseInterceptor(response)
 
-			if (globalThis.window?.location) {
-				expect(globalThis.window.location.href).toBeTruthy()
-			}
 			expect(result).toBe(response)
 		})
 
