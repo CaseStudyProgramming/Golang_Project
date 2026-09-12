@@ -7,6 +7,7 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 // Setup Testing Library cleanup
 afterEach(() => {
 	cleanup()
+	vi.clearAllMocks()
 })
 
 // Mock environment variables

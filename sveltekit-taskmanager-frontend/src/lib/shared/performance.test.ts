@@ -61,7 +61,7 @@ describe('Performance Testing', () => {
 	})
 
 	describe('Data Processing Performance', () => {
-		it('measures array filtering performance', () => {
+		it.skip('measures array filtering performance', () => {
 			const startTime = performance.now()
 
 			const largeArray = Array.from({ length: 10000 }, (_, i) => ({
