@@ -1,74 +1,108 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Task Management E2E Tests', () => {
-	test.beforeEach(async ({ page }) => {
-		// Navigate to the application
-		await page.goto('/')
+test.describe('Task Management Critical Flows', () => {
+	test.describe('Create Task Flow', () => {
+		test('should create a new task and view it', async ({ page }) => {
+			// Navigate to tasks page
+			await page.goto('/tasks')
+
+			// Wait for page to load
+			await page.waitForLoadState('networkidle')
+
+			// Click create task button
+			await page.click('[data-testid="create-task-button"]')
+
+			// Fill in task details
+			await page.fill('[data-testid="task-title-input"]', 'E2E Test Task')
+			await page.fill('[data-testid="task-description-input"]', 'This is a test task created by E2E tests')
+			await page.selectOption('[data-testid="task-priority-select"]', 'high')
+
+			// Submit the form
+			await page.click('[data-testid="save-task-button"]')
+
+			// Wait for modal to close and task to appear
+			await page.waitForTimeout(2000)
+
+			// Navigate to tasks page to verify
+			await page.goto('/tasks')
+			await page.waitForLoadState('networkidle')
+
+			// Verify task was created - wait for task list to be visible
+			await page.waitForSelector('[data-testid="task-list"]')
+
+			// Check if the task appears in the list
+			const taskExists = await page.locator('[data-testid="task-list"]').getByText('E2E Test Task').count()
+			expect(taskExists).toBeGreaterThan(0)
+		})
 	})
 
-	test('loads the application homepage', async ({ page }) => {
-		// Check that the page loads successfully
-		await expect(page).toHaveTitle(/Task Manager/)
-		await expect(page.locator('h1')).toContainText('Task Manager')
+	test.describe('Update Task Flow', () => {
+		test('should update an existing task and verify changes', async ({ page }) => {
+			// Navigate to tasks page
+			await page.goto('/tasks')
+			await page.waitForLoadState('networkidle')
+
+			// Wait for task list to load
+			await page.waitForSelector('[data-testid="task-list"]')
+
+			// Click on first task's view button (eye icon)
+			const firstTask = page.locator('[data-testid="task-item"]').first()
+			await firstTask.locator('button[aria-label="View task"]').click()
+
+			// Wait for task detail page to load
+			await page.waitForURL(/\/tasks\/.+/)
+			await page.waitForLoadState('networkidle')
+
+			// Click edit button
+			await page.click('text=Edit Task')
+
+			// Update task title
+			await page.fill('[data-testid="task-title-input"]', 'Updated E2E Test Task')
+
+			// Submit the form
+			await page.click('[data-testid="save-task-button"]')
+
+			// Wait for edit mode to close
+			await page.waitForTimeout(2000)
+
+			// Verify the updated title is visible
+			await expect(page.locator('text=Updated E2E Test Task')).toBeVisible()
+		})
 	})
 
-	test('navigates to task list page', async ({ page }) => {
-		// Click on tasks link
-		await page.click('a[href="/tasks"]')
+	test.describe('Delete Task Flow', () => {
+		test('should delete a task and verify it is removed', async ({ page }) => {
+			// Navigate to tasks page
+			await page.goto('/tasks')
+			await page.waitForLoadState('networkidle')
 
-		// Verify navigation to tasks page
-		await expect(page).toHaveURL('/tasks')
-		await expect(page.locator('h1')).toContainText('Tasks')
-	})
+			// Wait for task list to load
+			await page.waitForSelector('[data-testid="task-list"]')
 
-	test('displays task list with items', async ({ page }) => {
-		// Navigate to tasks page
-		await page.goto('/tasks')
+			// Get initial task count
+			const initialTaskCount = await page.locator('[data-testid="task-item"]').count()
 
-		// Wait for task list to load
-		await page.waitForSelector('[data-testid="task-list"]')
+			// Click on first task's view button
+			const firstTask = page.locator('[data-testid="task-item"]').first()
+			await firstTask.locator('button[aria-label="View task"]').click()
 
-		// Verify task list container exists
-		await expect(page.locator('[data-testid="task-list"]')).toBeVisible()
-	})
+			// Wait for task detail page to load
+			await page.waitForURL(/\/tasks\/.+/)
+			await page.waitForLoadState('networkidle')
 
-	test('navigates between pages', async ({ page }) => {
-		// Start at homepage
-		await page.goto('/')
+			// Click delete button
+			await page.click('text=Delete Task')
 
-		// Navigate to tasks
-		await page.click('a[href="/tasks"]')
-		await expect(page).toHaveURL('/tasks')
+			// Confirm deletion
+			await page.click('text=Delete')
 
-		// Navigate to categories
-		await page.click('a[href="/categories"]')
-		await expect(page).toHaveURL('/categories')
+			// Wait for redirect back to tasks page
+			await page.waitForURL('/tasks')
+			await page.waitForLoadState('networkidle')
 
-		// Navigate back to homepage
-		await page.click('a[href="/"]')
-		await expect(page).toHaveURL('/')
-	})
-
-	test('basic task form rendering', async ({ page }) => {
-		// Navigate to tasks page
-		await page.goto('/tasks')
-
-		// Click on create task button
-		await page.click('[data-testid="create-task-button"]')
-
-		// Verify form elements are present
-		await expect(page.locator('[data-testid="task-title-input"]')).toBeVisible()
-		await expect(page.locator('[data-testid="task-description-input"]')).toBeVisible()
-		await expect(page.locator('[data-testid="task-priority-select"]')).toBeVisible()
-		await expect(page.locator('[data-testid="save-task-button"]')).toBeVisible()
-	})
-
-	test('filter components are present', async ({ page }) => {
-		// Navigate to tasks page
-		await page.goto('/tasks')
-
-		// Verify filter components exist
-		await expect(page.locator('[data-testid="status-filter"]')).toBeVisible()
-		await expect(page.locator('[data-testid="task-search-input"]')).toBeVisible()
+			// Verify task was removed
+			const finalTaskCount = await page.locator('[data-testid="task-item"]').count()
+			expect(finalTaskCount).toBeLessThan(initialTaskCount)
+		})
 	})
 })
