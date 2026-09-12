@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { categoryStore } from '$lib/features/categories'
 import { tagStore } from '$lib/features/tags'
 import TagInput from '$lib/features/tags/components/TagInput.svelte'
@@ -51,14 +52,16 @@ $effect(() => {
 	tags = initialTags
 })
 
-let categories = $derived(categoryStore.state.categories)
+let categories = $derived(browser ? categoryStore.state.categories : [])
 
 /**
  * Initialize categories and tags on mount
  */
 $effect(() => {
-	categoryStore.fetchCategories()
-	tagStore.fetchTags()
+	if (browser) {
+		categoryStore.fetchCategories()
+		tagStore.fetchTags()
+	}
 })
 
 /**
@@ -168,6 +171,7 @@ function validateForm(): boolean {
 		<label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
 		<input
 			id="title"
+			data-testid="task-title-input"
 			type="text"
 			bind:value={title}
 			class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
@@ -183,6 +187,7 @@ function validateForm(): boolean {
 		<label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
 		<textarea
 			id="description"
+			data-testid="task-description-input"
 			bind:value={description}
 			rows="3"
 			class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
@@ -198,6 +203,7 @@ function validateForm(): boolean {
 			<label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
 			<select
 				id="priority"
+				data-testid="task-priority-select"
 				bind:value={priority}
 				class="w-full px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
 			>
@@ -258,6 +264,7 @@ function validateForm(): boolean {
 		{/if}
 		<button
 			type="submit"
+			data-testid="save-task-button"
 			disabled={isSubmitting}
 			class="w-full sm:w-auto px-4 py-3 sm:px-4 sm:py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 transition-colors min-h-[44px] flex items-center justify-center gap-2"
 		>

@@ -63,5 +63,8 @@
 		"svelte-chartjs": "^4.0.1",
 		"web-vitals": "^4.2.4",
 		"zod": "^4.5.4"
+	},
+	"msw": {
+		"workerDirectory": "public"
 	}
 }

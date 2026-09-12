@@ -8,6 +8,8 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
 	workers: process.env.CI ? 2 : undefined,
+	globalSetup: './playwright-tests/global.setup.ts',
+	globalTeardown: './playwright-tests/global.teardown.ts',
 	reporter: [
 		['html'],
 		['list'],

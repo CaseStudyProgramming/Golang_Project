@@ -1,10 +1,11 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { toastStore } from '$lib/shared/stores'
 import { tagStore } from '../stores/tag.store'
 import type { Tag } from '../types/tag.types'
 
 let {
-	availableTags = $bindable(tagStore.state.tags),
+	availableTags = $bindable(browser ? tagStore.state.tags : []),
 	onCreateTag,
 	placeholder = 'Add tags...',
 	selectedTags = $bindable([]),

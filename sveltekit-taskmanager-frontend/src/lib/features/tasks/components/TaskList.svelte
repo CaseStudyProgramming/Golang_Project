@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { categoryStore } from '$lib/features/categories'
 import { tagStore } from '$lib/features/tags'
 import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
@@ -22,15 +23,17 @@ let {
 	tasks?: Task[]
 } = $props()
 
-let categories = $derived(categoryStore.state.categories)
-let tags = $derived(tagStore.state.tags)
+let categories = $derived(browser ? categoryStore.state.categories : [])
+let tags = $derived(browser ? tagStore.state.tags : [])
 
 /**
  * Initialize categories and tags on mount
  */
 $effect(() => {
-	categoryStore.fetchCategories()
-	tagStore.fetchTags()
+	if (browser) {
+		categoryStore.fetchCategories()
+		tagStore.fetchTags()
+	}
 })
 
 /**
@@ -122,9 +125,9 @@ async function handleDeleteTask(task: Task) {
 			/>
 		</div>
 	{:else}
-		<div class="space-y-3">
+		<div class="space-y-3" data-testid="task-list">
 			{#each tasks as task (task.id)}
-				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-3 sm:p-4">
+				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-3 sm:p-4" data-testid="task-item">
 					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
 						<div class="flex-1 min-w-0">
 							<div class="flex flex-wrap items-center gap-2 mb-2">
@@ -198,6 +201,7 @@ async function handleDeleteTask(task: Task) {
 							{/if}
 							{#if onDeleteTask}
 								<button
+									data-testid="delete-task-button"
 									onclick={() => handleDeleteTask(task)}
 									class="p-3 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
 									title="Delete task"
