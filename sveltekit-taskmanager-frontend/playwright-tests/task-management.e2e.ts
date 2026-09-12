@@ -14,7 +14,10 @@ test.describe('Task Management Critical Flows', () => {
 
 			// Fill in task details
 			await page.fill('[data-testid="task-title-input"]', 'E2E Test Task')
-			await page.fill('[data-testid="task-description-input"]', 'This is a test task created by E2E tests')
+			await page.fill(
+				'[data-testid="task-description-input"]',
+				'This is a test task created by E2E tests'
+			)
 			await page.selectOption('[data-testid="task-priority-select"]', 'high')
 
 			// Submit the form
@@ -31,7 +34,10 @@ test.describe('Task Management Critical Flows', () => {
 			await page.waitForSelector('[data-testid="task-list"]')
 
 			// Check if the task appears in the list
-			const taskExists = await page.locator('[data-testid="task-list"]').getByText('E2E Test Task').count()
+			const taskExists = await page
+				.locator('[data-testid="task-list"]')
+				.getByText('E2E Test Task')
+				.count()
 			expect(taskExists).toBeGreaterThan(0)
 		})
 	})
