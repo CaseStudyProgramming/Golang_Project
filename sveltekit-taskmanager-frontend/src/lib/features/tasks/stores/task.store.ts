@@ -666,14 +666,14 @@ const defaultState = {
 		status: undefined,
 		priority: undefined,
 		categoryId: undefined,
-		tags: undefined
+		tags: undefined,
 	},
 	pagination: {
 		page: 1,
 		limit: 10,
 		total: 0,
-		totalPages: 0
-	}
+		totalPages: 0,
+	},
 }
 
 export const taskStore = new Proxy({} as ReturnType<typeof createTaskStore>, {
