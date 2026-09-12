@@ -16,7 +16,8 @@
 			"!**/*.config.js",
 			"!**/*.config.ts",
 			"!**/playwright-report",
-			"!**/test-results"
+			"!**/test-results",
+			"!**/public/mockServiceWorker.js"
 		]
 	},
 	"formatter": {

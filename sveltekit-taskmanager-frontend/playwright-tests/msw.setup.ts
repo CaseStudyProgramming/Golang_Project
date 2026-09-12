@@ -13,7 +13,7 @@ const mockTasks = [
 		tags: ['tag1'],
 		dueDate: '2024-12-31',
 		createdAt: '2024-01-01T00:00:00Z',
-		updatedAt: '2024-01-01T00:00:00Z'
+		updatedAt: '2024-01-01T00:00:00Z',
 	},
 	{
 		id: '2',
@@ -25,8 +25,8 @@ const mockTasks = [
 		tags: ['tag2'],
 		dueDate: '2024-12-25',
 		createdAt: '2024-01-02T00:00:00Z',
-		updatedAt: '2024-01-02T00:00:00Z'
-	}
+		updatedAt: '2024-01-02T00:00:00Z',
+	},
 ]
 
 const mockCategories = [
@@ -37,7 +37,7 @@ const mockCategories = [
 		color: '#3B82F6',
 		description: 'Work related tasks',
 		createdAt: '2024-01-01T00:00:00Z',
-		updatedAt: '2024-01-01T00:00:00Z'
+		updatedAt: '2024-01-01T00:00:00Z',
 	},
 	{
 		id: 'cat2',
@@ -46,8 +46,8 @@ const mockCategories = [
 		color: '#10B981',
 		description: 'Personal tasks',
 		createdAt: '2024-01-01T00:00:00Z',
-		updatedAt: '2024-01-01T00:00:00Z'
-	}
+		updatedAt: '2024-01-01T00:00:00Z',
+	},
 ]
 
 const mockTags = [
@@ -56,15 +56,15 @@ const mockTags = [
 		name: 'Important',
 		color: '#EF4444',
 		createdAt: '2024-01-01T00:00:00Z',
-		updatedAt: '2024-01-01T00:00:00Z'
+		updatedAt: '2024-01-01T00:00:00Z',
 	},
 	{
 		id: 'tag2',
 		name: 'Urgent',
 		color: '#F59E0B',
 		createdAt: '2024-01-01T00:00:00Z',
-		updatedAt: '2024-01-01T00:00:00Z'
-	}
+		updatedAt: '2024-01-01T00:00:00Z',
+	},
 ]
 
 // Create MSW server
@@ -77,8 +77,8 @@ export const server = setupServer(
 				page: 1,
 				limit: 10,
 				total: mockTasks.length,
-				totalPages: 1
-			}
+				totalPages: 1,
+			},
 		})
 	}),
 
@@ -98,7 +98,7 @@ export const server = setupServer(
 			...newTask,
 			id: 'new-task-id',
 			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString()
+			updatedAt: new Date().toISOString(),
 		}
 		return HttpResponse.json(createdTask, { status: 201 })
 	}),
@@ -113,7 +113,7 @@ export const server = setupServer(
 		const updatedTask = {
 			...task,
 			...updatedData,
-			updatedAt: new Date().toISOString()
+			updatedAt: new Date().toISOString(),
 		}
 		return HttpResponse.json(updatedTask)
 	}),
@@ -144,7 +144,7 @@ export const server = setupServer(
 			...newTag,
 			id: 'new-tag-id',
 			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString()
+			updatedAt: new Date().toISOString(),
 		}
 		return HttpResponse.json(createdTag, { status: 201 })
 	}),
@@ -157,22 +157,25 @@ export const server = setupServer(
 			user: {
 				id: 'user-1',
 				email: credentials.email,
-				name: 'Test User'
+				name: 'Test User',
 			},
-			token: 'mock-jwt-token'
+			token: 'mock-jwt-token',
 		})
 	}),
 
 	http.post('/api/auth/register', async ({ request }) => {
 		const userData = await request.json()
-		return HttpResponse.json({
-			user: {
-				id: 'user-1',
-				email: userData.email,
-				name: userData.name
+		return HttpResponse.json(
+			{
+				user: {
+					id: 'user-1',
+					email: userData.email,
+					name: userData.name,
+				},
+				token: 'mock-jwt-token',
 			},
-			token: 'mock-jwt-token'
-		}, { status: 201 })
+			{ status: 201 }
+		)
 	}),
 
 	// Mock health check
