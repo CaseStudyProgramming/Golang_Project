@@ -1,16 +1,31 @@
 import { expect, test } from '@playwright/test'
+import { AuthHelper } from './helpers/auth-helper'
 
 test.describe('Task Management Critical Flows', () => {
+	test.beforeAll(async ({ request }) => {
+		// Register test user before running tests
+		await AuthHelper.registerTestUser(request)
+	})
+
+	test.beforeEach(async ({ page }) => {
+		// Login with test user before each test
+		await AuthHelper.loginTestUser(page)
+	})
+
+	test.afterAll(async ({ request }) => {
+		// Cleanup test user data after all tests
+		await AuthHelper.cleanupTestUser(request)
+	})
+
 	test.describe('Create Task Flow', () => {
 		test('should create a new task and view it', async ({ page }) => {
-			// Navigate to tasks page
-			await page.goto('/tasks')
-
-			// Wait for page to load
-			await page.waitForLoadState('networkidle')
+			// Already on tasks page from beforeEach
 
 			// Click create task button
 			await page.click('[data-testid="create-task-button"]')
+
+			// Wait for modal to appear
+			await page.waitForSelector('.fixed.inset-0.bg-black.bg-opacity-50', { state: 'visible' })
 
 			// Fill in task details
 			await page.fill('[data-testid="task-title-input"]', 'E2E Test Task')
@@ -23,12 +38,16 @@ test.describe('Task Management Critical Flows', () => {
 			// Submit the form
 			await page.click('[data-testid="save-task-button"]')
 
-			// Wait for modal to close and task to appear
-			await page.waitForTimeout(2000)
+			// Wait for modal to close
+			await page
+				.waitForSelector('.fixed.inset-0.bg-black.bg-opacity-50', { state: 'hidden' })
+				.catch(() => {
+					// Modal might be removed instead of hidden
+					return page.waitForTimeout(1000)
+				})
 
-			// Navigate to tasks page to verify
-			await page.goto('/tasks')
-			await page.waitForLoadState('networkidle')
+			// Wait for task to appear in the list (without navigation)
+			await page.waitForTimeout(2000)
 
 			// Verify task was created - wait for task list to be visible
 			await page.waitForSelector('[data-testid="task-list"]')
@@ -44,9 +63,7 @@ test.describe('Task Management Critical Flows', () => {
 
 	test.describe('Update Task Flow', () => {
 		test('should update an existing task and verify changes', async ({ page }) => {
-			// Navigate to tasks page
-			await page.goto('/tasks')
-			await page.waitForLoadState('networkidle')
+			// Already on tasks page from beforeEach
 
 			// Wait for task list to load
 			await page.waitForSelector('[data-testid="task-list"]')
@@ -61,6 +78,9 @@ test.describe('Task Management Critical Flows', () => {
 
 			// Click edit button
 			await page.click('text=Edit Task')
+
+			// Wait for edit form to appear
+			await page.waitForSelector('[data-testid="task-title-input"]', { state: 'visible' })
 
 			// Update task title
 			await page.fill('[data-testid="task-title-input"]', 'Updated E2E Test Task')
@@ -78,9 +98,7 @@ test.describe('Task Management Critical Flows', () => {
 
 	test.describe('Delete Task Flow', () => {
 		test('should delete a task and verify it is removed', async ({ page }) => {
-			// Navigate to tasks page
-			await page.goto('/tasks')
-			await page.waitForLoadState('networkidle')
+			// Already on tasks page from beforeEach
 
 			// Wait for task list to load
 			await page.waitForSelector('[data-testid="task-list"]')

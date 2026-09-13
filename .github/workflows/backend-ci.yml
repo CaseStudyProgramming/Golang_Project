@@ -20,26 +20,41 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: Berjuang#382
+          POSTGRES_DB: taskmanager_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - name: Setup Node.js
       uses: actions/setup-node@v7
       with:
         node-version: '24'
-    
+
     - name: Checkout code
       uses: actions/checkout@v7
-      
+
     - name: Set up Go
       uses: actions/setup-go@v7
       with:
-        go-version: '1.22'
+        go-version: '1.25'
         cache: true
         cache-dependency-path: backendGoVanilaTaskmanager/go.sum
-        
+
     - name: Install dependencies
       run: go mod download
-      
+
     - name: Check code formatting
       run: |
         if [ -n "$(gofmt -l .)" ]; then
@@ -48,16 +63,26 @@ jobs:
           exit 1
         fi
         echo "✅ All Go files are properly formatted"
-      
-    - name: Run tests
+
+    - name: Run unit tests
       run: go test -v ./...
-      
+
+    - name: Run integration tests
+      env:
+        TEST_DB_HOST: localhost
+        TEST_DB_PORT: 5432
+        TEST_DB_USER: postgres
+        TEST_DB_PASSWORD: Berjuang#382
+        TEST_DB_NAME: taskmanager_test
+        TEST_DB_SSLMODE: disable
+      run: go test -v ./tests/...
+
     - name: Run tests with race detection
       run: go test -race ./...
-      
+
     - name: Run tests with coverage
       run: go test -cover ./...
-      
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v6
       with:
@@ -65,14 +90,14 @@ jobs:
         flags: backend
         name: backend-coverage
         fail_ci_if_error: false
-      
+
     - name: Security scan
       run: |
         go install golang.org/x/vuln/cmd/govulncheck@latest
         govulncheck ./...
-      
+
     - name: Build application
       run: go build -o taskmanager-server main.go
-      
+
     - name: Build Docker image
       run: docker build -t taskmanager-backend:test .

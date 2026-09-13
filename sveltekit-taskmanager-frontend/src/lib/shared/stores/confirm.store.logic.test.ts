@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ConfirmType } from './confirm.store'
+import type { ConfirmType } from './confirm.store.svelte.ts'
 
 describe('Confirm Store Logic', () => {
 	describe('Dialog ID Generation', () => {

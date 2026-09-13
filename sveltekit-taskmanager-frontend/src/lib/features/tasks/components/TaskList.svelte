@@ -6,7 +6,7 @@ import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
 import EmptyState from '$lib/shared/components/EmptyState.svelte'
 import ProgressBar from '$lib/shared/components/ProgressBar.svelte'
 import { confirmStore } from '$lib/shared/stores'
-import { taskStore } from '../stores/task.store'
+import { taskStore } from '../stores/task.store.svelte.ts'
 import type { Task } from '../types/task.types'
 
 let {
@@ -111,7 +111,7 @@ async function handleDeleteTask(task: Task) {
 }
 </script>
 
-<div class="space-y-3 sm:space-y-4">
+<div class="space-y-3 sm:space-y-4" data-testid="task-list">
 	{#if isLoading}
 		<div class="text-center py-8 sm:py-12">
 			<LoadingSpinner text="Loading tasks..." />
@@ -125,7 +125,7 @@ async function handleDeleteTask(task: Task) {
 			/>
 		</div>
 	{:else}
-		<div class="space-y-3" data-testid="task-list">
+		<div class="space-y-3">
 			{#each tasks as task (task.id)}
 				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-3 sm:p-4" data-testid="task-item">
 					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

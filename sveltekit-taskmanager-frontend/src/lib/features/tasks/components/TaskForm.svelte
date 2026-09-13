@@ -6,7 +6,7 @@ import TagInput from '$lib/features/tags/components/TagInput.svelte'
 import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
 import { toastStore } from '$lib/shared/stores'
 import { type CreateTaskPayload, createTaskSchema } from '../schemas/task.schemas'
-import { taskStore } from '../stores/task.store'
+import { taskStore } from '../stores/task.store.svelte.ts'
 import type { TaskPriority } from '../types/task.types'
 
 let {

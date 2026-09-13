@@ -2,7 +2,7 @@
 import { confirmStore } from '$lib/shared/stores'
 import LoadingSpinner from '$lib/shared/components/LoadingSpinner.svelte'
 import EmptyState from '$lib/shared/components/EmptyState.svelte'
-import { categoryStore } from '../stores/category.store'
+import { categoryStore } from '../stores/category.store.svelte.ts'
 import type { Category } from '../types/category.types'
 
 let {

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { browser } from '$app/environment'
 import { toastStore } from '$lib/shared/stores'
-import { tagStore } from '../stores/tag.store'
+import { tagStore } from '../stores/tag.store.svelte.ts'
 import type { Tag } from '../types/tag.types'
 
 let {

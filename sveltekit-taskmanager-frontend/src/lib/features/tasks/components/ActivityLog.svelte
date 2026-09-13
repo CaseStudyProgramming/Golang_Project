@@ -1,5 +1,5 @@
 <script lang="ts">
-import { activityStore } from '../stores/activity.store'
+import { activityStore } from '../stores/activity.store.svelte.ts'
 import type { Activity, ActivityFilters, ActivityType } from '../types/task.types'
 
 let {

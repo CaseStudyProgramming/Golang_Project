@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Toast as ToastType } from '../stores/toast.store'
+import type { Toast as ToastType } from '../stores/toast.store.svelte.ts'
 
 function getIconColors(type: ToastType['type']): string {
 	return type === 'success'

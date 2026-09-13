@@ -1,8 +1,8 @@
 import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
 
-// Mock data
-const mockTasks = [
+// Mock data with persistent storage across requests
+let mockTasks = [
 	{
 		id: '1',
 		title: 'Test Task 1',
@@ -93,37 +93,41 @@ export const server = setupServer(
 
 	// Mock POST /api/tasks
 	http.post('/api/tasks', async ({ request }) => {
-		const newTask = await request.json()
+		const newTask = (await request.json()) as Partial<(typeof mockTasks)[0]>
 		const createdTask = {
 			...newTask,
-			id: 'new-task-id',
+			id: `task-${Date.now()}`,
+			status: 'todo',
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
-		}
+		} as (typeof mockTasks)[0]
+		mockTasks.push(createdTask)
 		return HttpResponse.json(createdTask, { status: 201 })
 	}),
 
 	// Mock PUT /api/tasks/:id
 	http.put('/api/tasks/:id', async ({ params, request }) => {
-		const updatedData = await request.json()
-		const task = mockTasks.find((t) => t.id === params.id)
-		if (!task) {
+		const updatedData = (await request.json()) as Partial<(typeof mockTasks)[0]>
+		const taskIndex = mockTasks.findIndex((t) => t.id === params.id)
+		if (taskIndex === -1) {
 			return HttpResponse.json({ error: 'Task not found' }, { status: 404 })
 		}
 		const updatedTask = {
-			...task,
+			...mockTasks[taskIndex],
 			...updatedData,
 			updatedAt: new Date().toISOString(),
-		}
+		} as (typeof mockTasks)[0]
+		mockTasks[taskIndex] = updatedTask
 		return HttpResponse.json(updatedTask)
 	}),
 
 	// Mock DELETE /api/tasks/:id
 	http.delete('/api/tasks/:id', ({ params }) => {
-		const task = mockTasks.find((t) => t.id === params.id)
-		if (!task) {
+		const taskIndex = mockTasks.findIndex((t) => t.id === params.id)
+		if (taskIndex === -1) {
 			return HttpResponse.json({ error: 'Task not found' }, { status: 404 })
 		}
+		mockTasks.splice(taskIndex, 1)
 		return HttpResponse.json({ message: 'Task deleted successfully' })
 	}),
 
@@ -139,19 +143,19 @@ export const server = setupServer(
 
 	// Mock POST /api/tags
 	http.post('/api/tags', async ({ request }) => {
-		const newTag = await request.json()
+		const newTag = (await request.json()) as Partial<(typeof mockTags)[0]>
 		const createdTag = {
 			...newTag,
 			id: 'new-tag-id',
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
-		}
+		} as (typeof mockTags)[0]
 		return HttpResponse.json(createdTag, { status: 201 })
 	}),
 
 	// Mock authentication endpoints
 	http.post('/api/auth/login', async ({ request }) => {
-		const credentials = await request.json()
+		const credentials = (await request.json()) as { email: string }
 		// Accept any credentials for testing
 		return HttpResponse.json({
 			user: {
@@ -164,7 +168,7 @@ export const server = setupServer(
 	}),
 
 	http.post('/api/auth/register', async ({ request }) => {
-		const userData = await request.json()
+		const userData = (await request.json()) as { email: string; name: string }
 		return HttpResponse.json(
 			{
 				user: {
@@ -188,3 +192,33 @@ export const server = setupServer(
 export const startServer = () => server.listen({ onUnhandledRequest: 'bypass' })
 export const stopServer = () => server.close()
 export const resetHandlers = () => server.resetHandlers()
+
+// Reset mock data to initial state
+export const resetMockData = () => {
+	mockTasks = [
+		{
+			id: '1',
+			title: 'Test Task 1',
+			description: 'This is a test task',
+			status: 'todo',
+			priority: 'medium',
+			categoryId: 'cat1',
+			tags: ['tag1'],
+			dueDate: '2024-12-31',
+			createdAt: '2024-01-01T00:00:00Z',
+			updatedAt: '2024-01-01T00:00:00Z',
+		},
+		{
+			id: '2',
+			title: 'Test Task 2',
+			description: 'Another test task',
+			status: 'in_progress',
+			priority: 'high',
+			categoryId: 'cat2',
+			tags: ['tag2'],
+			dueDate: '2024-12-25',
+			createdAt: '2024-01-02T00:00:00Z',
+			updatedAt: '2024-01-02T00:00:00Z',
+		},
+	]
+}

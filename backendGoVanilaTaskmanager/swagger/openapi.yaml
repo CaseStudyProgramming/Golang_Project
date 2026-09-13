@@ -1743,7 +1743,7 @@ components:
           example: 1
         details:
           type: string
-          example: Created task: Complete project documentation
+          example: "Created task: Complete project documentation"
         ip_address:
           type: string
           example: 127.0.0.1

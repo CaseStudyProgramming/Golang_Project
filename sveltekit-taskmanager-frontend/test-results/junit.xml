@@ -1,0 +1,357 @@
+<testsuites id="" name="" tests="15" failures="0" skipped="0" errors="15" time="6.921964">
+<testsuite name="task-management.e2e.ts" timestamp="2026-09-12T11:17:55.781Z" hostname="chromium" tests="3" failures="0" skipped="0" time="0.308" errors="3">
+<testcase name="Task Management Critical Flows › Create Task Flow › should create a new task and view it" classname="task-management.e2e.ts" time="0.104">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-chromium/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell" type="Error">
+<![CDATA[  [chromium] › task-management.e2e.ts:10:3 › Task Management Critical Flows › Create Task Flow › should create a new task and view it 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-chromium/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes" classname="task-management.e2e.ts" time="0.091">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-chromium/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell" type="Error">
+<![CDATA[  [chromium] › task-management.e2e.ts:56:3 › Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-chromium/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed" classname="task-management.e2e.ts" time="0.113">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-chromium/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell" type="Error">
+<![CDATA[  [chromium] › task-management.e2e.ts:93:3 › Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-chromium/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+<testsuite name="task-management.e2e.ts" timestamp="2026-09-12T11:17:55.781Z" hostname="firefox" tests="3" failures="0" skipped="0" time="0.35" errors="3">
+<testcase name="Task Management Critical Flows › Create Task Flow › should create a new task and view it" classname="task-management.e2e.ts" time="0.093">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-firefox/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/firefox-1543/firefox/firefox" type="Error">
+<![CDATA[  [firefox] › task-management.e2e.ts:10:3 › Task Management Critical Flows › Create Task Flow › should create a new task and view it 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/firefox-1543/firefox/firefox
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-firefox/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes" classname="task-management.e2e.ts" time="0.118">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-firefox/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/firefox-1543/firefox/firefox" type="Error">
+<![CDATA[  [firefox] › task-management.e2e.ts:56:3 › Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/firefox-1543/firefox/firefox
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-firefox/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed" classname="task-management.e2e.ts" time="0.139">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-firefox/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/firefox-1543/firefox/firefox" type="Error">
+<![CDATA[  [firefox] › task-management.e2e.ts:93:3 › Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/firefox-1543/firefox/firefox
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-firefox/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+<testsuite name="task-management.e2e.ts" timestamp="2026-09-12T11:17:55.781Z" hostname="webkit" tests="3" failures="0" skipped="0" time="0.245" errors="3">
+<testcase name="Task Management Critical Flows › Create Task Flow › should create a new task and view it" classname="task-management.e2e.ts" time="0.073">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-webkit/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh" type="Error">
+<![CDATA[  [webkit] › task-management.e2e.ts:10:3 › Task Management Critical Flows › Create Task Flow › should create a new task and view it 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-webkit/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes" classname="task-management.e2e.ts" time="0.088">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-webkit/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh" type="Error">
+<![CDATA[  [webkit] › task-management.e2e.ts:56:3 › Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-webkit/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed" classname="task-management.e2e.ts" time="0.084">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-webkit/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh" type="Error">
+<![CDATA[  [webkit] › task-management.e2e.ts:93:3 › Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-webkit/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+<testsuite name="task-management.e2e.ts" timestamp="2026-09-12T11:17:55.781Z" hostname="Mobile Chrome" tests="3" failures="0" skipped="0" time="0.213" errors="3">
+<testcase name="Task Management Critical Flows › Create Task Flow › should create a new task and view it" classname="task-management.e2e.ts" time="0.067">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell" type="Error">
+<![CDATA[  [Mobile Chrome] › task-management.e2e.ts:10:3 › Task Management Critical Flows › Create Task Flow › should create a new task and view it 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-Mobile-Chrome/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes" classname="task-management.e2e.ts" time="0.078">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell" type="Error">
+<![CDATA[  [Mobile Chrome] › task-management.e2e.ts:56:3 › Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-Mobile-Chrome/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed" classname="task-management.e2e.ts" time="0.068">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell" type="Error">
+<![CDATA[  [Mobile Chrome] › task-management.e2e.ts:93:3 › Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-Mobile-Chrome/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+<testsuite name="task-management.e2e.ts" timestamp="2026-09-12T11:17:55.781Z" hostname="Mobile Safari" tests="3" failures="0" skipped="0" time="0.144" errors="3">
+<testcase name="Task Management Critical Flows › Create Task Flow › should create a new task and view it" classname="task-management.e2e.ts" time="0.047">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh" type="Error">
+<![CDATA[  [Mobile Safari] › task-management.e2e.ts:10:3 › Task Management Critical Flows › Create Task Flow › should create a new task and view it 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-7963f-eate-a-new-task-and-view-it-Mobile-Safari/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes" classname="task-management.e2e.ts" time="0.051">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh" type="Error">
+<![CDATA[  [Mobile Safari] › task-management.e2e.ts:56:3 › Task Management Critical Flows › Update Task Flow › should update an existing task and verify changes 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-54067-ing-task-and-verify-changes-Mobile-Safari/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed" classname="task-management.e2e.ts" time="0.046">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+<error message="browserType.launch: Executable doesn&apos;t exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh" type="Error">
+<![CDATA[  [Mobile Safari] › task-management.e2e.ts:93:3 › Task Management Critical Flows › Delete Task Flow › should delete a task and verify it is removed 
+
+    Error: browserType.launch: Executable doesn't exist at /home/davidtan/.cache/ms-playwright/webkit-2359/pw_run.sh
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     npx playwright install                                 ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../test-results/task-management.e2e.ts-Tas-595a6-sk-and-verify-it-is-removed-Mobile-Safari/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+</testsuites>
