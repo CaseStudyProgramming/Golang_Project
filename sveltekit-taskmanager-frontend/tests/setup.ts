@@ -1,8 +1,8 @@
 import { cleanup } from '@testing-library/svelte'
-import { HttpResponse, http } from 'msw'
 import '@testing-library/jest-dom'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { handlers } from '$lib/api/handlers'
 
 // Setup Testing Library cleanup
 afterEach(() => {
@@ -72,28 +72,8 @@ if (!globalThis.window?.location) {
 	// No-op for tests
 }
 
-// Setup MSW for API mocking
-const server = setupServer(
-	// Example API mocks - add more as needed
-	http.get('http://localhost:8080/api/tasks', () => {
-		return HttpResponse.json({
-			limit: 10,
-			page: 1,
-			tasks: [],
-			total: 0,
-		})
-	}),
-	http.post('http://localhost:8080/api/auth/login', () => {
-		return HttpResponse.json({
-			token: 'mock-token',
-			user: {
-				email: 'test@example.com',
-				id: '1',
-				name: 'Test User',
-			},
-		})
-	})
-)
+// Setup MSW for API mocking using OpenAPI-based handlers
+const server = setupServer(...handlers)
 
 beforeAll(() => {
 	server.listen({ onUnhandledRequest: 'error' })

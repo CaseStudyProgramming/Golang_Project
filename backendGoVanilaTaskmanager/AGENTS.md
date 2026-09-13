@@ -63,6 +63,16 @@
   - `gofmt -w .` - Format all Go files
   - `gofmt -l .` - Check if code is properly formatted
   - `air` - Run with live reload (development)
+- **Use Makefile for common tasks**:
+  - `make test-unit` - Run unit tests
+  - `make test-integration` - Run integration tests (requires test DB)
+  - `make test-all` - Run all tests
+  - `make test-coverage` - Run tests with coverage
+  - `make build` - Build the application
+  - `make lint` - Run linter
+  - `make format` - Format code
+  - `make dev` - Run development server
+  - `make dev-test` - Run development server with test DB
 
 ## Git Commits
 - **Conventional Commits**: Format as `type: summary without scope`.

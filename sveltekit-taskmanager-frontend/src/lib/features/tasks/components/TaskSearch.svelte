@@ -42,6 +42,7 @@ function handleSearchInput(event: Event): void {
 	<div class="relative">
 		<input
 			type="text"
+			data-testid="task-search-input"
 			value={searchQuery}
 			oninput={handleSearchInput}
 			placeholder={placeholder}

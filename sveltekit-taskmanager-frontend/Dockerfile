@@ -1,5 +1,5 @@
 # Multi-stage build for optimized production image
-FROM node:18-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -26,10 +26,7 @@ FROM nginx:alpine
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy built assets from builder
-COPY --from=builder /app/build /usr/share/nginx/html
-
-# Copy .htaccess for routing (if needed)
-COPY --from=builder /app/build/.htaccess /usr/share/nginx/html/.htaccess 2>/dev/null || true
+COPY --from=builder /app/.svelte-kit/output/client /usr/share/nginx/html
 
 # Expose port
 EXPOSE 80

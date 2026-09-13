@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -36,18 +37,32 @@ type CORSConfig struct {
 	AllowedOrigins []string `yaml:"allowed_origins"`
 }
 
-// LoadConfig loads configuration from yaml file
+// LoadConfig loads configuration from yaml file or environment variables only
 func LoadConfig(filePath string) (*Config, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
 	var cfg Config
-	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(&cfg); err != nil {
-		return nil, err
+
+	// Load from file if path is provided and file exists
+	if filePath != "" {
+		file, err := os.Open(filePath)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		decoder := yaml.NewDecoder(file)
+		if err := decoder.Decode(&cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	// Environment variables take precedence over config file values
+	// This also provides defaults when no config file is loaded
+
+	// Server port from environment
+	if port := os.Getenv("SERVER_PORT"); port != "" {
+		cfg.Server.Port = port
+	} else if cfg.Server.Port == "" {
+		cfg.Server.Port = "8080"
 	}
 
 	// Fallback to environment variables for JWT secret
@@ -60,7 +75,7 @@ func LoadConfig(filePath string) (*Config, error) {
 		cfg.JWT.Secret = "dev-secret-key-change-in-production"
 	}
 
-	// Environment variables take precedence over config file values
+	// Database configuration from environment variables
 	if host := os.Getenv("DB_HOST"); host != "" {
 		cfg.Database.Host = host
 	} else if cfg.Database.Host == "" {
@@ -102,9 +117,10 @@ func LoadConfig(filePath string) (*Config, error) {
 
 	// Default CORS origins for development (should be restricted in production)
 	if len(cfg.CORS.AllowedOrigins) == 0 {
-		// Check for environment variable
+		// Check for environment variable (comma-separated)
 		if corsOrigins := os.Getenv("CORS_ALLOWED_ORIGINS"); corsOrigins != "" {
-			cfg.CORS.AllowedOrigins = []string{corsOrigins}
+			// Parse comma-separated origins
+			cfg.CORS.AllowedOrigins = strings.Split(corsOrigins, ",")
 		} else {
 			cfg.CORS.AllowedOrigins = []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:8080"}
 		}

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Test database for integration and e2e tests
+  postgres-test:
+    image: postgres:15
+    container_name: taskmanager-postgres-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Berjuang#382
+      POSTGRES_DB: taskmanager_test
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend server for e2e tests
+  backend-test:
+    build:
+      context: ./backendGoVanilaTaskmanager
+      dockerfile: Dockerfile
+    container_name: taskmanager-backend-test
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres-test
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: Berjuang#382
+      DB_NAME: taskmanager_test
+      SSL_MODE: disable
+      JWT_SECRET: test-secret-key-for-e2e-testing-only
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres_test_data:

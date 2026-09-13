@@ -1,9 +1,11 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 import { goto } from '$app/navigation'
 import { taskStore } from '$lib/features/tasks'
 
 onMount(async () => {
+	if (!browser) return
 	try {
 		// Filter to show only deleted tasks
 		taskStore.setFilters({ status: 'deleted' })
@@ -91,12 +93,12 @@ function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
 		</button>
 	</div>
 
-	{#if taskStore.state.isLoading}
+	{#if browser && taskStore.state.isLoading}
 		<div class="text-center py-12">
 			<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
 			<p class="mt-4 text-gray-500">Loading trash...</p>
 		</div>
-	{:else if taskStore.state.tasks.length === 0}
+	{:else if browser && taskStore.state.tasks.length === 0}
 		<div class="text-center py-12 bg-white rounded-lg shadow">
 			<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -104,7 +106,7 @@ function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
 			<h3 class="mt-2 text-sm font-medium text-gray-900">Trash is empty</h3>
 			<p class="mt-1 text-sm text-gray-500">No deleted tasks to restore.</p>
 		</div>
-	{:else}
+	{:else if browser}
 		<div class="space-y-3">
 			{#each taskStore.state.tasks as task (task.id)}
 				<div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">

@@ -17,19 +17,24 @@
 		"format:check": "biome format .",
 		"check:all": "biome check .",
 		"fix:all": "biome check --write .",
-		"validate": "npm run format:check && npm run lint && npm run check && npm run test && npm run build",
+		"validate": "bun run format:check && bun run lint && bun run check && bun run test && bun run build",
+		"validate:pre-pr": "bun run test:coverage && bun run test:e2e",
 		"test": "vitest",
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest --coverage",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:debug": "playwright test --debug",
+		"test:e2e:setup": "cd .. && docker-compose -f docker-compose.test.yml up -d",
+		"test:e2e:teardown": "cd .. && docker-compose -f docker-compose.test.yml down",
+		"api:generate": "orval --mock -i ../backendGoVanilaTaskmanager/swagger/openapi.yaml -o src/lib/api/index.ts && node scripts/add-ts-nocheck.mjs",
 		"docker:build": "docker build -t taskmanager-frontend .",
 		"docker:run": "docker run -p 80:80 taskmanager-frontend"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.13",
 		"@eslint/js": "^10.0.1",
+		"@faker-js/faker": "^10.6.0",
 		"@playwright/test": "^1.63.0",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/kit": "^2.63.0",
@@ -41,12 +46,14 @@
 		"@typescript-eslint/parser": "^8.69.0",
 		"@vitest/coverage-v8": "^5.0.0",
 		"@vitest/ui": "^5.0.0",
+		"ajv": "^8.20.0",
 		"eslint": "^10.10.0",
 		"eslint-plugin-perfectionist": "^5.11.0",
 		"eslint-plugin-svelte": "^3.23.0",
 		"globals": "^17.12.0",
 		"jsdom": "^30.0.1",
 		"msw": "^2.15.0",
+		"orval": "^8.32.0",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"svelte-eslint-parser": "^1.8.1",
@@ -62,5 +69,8 @@
 		"svelte-chartjs": "^4.0.1",
 		"web-vitals": "^4.2.4",
 		"zod": "^4.5.4"
+	},
+	"msw": {
+		"workerDirectory": "public"
 	}
 }
