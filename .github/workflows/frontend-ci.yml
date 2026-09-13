@@ -182,9 +182,123 @@ jobs:
       working-directory: ./backendGoVanilaTaskmanager
       run: go mod download
 
+    - name: Install PostgreSQL client
+      run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
     - name: Build backend
       working-directory: ./backendGoVanilaTaskmanager
       run: go build -o taskmanager-server main.go
+
+    - name: Run database migrations
+      working-directory: ./backendGoVanilaTaskmanager
+      env:
+        PGPASSWORD: Berjuang#382
+      run: |
+        # Drop existing tables to ensure clean state
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS activity_logs CASCADE"
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS subtasks CASCADE"
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS task_tags CASCADE"
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS tasks CASCADE"
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS tags CASCADE"
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS categories CASCADE"
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS users CASCADE"
+        
+        # Create tables with final schema (epoch timestamps)
+        psql -h localhost -U postgres -d taskmanager_test << 'EOF'
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(150) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            timezone VARCHAR(50) DEFAULT 'UTC',
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+            updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
+        );
+        
+        CREATE TABLE categories (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(100) NOT NULL,
+            color_hex VARCHAR(7) DEFAULT '#3B82F6',
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
+        );
+        
+        CREATE TABLE tags (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(100) NOT NULL,
+            color_hex VARCHAR(7) DEFAULT '#3B82F6',
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
+        );
+        
+        CREATE TABLE tasks (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            category_id INT NULL REFERENCES categories(id) ON DELETE SET NULL,
+            title VARCHAR(255) NOT NULL,
+            sub_title VARCHAR(255) NULL,
+            description TEXT NULL,
+            completed BOOLEAN DEFAULT false,
+            due_date BIGINT NULL,
+            priority VARCHAR(20) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')),
+            progress_percentage INT DEFAULT 0,
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+            updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+            deleted_at BIGINT NULL
+        );
+        
+        CREATE TABLE task_tags (
+            task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+            tag_id INT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+            PRIMARY KEY (task_id, tag_id)
+        );
+        
+        CREATE TABLE subtasks (
+            id SERIAL PRIMARY KEY,
+            task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+            title VARCHAR(255) NOT NULL,
+            is_completed BOOLEAN DEFAULT false,
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT,
+            updated_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
+        );
+        
+        CREATE TABLE activity_logs (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            task_id INT NULL REFERENCES tasks(id) ON DELETE SET NULL,
+            action VARCHAR(20) NOT NULL,
+            entity_type VARCHAR(20) NOT NULL,
+            entity_id INT NULL,
+            details TEXT NULL,
+            ip_address VARCHAR(45) NULL,
+            user_agent TEXT NULL,
+            created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000)::BIGINT
+        );
+        EOF
+
+    - name: Create test config file
+      working-directory: ./backendGoVanilaTaskmanager
+      run: |
+        mkdir -p env
+        cat > env/config.yaml << 'EOF'
+        server:
+          port: "8080"
+        database:
+          host: "localhost"
+          port: 5432
+          user: "postgres"
+          password: "Berjuang#382"
+          dbname: "taskmanager_test"
+          sslmode: "disable"
+        jwt:
+          secret: "test-secret-key-for-e2e-testing-only"
+        cors:
+          allowed_origins:
+            - "http://localhost:5173"
+            - "http://localhost:3000"
+            - "http://localhost:8080"
+        EOF
 
     - name: Start backend server
       working-directory: ./backendGoVanilaTaskmanager
@@ -194,13 +308,31 @@ jobs:
         DB_USER: postgres
         DB_PASSWORD: Berjuang#382
         DB_NAME: taskmanager_test
-        SSL_MODE: disable
+        DB_SSLMODE: disable
         JWT_SECRET: test-secret-key-for-e2e-testing-only
-        PORT: 8080
+        APP_ENV: test
       run: |
-        ./taskmanager-server &
-        sleep 10
-        curl -f http://localhost:8080/health || exit 1
+        # Start server in background with logging
+        nohup ./taskmanager-server > server.log 2>&1 &
+        echo $! > server.pid
+        
+        # Wait for server to start with progressive backoff
+        echo "Waiting for server to start..."
+        for i in {1..30}; do
+          if curl -f http://localhost:8080/health > /dev/null 2>&1; then
+            echo "✅ Server is ready"
+            break
+          fi
+          echo "Attempt $i: Server not ready yet..."
+          sleep 2
+        done
+        
+        # Final health check
+        if ! curl -f http://localhost:8080/health; then
+          echo "❌ Server failed to start"
+          cat server.log
+          exit 1
+        fi
 
     - name: Install system dependencies for Playwright
       run: sudo apt-get update && sudo apt-get install -y libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64
@@ -223,3 +355,15 @@ jobs:
         name: playwright-report
         path: ./sveltekit-taskmanager-frontend/playwright-report/
         retention-days: 30
+
+    - name: Cleanup backend server
+      if: always()
+      working-directory: ./backendGoVanilaTaskmanager
+      run: |
+        if [ -f server.pid ]; then
+          pid=$(cat server.pid)
+          kill $pid 2>/dev/null || true
+          wait $pid 2>/dev/null || true
+          rm server.pid
+          echo "✅ Backend server stopped"
+        fi
