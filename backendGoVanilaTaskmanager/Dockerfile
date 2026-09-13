@@ -40,6 +40,9 @@ COPY --from=builder --chown=taskmanager:taskmanager /app/taskmanager-server .
 # Copy migrations
 COPY --from=builder --chown=taskmanager:taskmanager /app/migrations ./migrations
 
+# Copy default Docker config
+COPY --from=builder --chown=taskmanager:taskmanager /app/env/config.docker.yaml ./env/config.yaml
+
 # Switch to non-root user
 USER taskmanager
 

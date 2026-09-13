@@ -163,13 +163,6 @@ jobs:
       with:
         bun-version: latest
 
-    - name: Set up Go
-      uses: actions/setup-go@v7
-      with:
-        go-version: '1.25'
-        cache: true
-        cache-dependency-path: backendGoVanilaTaskmanager/go.sum
-
     - name: Install frontend dependencies
       working-directory: ./sveltekit-taskmanager-frontend
       run: bun install
@@ -178,33 +171,29 @@ jobs:
       working-directory: ./sveltekit-taskmanager-frontend
       run: bun run api:generate
 
-    - name: Install backend dependencies
-      working-directory: ./backendGoVanilaTaskmanager
-      run: go mod download
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
 
-    - name: Install PostgreSQL client
-      run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-    - name: Build backend
+    - name: Build backend Docker image
       working-directory: ./backendGoVanilaTaskmanager
-      run: go build -o taskmanager-server main.go
-
-    - name: Run database migrations
-      working-directory: ./backendGoVanilaTaskmanager
-      env:
-        PGPASSWORD: Berjuang#382
       run: |
-        # Drop existing tables to ensure clean state
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS activity_logs CASCADE"
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS subtasks CASCADE"
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS task_tags CASCADE"
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS tasks CASCADE"
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS tags CASCADE"
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS categories CASCADE"
-        psql -h localhost -U postgres -d taskmanager_test -c "DROP TABLE IF EXISTS users CASCADE"
+        docker build -t taskmanager-backend:e2e .
+
+    - name: Create database initialization script
+      working-directory: ./backendGoVanilaTaskmanager
+      run: |
+        mkdir -p docker-init
+        cat > docker-init/init-db.sql << 'EOF'
+        -- Drop existing tables to ensure clean state
+        DROP TABLE IF EXISTS activity_logs CASCADE;
+        DROP TABLE IF EXISTS subtasks CASCADE;
+        DROP TABLE IF EXISTS task_tags CASCADE;
+        DROP TABLE IF EXISTS tasks CASCADE;
+        DROP TABLE IF EXISTS tags CASCADE;
+        DROP TABLE IF EXISTS categories CASCADE;
+        DROP TABLE IF EXISTS users CASCADE;
         
-        # Create tables with final schema (epoch timestamps)
-        psql -h localhost -U postgres -d taskmanager_test << 'EOF'
+        -- Create tables with final schema (epoch timestamps)
         CREATE TABLE users (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -277,60 +266,47 @@ jobs:
         );
         EOF
 
-    - name: Create test config file
-      working-directory: ./backendGoVanilaTaskmanager
+    - name: Initialize PostgreSQL database
       run: |
-        mkdir -p env
-        cat > env/config.yaml << 'EOF'
-        server:
-          port: "8080"
-        database:
-          host: "localhost"
-          port: 5432
-          user: "postgres"
-          password: "Berjuang#382"
-          dbname: "taskmanager_test"
-          sslmode: "disable"
-        jwt:
-          secret: "test-secret-key-for-e2e-testing-only"
-        cors:
-          allowed_origins:
-            - "http://localhost:5173"
-            - "http://localhost:3000"
-            - "http://localhost:8080"
-        EOF
+        docker run --rm \
+          --network host \
+          -e PGPASSWORD=Berjuang#382 \
+          -v $(pwd)/backendGoVanilaTaskmanager/docker-init:/docker-init \
+          postgres:15 \
+          psql -h localhost -U postgres -d taskmanager_test -f /docker-init/init-db.sql
 
-    - name: Start backend server
-      working-directory: ./backendGoVanilaTaskmanager
-      env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_USER: postgres
-        DB_PASSWORD: Berjuang#382
-        DB_NAME: taskmanager_test
-        DB_SSLMODE: disable
-        JWT_SECRET: test-secret-key-for-e2e-testing-only
-        APP_ENV: test
+    - name: Start backend container
       run: |
-        # Start server in background with logging
-        nohup ./taskmanager-server > server.log 2>&1 &
-        echo $! > server.pid
-        
-        # Wait for server to start with progressive backoff
-        echo "Waiting for server to start..."
+        docker run -d \
+          --name taskmanager-backend-e2e \
+          --network host \
+          -e DB_HOST=localhost \
+          -e DB_PORT=5432 \
+          -e DB_USER=postgres \
+          -e DB_PASSWORD=Berjuang#382 \
+          -e DB_NAME=taskmanager_test \
+          -e DB_SSLMODE=disable \
+          -e JWT_SECRET=test-secret-key-for-e2e-testing-only \
+          -e APP_ENV=test \
+          -e SERVER_PORT=8080 \
+          taskmanager-backend:e2e
+
+    - name: Wait for backend to be ready
+      run: |
+        echo "Waiting for backend to start..."
         for i in {1..30}; do
           if curl -f http://localhost:8080/health > /dev/null 2>&1; then
-            echo "✅ Server is ready"
+            echo "✅ Backend is ready"
             break
           fi
-          echo "Attempt $i: Server not ready yet..."
+          echo "Attempt $i: Backend not ready yet..."
           sleep 2
         done
         
         # Final health check
         if ! curl -f http://localhost:8080/health; then
-          echo "❌ Server failed to start"
-          cat server.log
+          echo "❌ Backend failed to start"
+          docker logs taskmanager-backend-e2e
           exit 1
         fi
 
@@ -356,14 +332,9 @@ jobs:
         path: ./sveltekit-taskmanager-frontend/playwright-report/
         retention-days: 30
 
-    - name: Cleanup backend server
+    - name: Cleanup backend container
       if: always()
-      working-directory: ./backendGoVanilaTaskmanager
       run: |
-        if [ -f server.pid ]; then
-          pid=$(cat server.pid)
-          kill $pid 2>/dev/null || true
-          wait $pid 2>/dev/null || true
-          rm server.pid
-          echo "✅ Backend server stopped"
-        fi
+        docker stop taskmanager-backend-e2e 2>/dev/null || true
+        docker rm taskmanager-backend-e2e 2>/dev/null || true
+        echo "✅ Backend container stopped and removed"
