@@ -15,452 +15,439 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
+import axios from 'axios'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 /**
  * @nullable
  */
-export type SuccessResponseData = { [key: string]: unknown } | null;
+export type SuccessResponseData = { [key: string]: unknown } | null
 
 export interface SuccessResponse {
-  status?: string;
-  message?: string;
-  /** @nullable */
-  data?: SuccessResponseData;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	/** @nullable */
+	data?: SuccessResponseData
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 /**
  * @nullable
  */
-export type ErrorResponseData = { [key: string]: unknown } | null;
+export type ErrorResponseData = { [key: string]: unknown } | null
 
 export interface ErrorResponse {
-  status?: string;
-  message?: string;
-  /** @nullable */
-  data?: ErrorResponseData;
+	status?: string
+	message?: string
+	/** @nullable */
+	data?: ErrorResponseData
 }
 
 export interface User {
-  id?: number;
-  name?: string;
-  email?: string;
-  /** User timezone preference */
-  timezone?: string;
-  /** Epoch milliseconds */
-  created_at?: number;
-  /** Epoch milliseconds */
-  updated_at?: number;
+	id?: number
+	name?: string
+	email?: string
+	/** User timezone preference */
+	timezone?: string
+	/** Epoch milliseconds */
+	created_at?: number
+	/** Epoch milliseconds */
+	updated_at?: number
 }
 
 export type LoginResponseData = {
-  token?: string;
-  user?: User;
-};
+	token?: string
+	user?: User
+}
 
 export interface LoginResponse {
-  status?: string;
-  message?: string;
-  data?: LoginResponseData;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: LoginResponseData
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface UserResponse {
-  status?: string;
-  message?: string;
-  data?: User;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: User
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
-export type TaskPriority = typeof TaskPriority[keyof typeof TaskPriority];
-
+export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority]
 
 export const TaskPriority = {
-  LOW: 'LOW',
-  MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH',
-  URGENT: 'URGENT',
-} as const;
+	LOW: 'LOW',
+	MEDIUM: 'MEDIUM',
+	HIGH: 'HIGH',
+	URGENT: 'URGENT',
+} as const
 
 export interface Tag {
-  id?: number;
-  user_id?: number;
-  name?: string;
-  color_hex?: string;
-  /** Epoch milliseconds */
-  created_at?: number;
+	id?: number
+	user_id?: number
+	name?: string
+	color_hex?: string
+	/** Epoch milliseconds */
+	created_at?: number
 }
 
 export interface Subtask {
-  id?: number;
-  task_id?: number;
-  title?: string;
-  is_completed?: boolean;
-  /** Epoch milliseconds */
-  created_at?: number;
-  /** Epoch milliseconds */
-  updated_at?: number;
+	id?: number
+	task_id?: number
+	title?: string
+	is_completed?: boolean
+	/** Epoch milliseconds */
+	created_at?: number
+	/** Epoch milliseconds */
+	updated_at?: number
 }
 
 export interface Task {
-  id?: number;
-  user_id?: number;
-  /** @nullable */
-  category_id?: number | null;
-  title?: string;
-  /** @nullable */
-  sub_title?: string | null;
-  /** @nullable */
-  description?: string | null;
-  completed?: boolean;
-  /**
-     * Epoch milliseconds
-     * @nullable
-     */
-  due_date?: number | null;
-  priority?: TaskPriority;
-  /** Epoch milliseconds */
-  created_at?: number;
-  /** Epoch milliseconds */
-  updated_at?: number;
-  /**
-     * Epoch milliseconds
-     * @nullable
-     */
-  deleted_at?: number | null;
-  progress_percentage?: number;
-  tags?: Tag[];
-  subtasks?: Subtask[];
+	id?: number
+	user_id?: number
+	/** @nullable */
+	category_id?: number | null
+	title?: string
+	/** @nullable */
+	sub_title?: string | null
+	/** @nullable */
+	description?: string | null
+	completed?: boolean
+	/**
+	 * Epoch milliseconds
+	 * @nullable
+	 */
+	due_date?: number | null
+	priority?: TaskPriority
+	/** Epoch milliseconds */
+	created_at?: number
+	/** Epoch milliseconds */
+	updated_at?: number
+	/**
+	 * Epoch milliseconds
+	 * @nullable
+	 */
+	deleted_at?: number | null
+	progress_percentage?: number
+	tags?: Tag[]
+	subtasks?: Subtask[]
 }
 
-export type TaskCreatePriority = typeof TaskCreatePriority[keyof typeof TaskCreatePriority];
-
+export type TaskCreatePriority = (typeof TaskCreatePriority)[keyof typeof TaskCreatePriority]
 
 export const TaskCreatePriority = {
-  LOW: 'LOW',
-  MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH',
-  URGENT: 'URGENT',
-} as const;
+	LOW: 'LOW',
+	MEDIUM: 'MEDIUM',
+	HIGH: 'HIGH',
+	URGENT: 'URGENT',
+} as const
 
 export interface TaskCreate {
-  title: string;
-  /** @nullable */
-  sub_title?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /**
-     * Epoch milliseconds
-     * @nullable
-     */
-  due_date?: number | null;
-  priority?: TaskCreatePriority;
-  /** @nullable */
-  category_id?: number | null;
+	title: string
+	/** @nullable */
+	sub_title?: string | null
+	/** @nullable */
+	description?: string | null
+	/**
+	 * Epoch milliseconds
+	 * @nullable
+	 */
+	due_date?: number | null
+	priority?: TaskCreatePriority
+	/** @nullable */
+	category_id?: number | null
 }
 
-export type TaskUpdatePriority = typeof TaskUpdatePriority[keyof typeof TaskUpdatePriority];
-
+export type TaskUpdatePriority = (typeof TaskUpdatePriority)[keyof typeof TaskUpdatePriority]
 
 export const TaskUpdatePriority = {
-  LOW: 'LOW',
-  MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH',
-  URGENT: 'URGENT',
-} as const;
+	LOW: 'LOW',
+	MEDIUM: 'MEDIUM',
+	HIGH: 'HIGH',
+	URGENT: 'URGENT',
+} as const
 
 export interface TaskUpdate {
-  title?: string;
-  /** @nullable */
-  sub_title?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /**
-     * Epoch milliseconds
-     * @nullable
-     */
-  due_date?: number | null;
-  priority?: TaskUpdatePriority;
-  /** @nullable */
-  category_id?: number | null;
-  completed?: boolean;
+	title?: string
+	/** @nullable */
+	sub_title?: string | null
+	/** @nullable */
+	description?: string | null
+	/**
+	 * Epoch milliseconds
+	 * @nullable
+	 */
+	due_date?: number | null
+	priority?: TaskUpdatePriority
+	/** @nullable */
+	category_id?: number | null
+	completed?: boolean
 }
 
 export interface TaskResponse {
-  status?: string;
-  message?: string;
-  data?: Task;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Task
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export type TasksListResponseDataMeta = {
-  page?: number;
-  limit?: number;
-  total_data?: number;
-  total_page?: number;
-  has_next?: boolean;
-  has_prev?: boolean;
-};
-
-export type TasksListResponseData = {
-  data?: Task[];
-  meta?: TasksListResponseDataMeta;
-};
-
-export interface TasksListResponse {
-  status?: string;
-  message?: string;
-  data?: TasksListResponseData;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	page?: number
+	limit?: number
+	total_data?: number
+	total_page?: number
+	has_next?: boolean
+	has_prev?: boolean
 }
 
-export type AnalyticsResponseDataPriorityDistribution = {[key: string]: number};
+export type TasksListResponseData = {
+	data?: Task[]
+	meta?: TasksListResponseDataMeta
+}
+
+export interface TasksListResponse {
+	status?: string
+	message?: string
+	data?: TasksListResponseData
+	/** User timezone used for response formatting */
+	timezone?: string
+}
+
+export type AnalyticsResponseDataPriorityDistribution = { [key: string]: number }
 
 export type AnalyticsResponseData = {
-  total_active?: number;
-  total_completed?: number;
-  total_overdue?: number;
-  completion_percentage?: number;
-  priority_distribution?: AnalyticsResponseDataPriorityDistribution;
-};
+	total_active?: number
+	total_completed?: number
+	total_overdue?: number
+	completion_percentage?: number
+	priority_distribution?: AnalyticsResponseDataPriorityDistribution
+}
 
 export interface AnalyticsResponse {
-  status?: string;
-  message?: string;
-  data?: AnalyticsResponseData;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: AnalyticsResponseData
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface Category {
-  id?: number;
-  user_id?: number;
-  name?: string;
-  color_hex?: string;
-  /** Epoch milliseconds */
-  created_at?: number;
+	id?: number
+	user_id?: number
+	name?: string
+	color_hex?: string
+	/** Epoch milliseconds */
+	created_at?: number
 }
 
 export interface CategoryCreate {
-  name: string;
-  color_hex?: string;
+	name: string
+	color_hex?: string
 }
 
 export interface CategoryUpdate {
-  name?: string;
-  color_hex?: string;
+	name?: string
+	color_hex?: string
 }
 
 export interface CategoryResponse {
-  status?: string;
-  message?: string;
-  data?: Category;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Category
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface CategoriesResponse {
-  status?: string;
-  message?: string;
-  data?: Category[];
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Category[]
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface TagCreate {
-  name: string;
-  color_hex?: string;
+	name: string
+	color_hex?: string
 }
 
 export interface TagUpdate {
-  name?: string;
-  color_hex?: string;
+	name?: string
+	color_hex?: string
 }
 
 export interface TagResponse {
-  status?: string;
-  message?: string;
-  data?: Tag;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Tag
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface TagsResponse {
-  status?: string;
-  message?: string;
-  data?: Tag[];
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Tag[]
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface SubtaskCreate {
-  title: string;
+	title: string
 }
 
 export interface SubtaskUpdate {
-  title?: string;
-  is_completed?: boolean;
+	title?: string
+	is_completed?: boolean
 }
 
 export interface SubtaskResponse {
-  status?: string;
-  message?: string;
-  data?: Subtask;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Subtask
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface SubtasksResponse {
-  status?: string;
-  message?: string;
-  data?: Subtask[];
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: Subtask[]
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface ActivityLog {
-  id?: number;
-  user_id?: number;
-  /** @nullable */
-  task_id?: number | null;
-  action?: string;
-  entity_type?: string;
-  /** @nullable */
-  entity_id?: number | null;
-  details?: string;
-  ip_address?: string;
-  user_agent?: string;
-  /** Epoch milliseconds */
-  created_at?: number;
+	id?: number
+	user_id?: number
+	/** @nullable */
+	task_id?: number | null
+	action?: string
+	entity_type?: string
+	/** @nullable */
+	entity_id?: number | null
+	details?: string
+	ip_address?: string
+	user_agent?: string
+	/** Epoch milliseconds */
+	created_at?: number
 }
 
 export interface ActivityLogResponse {
-  status?: string;
-  message?: string;
-  data?: ActivityLog;
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: ActivityLog
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export interface ActivityLogsResponse {
-  status?: string;
-  message?: string;
-  data?: ActivityLog[];
-  /** User timezone used for response formatting */
-  timezone?: string;
+	status?: string
+	message?: string
+	data?: ActivityLog[]
+	/** User timezone used for response formatting */
+	timezone?: string
 }
 
 export type PostAuthRegisterBody = {
-  name: string;
-  email: string;
-  password: string;
-  /** User timezone (defaults to UTC if not provided) */
-  timezone?: string;
-};
+	name: string
+	email: string
+	password: string
+	/** User timezone (defaults to UTC if not provided) */
+	timezone?: string
+}
 
 export type PostAuthLoginBody = {
-  email: string;
-  password: string;
-};
+	email: string
+	password: string
+}
 
 export type PutAuthTimezoneBody = {
-  /** Valid IANA timezone identifier */
-  timezone: string;
-};
+	/** Valid IANA timezone identifier */
+	timezone: string
+}
 
 export type GetTasksParams = {
-page?: number;
-limit?: number;
-completed?: boolean;
-search?: string;
-priority?: GetTasksPriority;
-category_id?: number;
-sort_by?: GetTasksSortBy;
-sort_order?: GetTasksSortOrder;
-};
+	page?: number
+	limit?: number
+	completed?: boolean
+	search?: string
+	priority?: GetTasksPriority
+	category_id?: number
+	sort_by?: GetTasksSortBy
+	sort_order?: GetTasksSortOrder
+}
 
-export type GetTasksPriority = typeof GetTasksPriority[keyof typeof GetTasksPriority];
-
+export type GetTasksPriority = (typeof GetTasksPriority)[keyof typeof GetTasksPriority]
 
 export const GetTasksPriority = {
-  LOW: 'LOW',
-  MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH',
-  URGENT: 'URGENT',
-} as const;
+	LOW: 'LOW',
+	MEDIUM: 'MEDIUM',
+	HIGH: 'HIGH',
+	URGENT: 'URGENT',
+} as const
 
-export type GetTasksSortBy = typeof GetTasksSortBy[keyof typeof GetTasksSortBy];
-
+export type GetTasksSortBy = (typeof GetTasksSortBy)[keyof typeof GetTasksSortBy]
 
 export const GetTasksSortBy = {
-  created_at: 'created_at',
-  updated_at: 'updated_at',
-  due_date: 'due_date',
-  priority: 'priority',
-  title: 'title',
-} as const;
+	created_at: 'created_at',
+	updated_at: 'updated_at',
+	due_date: 'due_date',
+	priority: 'priority',
+	title: 'title',
+} as const
 
-export type GetTasksSortOrder = typeof GetTasksSortOrder[keyof typeof GetTasksSortOrder];
-
+export type GetTasksSortOrder = (typeof GetTasksSortOrder)[keyof typeof GetTasksSortOrder]
 
 export const GetTasksSortOrder = {
-  ASC: 'ASC',
-  DESC: 'DESC',
-} as const;
+	ASC: 'ASC',
+	DESC: 'DESC',
+} as const
 
 export type PostTasksBulkDeleteBody = {
-  /** @maxItems 100 */
-  task_ids: number[];
-};
+	/** @maxItems 100 */
+	task_ids: number[]
+}
 
 export type PostTasksBulkCompleteBody = {
-  /** @maxItems 100 */
-  task_ids: number[];
-};
+	/** @maxItems 100 */
+	task_ids: number[]
+}
 
 export type PostTasksIdTagsBody = {
-  tag_id: number;
-};
+	tag_id: number
+}
 
 export type GetActivityLogsParams = {
-page?: number;
-limit?: number;
-};
+	page?: number
+	limit?: number
+}
 
 /**
  * Returns API status
  * @summary Health check endpoint
  */
-export const getHealth = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<string>> => {
-    return axios.get(
-      `/health`,{
-        responseType: 'text',
-    ...options,}
-    );
-  }
+export const getHealth = (options?: AxiosRequestConfig): Promise<AxiosResponse<string>> => {
+	return axios.get(`/health`, {
+		responseType: 'text',
+		...options,
+	})
+}
 export const getGetHealthUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/health`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/health`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -468,24 +455,21 @@ export const getGetHealthUrl = () => {
  * @summary Register a new user
  */
 export const postAuthRegister = (
-    postAuthRegisterBody: PostAuthRegisterBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.post(
-      `/auth/register`,
-      postAuthRegisterBody,options
-    );
-  }
+	postAuthRegisterBody: PostAuthRegisterBody,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.post(`/auth/register`, postAuthRegisterBody, options)
+}
 export const getPostAuthRegisterUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/auth/register`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/auth/register`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -493,24 +477,21 @@ export const getPostAuthRegisterUrl = () => {
  * @summary Login user
  */
 export const postAuthLogin = (
-    postAuthLoginBody: PostAuthLoginBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<LoginResponse>> => {
-    return axios.post(
-      `/auth/login`,
-      postAuthLoginBody,options
-    );
-  }
+	postAuthLoginBody: PostAuthLoginBody,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<LoginResponse>> => {
+	return axios.post(`/auth/login`, postAuthLoginBody, options)
+}
 export const getPostAuthLoginUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/auth/login`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/auth/login`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -518,48 +499,39 @@ export const getPostAuthLoginUrl = () => {
  * @summary Logout user
  */
 export const postAuthLogout = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.post(
-      `/auth/logout`,
-      undefined,options
-    );
-  }
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.post(`/auth/logout`, undefined, options)
+}
 export const getPostAuthLogoutUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/auth/logout`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/auth/logout`,
+			baseURL: '',
+		})
 }
 
 /**
  * Get information about the authenticated user
  * @summary Get current user
  */
-export const getAuthMe = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<UserResponse>> => {
-    return axios.get(
-      `/auth/me`,options
-    );
-  }
+export const getAuthMe = (options?: AxiosRequestConfig): Promise<AxiosResponse<UserResponse>> => {
+	return axios.get(`/auth/me`, options)
+}
 export const getGetAuthMeUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/auth/me`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/auth/me`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -567,24 +539,21 @@ export const getGetAuthMeUrl = () => {
  * @summary Update user timezone
  */
 export const putAuthTimezone = (
-    putAuthTimezoneBody: PutAuthTimezoneBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<UserResponse>> => {
-    return axios.put(
-      `/auth/timezone`,
-      putAuthTimezoneBody,options
-    );
-  }
+	putAuthTimezoneBody: PutAuthTimezoneBody,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<UserResponse>> => {
+	return axios.put(`/auth/timezone`, putAuthTimezoneBody, options)
+}
 export const getPutAuthTimezoneUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/auth/timezone`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/auth/timezone`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -592,25 +561,25 @@ export const getPutAuthTimezoneUrl = () => {
  * @summary Get all tasks
  */
 export const getTasks = (
-    params?: GetTasksParams, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TasksListResponse>> => {
-    return axios.get(
-      `/tasks`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-export const getGetTasksUrl = (params?: GetTasksParams,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks`,
-    baseURL: '',
-    params,
-
-  });
+	params?: GetTasksParams,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TasksListResponse>> => {
+	return axios.get(`/tasks`, {
+		...options,
+		params: { ...params, ...options?.params },
+	})
+}
+export const getGetTasksUrl = (params?: GetTasksParams) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks`,
+			baseURL: '',
+			params,
+		})
 }
 
 /**
@@ -618,24 +587,21 @@ export const getGetTasksUrl = (params?: GetTasksParams,) => {
  * @summary Create a new task
  */
 export const postTasks = (
-    taskCreate: TaskCreate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TaskResponse>> => {
-    return axios.post(
-      `/tasks`,
-      taskCreate,options
-    );
-  }
+	taskCreate: TaskCreate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TaskResponse>> => {
+	return axios.post(`/tasks`, taskCreate, options)
+}
 export const getPostTasksUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -643,23 +609,21 @@ export const getPostTasksUrl = () => {
  * @summary Get task by ID
  */
 export const getTasksId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TaskResponse>> => {
-    return axios.get(
-      `/tasks/${id}`,options
-    );
-  }
-export const getGetTasksIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TaskResponse>> => {
+	return axios.get(`/tasks/${id}`, options)
+}
+export const getGetTasksIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -667,25 +631,22 @@ export const getGetTasksIdUrl = (id: number,) => {
  * @summary Update task
  */
 export const putTasksId = (
-    id: number,
-    taskUpdate: TaskUpdate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TaskResponse>> => {
-    return axios.put(
-      `/tasks/${id}`,
-      taskUpdate,options
-    );
-  }
-export const getPutTasksIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	taskUpdate: TaskUpdate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TaskResponse>> => {
+	return axios.put(`/tasks/${id}`, taskUpdate, options)
+}
+export const getPutTasksIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -693,23 +654,21 @@ export const getPutTasksIdUrl = (id: number,) => {
  * @summary Delete task
  */
 export const deleteTasksId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.delete(
-      `/tasks/${id}`,options
-    );
-  }
-export const getDeleteTasksIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.delete(`/tasks/${id}`, options)
+}
+export const getDeleteTasksIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -717,24 +676,21 @@ export const getDeleteTasksIdUrl = (id: number,) => {
  * @summary Mark task as completed
  */
 export const patchTasksIdComplete = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.patch(
-      `/tasks/${id}/complete`,
-      undefined,options
-    );
-  }
-export const getPatchTasksIdCompleteUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/complete`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.patch(`/tasks/${id}/complete`, undefined, options)
+}
+export const getPatchTasksIdCompleteUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/complete`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -742,24 +698,21 @@ export const getPatchTasksIdCompleteUrl = (id: number,) => {
  * @summary Mark task as uncompleted
  */
 export const patchTasksIdUncomplete = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.patch(
-      `/tasks/${id}/uncomplete`,
-      undefined,options
-    );
-  }
-export const getPatchTasksIdUncompleteUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/uncomplete`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.patch(`/tasks/${id}/uncomplete`, undefined, options)
+}
+export const getPatchTasksIdUncompleteUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/uncomplete`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -767,24 +720,21 @@ export const getPatchTasksIdUncompleteUrl = (id: number,) => {
  * @summary Restore deleted task
  */
 export const patchTasksIdRestore = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.patch(
-      `/tasks/${id}/restore`,
-      undefined,options
-    );
-  }
-export const getPatchTasksIdRestoreUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/restore`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.patch(`/tasks/${id}/restore`, undefined, options)
+}
+export const getPatchTasksIdRestoreUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/restore`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -792,23 +742,20 @@ export const getPatchTasksIdRestoreUrl = (id: number,) => {
  * @summary Get task analytics summary
  */
 export const getTasksAnalyticsSummary = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<AnalyticsResponse>> => {
-    return axios.get(
-      `/tasks/analytics/summary`,options
-    );
-  }
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<AnalyticsResponse>> => {
+	return axios.get(`/tasks/analytics/summary`, options)
+}
 export const getGetTasksAnalyticsSummaryUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/analytics/summary`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/analytics/summary`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -816,24 +763,21 @@ export const getGetTasksAnalyticsSummaryUrl = () => {
  * @summary Bulk delete tasks
  */
 export const postTasksBulkDelete = (
-    postTasksBulkDeleteBody: PostTasksBulkDeleteBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.post(
-      `/tasks/bulk-delete`,
-      postTasksBulkDeleteBody,options
-    );
-  }
+	postTasksBulkDeleteBody: PostTasksBulkDeleteBody,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.post(`/tasks/bulk-delete`, postTasksBulkDeleteBody, options)
+}
 export const getPostTasksBulkDeleteUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/bulk-delete`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/bulk-delete`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -841,24 +785,21 @@ export const getPostTasksBulkDeleteUrl = () => {
  * @summary Bulk complete tasks
  */
 export const postTasksBulkComplete = (
-    postTasksBulkCompleteBody: PostTasksBulkCompleteBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.post(
-      `/tasks/bulk-complete`,
-      postTasksBulkCompleteBody,options
-    );
-  }
+	postTasksBulkCompleteBody: PostTasksBulkCompleteBody,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.post(`/tasks/bulk-complete`, postTasksBulkCompleteBody, options)
+}
 export const getPostTasksBulkCompleteUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/bulk-complete`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/bulk-complete`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -866,25 +807,22 @@ export const getPostTasksBulkCompleteUrl = () => {
  * @summary Add tag to task
  */
 export const postTasksIdTags = (
-    id: number,
-    postTasksIdTagsBody: PostTasksIdTagsBody, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.post(
-      `/tasks/${id}/tags`,
-      postTasksIdTagsBody,options
-    );
-  }
-export const getPostTasksIdTagsUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/tags`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	postTasksIdTagsBody: PostTasksIdTagsBody,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.post(`/tasks/${id}/tags`, postTasksIdTagsBody, options)
+}
+export const getPostTasksIdTagsUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/tags`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -892,23 +830,21 @@ export const getPostTasksIdTagsUrl = (id: number,) => {
  * @summary Get task tags
  */
 export const getTasksIdTags = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TagsResponse>> => {
-    return axios.get(
-      `/tasks/${id}/tags`,options
-    );
-  }
-export const getGetTasksIdTagsUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/tags`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TagsResponse>> => {
+	return axios.get(`/tasks/${id}/tags`, options)
+}
+export const getGetTasksIdTagsUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/tags`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -916,25 +852,22 @@ export const getGetTasksIdTagsUrl = (id: number,) => {
  * @summary Remove tag from task
  */
 export const deleteTasksIdTagsTagId = (
-    id: number,
-    tagId: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.delete(
-      `/tasks/${id}/tags/${tagId}`,options
-    );
-  }
-export const getDeleteTasksIdTagsTagIdUrl = (id: number,
-    tagId: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/tags/${tagId}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	tagId: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.delete(`/tasks/${id}/tags/${tagId}`, options)
+}
+export const getDeleteTasksIdTagsTagIdUrl = (id: number, tagId: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/tags/${tagId}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -942,23 +875,20 @@ export const getDeleteTasksIdTagsTagIdUrl = (id: number,
  * @summary Get all categories
  */
 export const getCategories = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CategoriesResponse>> => {
-    return axios.get(
-      `/categories`,options
-    );
-  }
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<CategoriesResponse>> => {
+	return axios.get(`/categories`, options)
+}
 export const getGetCategoriesUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/categories`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/categories`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -966,24 +896,21 @@ export const getGetCategoriesUrl = () => {
  * @summary Create category
  */
 export const postCategories = (
-    categoryCreate: CategoryCreate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CategoryResponse>> => {
-    return axios.post(
-      `/categories`,
-      categoryCreate,options
-    );
-  }
+	categoryCreate: CategoryCreate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<CategoryResponse>> => {
+	return axios.post(`/categories`, categoryCreate, options)
+}
 export const getPostCategoriesUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/categories`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/categories`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -991,23 +918,21 @@ export const getPostCategoriesUrl = () => {
  * @summary Get category by ID
  */
 export const getCategoriesId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CategoryResponse>> => {
-    return axios.get(
-      `/categories/${id}`,options
-    );
-  }
-export const getGetCategoriesIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/categories/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<CategoryResponse>> => {
+	return axios.get(`/categories/${id}`, options)
+}
+export const getGetCategoriesIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/categories/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1015,25 +940,22 @@ export const getGetCategoriesIdUrl = (id: number,) => {
  * @summary Update category
  */
 export const putCategoriesId = (
-    id: number,
-    categoryUpdate: CategoryUpdate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CategoryResponse>> => {
-    return axios.put(
-      `/categories/${id}`,
-      categoryUpdate,options
-    );
-  }
-export const getPutCategoriesIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/categories/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	categoryUpdate: CategoryUpdate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<CategoryResponse>> => {
+	return axios.put(`/categories/${id}`, categoryUpdate, options)
+}
+export const getPutCategoriesIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/categories/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1041,47 +963,40 @@ export const getPutCategoriesIdUrl = (id: number,) => {
  * @summary Delete category
  */
 export const deleteCategoriesId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.delete(
-      `/categories/${id}`,options
-    );
-  }
-export const getDeleteCategoriesIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/categories/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.delete(`/categories/${id}`, options)
+}
+export const getDeleteCategoriesIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/categories/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
  * Retrieve all tags for authenticated user
  * @summary Get all tags
  */
-export const getTags = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TagsResponse>> => {
-    return axios.get(
-      `/tags`,options
-    );
-  }
+export const getTags = (options?: AxiosRequestConfig): Promise<AxiosResponse<TagsResponse>> => {
+	return axios.get(`/tags`, options)
+}
 export const getGetTagsUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tags`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tags`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1089,24 +1004,21 @@ export const getGetTagsUrl = () => {
  * @summary Create tag
  */
 export const postTags = (
-    tagCreate: TagCreate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TagResponse>> => {
-    return axios.post(
-      `/tags`,
-      tagCreate,options
-    );
-  }
+	tagCreate: TagCreate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TagResponse>> => {
+	return axios.post(`/tags`, tagCreate, options)
+}
 export const getPostTagsUrl = () => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tags`,
-    baseURL: '',
-
-
-  });
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tags`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1114,23 +1026,21 @@ export const getPostTagsUrl = () => {
  * @summary Get tag by ID
  */
 export const getTagsId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TagResponse>> => {
-    return axios.get(
-      `/tags/${id}`,options
-    );
-  }
-export const getGetTagsIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tags/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TagResponse>> => {
+	return axios.get(`/tags/${id}`, options)
+}
+export const getGetTagsIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tags/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1138,25 +1048,22 @@ export const getGetTagsIdUrl = (id: number,) => {
  * @summary Update tag
  */
 export const putTagsId = (
-    id: number,
-    tagUpdate: TagUpdate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TagResponse>> => {
-    return axios.put(
-      `/tags/${id}`,
-      tagUpdate,options
-    );
-  }
-export const getPutTagsIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tags/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	tagUpdate: TagUpdate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TagResponse>> => {
+	return axios.put(`/tags/${id}`, tagUpdate, options)
+}
+export const getPutTagsIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tags/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1164,23 +1071,21 @@ export const getPutTagsIdUrl = (id: number,) => {
  * @summary Delete tag
  */
 export const deleteTagsId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.delete(
-      `/tags/${id}`,options
-    );
-  }
-export const getDeleteTagsIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tags/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.delete(`/tags/${id}`, options)
+}
+export const getDeleteTagsIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tags/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1188,23 +1093,21 @@ export const getDeleteTagsIdUrl = (id: number,) => {
  * @summary Get tasks by tag
  */
 export const getTagsIdTasks = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<TasksListResponse>> => {
-    return axios.get(
-      `/tags/${id}/tasks`,options
-    );
-  }
-export const getGetTagsIdTasksUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tags/${id}/tasks`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<TasksListResponse>> => {
+	return axios.get(`/tags/${id}/tasks`, options)
+}
+export const getGetTagsIdTasksUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tags/${id}/tasks`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1212,25 +1115,22 @@ export const getGetTagsIdTasksUrl = (id: number,) => {
  * @summary Create subtask
  */
 export const postTasksIdSubtasks = (
-    id: number,
-    subtaskCreate: SubtaskCreate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SubtaskResponse>> => {
-    return axios.post(
-      `/tasks/${id}/subtasks`,
-      subtaskCreate,options
-    );
-  }
-export const getPostTasksIdSubtasksUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/subtasks`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	subtaskCreate: SubtaskCreate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SubtaskResponse>> => {
+	return axios.post(`/tasks/${id}/subtasks`, subtaskCreate, options)
+}
+export const getPostTasksIdSubtasksUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/subtasks`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1238,23 +1138,21 @@ export const getPostTasksIdSubtasksUrl = (id: number,) => {
  * @summary Get task subtasks
  */
 export const getTasksIdSubtasks = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SubtasksResponse>> => {
-    return axios.get(
-      `/tasks/${id}/subtasks`,options
-    );
-  }
-export const getGetTasksIdSubtasksUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/subtasks`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SubtasksResponse>> => {
+	return axios.get(`/tasks/${id}/subtasks`, options)
+}
+export const getGetTasksIdSubtasksUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/subtasks`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1262,23 +1160,21 @@ export const getGetTasksIdSubtasksUrl = (id: number,) => {
  * @summary Get subtask by ID
  */
 export const getSubtasksId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SubtaskResponse>> => {
-    return axios.get(
-      `/subtasks/${id}`,options
-    );
-  }
-export const getGetSubtasksIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/subtasks/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SubtaskResponse>> => {
+	return axios.get(`/subtasks/${id}`, options)
+}
+export const getGetSubtasksIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/subtasks/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1286,25 +1182,22 @@ export const getGetSubtasksIdUrl = (id: number,) => {
  * @summary Update subtask
  */
 export const putSubtasksId = (
-    id: number,
-    subtaskUpdate: SubtaskUpdate, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SubtaskResponse>> => {
-    return axios.put(
-      `/subtasks/${id}`,
-      subtaskUpdate,options
-    );
-  }
-export const getPutSubtasksIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/subtasks/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	subtaskUpdate: SubtaskUpdate,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SubtaskResponse>> => {
+	return axios.put(`/subtasks/${id}`, subtaskUpdate, options)
+}
+export const getPutSubtasksIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/subtasks/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1312,23 +1205,21 @@ export const getPutSubtasksIdUrl = (id: number,) => {
  * @summary Delete subtask
  */
 export const deleteSubtasksId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SuccessResponse>> => {
-    return axios.delete(
-      `/subtasks/${id}`,options
-    );
-  }
-export const getDeleteSubtasksIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/subtasks/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SuccessResponse>> => {
+	return axios.delete(`/subtasks/${id}`, options)
+}
+export const getDeleteSubtasksIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/subtasks/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1336,24 +1227,21 @@ export const getDeleteSubtasksIdUrl = (id: number,) => {
  * @summary Toggle subtask completion
  */
 export const patchSubtasksIdToggle = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SubtaskResponse>> => {
-    return axios.patch(
-      `/subtasks/${id}/toggle`,
-      undefined,options
-    );
-  }
-export const getPatchSubtasksIdToggleUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/subtasks/${id}/toggle`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<SubtaskResponse>> => {
+	return axios.patch(`/subtasks/${id}/toggle`, undefined, options)
+}
+export const getPatchSubtasksIdToggleUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/subtasks/${id}/toggle`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1361,25 +1249,25 @@ export const getPatchSubtasksIdToggleUrl = (id: number,) => {
  * @summary Get user activity logs
  */
 export const getActivityLogs = (
-    params?: GetActivityLogsParams, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<ActivityLogsResponse>> => {
-    return axios.get(
-      `/activity-logs`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-export const getGetActivityLogsUrl = (params?: GetActivityLogsParams,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/activity-logs`,
-    baseURL: '',
-    params,
-
-  });
+	params?: GetActivityLogsParams,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<ActivityLogsResponse>> => {
+	return axios.get(`/activity-logs`, {
+		...options,
+		params: { ...params, ...options?.params },
+	})
+}
+export const getGetActivityLogsUrl = (params?: GetActivityLogsParams) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/activity-logs`,
+			baseURL: '',
+			params,
+		})
 }
 
 /**
@@ -1387,23 +1275,21 @@ export const getGetActivityLogsUrl = (params?: GetActivityLogsParams,) => {
  * @summary Get activity log by ID
  */
 export const getActivityLogsId = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<ActivityLogResponse>> => {
-    return axios.get(
-      `/activity-logs/${id}`,options
-    );
-  }
-export const getGetActivityLogsIdUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/activity-logs/${id}`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<ActivityLogResponse>> => {
+	return axios.get(`/activity-logs/${id}`, options)
+}
+export const getGetActivityLogsIdUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/activity-logs/${id}`,
+			baseURL: '',
+		})
 }
 
 /**
@@ -1411,23 +1297,21 @@ export const getGetActivityLogsIdUrl = (id: number,) => {
  * @summary Get task activity logs
  */
 export const getTasksIdActivityLogs = (
-    id: number, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<ActivityLogsResponse>> => {
-    return axios.get(
-      `/tasks/${id}/activity-logs`,options
-    );
-  }
-export const getGetTasksIdActivityLogsUrl = (id: number,) => {
-
-  return axios.create({
-    baseURL: '',
-    params: null,
-  }).getUri({
-    url: `/tasks/${id}/activity-logs`,
-    baseURL: '',
-
-
-  });
+	id: number,
+	options?: AxiosRequestConfig
+): Promise<AxiosResponse<ActivityLogsResponse>> => {
+	return axios.get(`/tasks/${id}/activity-logs`, options)
+}
+export const getGetTasksIdActivityLogsUrl = (id: number) => {
+	return axios
+		.create({
+			baseURL: '',
+			params: null,
+		})
+		.getUri({
+			url: `/tasks/${id}/activity-logs`,
+			baseURL: '',
+		})
 }
 
 export type GetHealthResult = AxiosResponse<string>

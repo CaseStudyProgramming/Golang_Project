@@ -107,7 +107,7 @@ cd sveltekit-taskmanager-frontend
 bun run api:generate
 
 # Run all unit tests
-bun run test
+bun run validate
 
 # Run in watch mode
 bun run test:ui
@@ -116,7 +116,7 @@ bun run test:ui
 bun run test:coverage
 
 # Run specific test file
-bun test src/lib/features/tasks/stores/task.store.logic.test.ts
+bun run validate src/lib/features/tasks/stores/task.store.logic.test.ts
 ```
 
 **Unit Test Configuration:**
@@ -183,7 +183,7 @@ go test ./tests/... -v
 
 # 3. Frontend unit tests
 cd ../sveltekit-taskmanager-frontend
-bun run test
+bun run validate
 
 # 4. E2E tests (requires test environment)
 cd ..
@@ -198,7 +198,7 @@ For fast development feedback:
 ```bash
 # Run only unit tests (fastest)
 cd backendGoVanilaTaskmanager && go test ./... -v
-cd ../sveltekit-taskmanager-frontend && bun run test
+cd ../sveltekit-taskmanager-frontend && bun run validate
 ```
 
 ### Pre-Commit Validation
@@ -298,7 +298,7 @@ TEST_DB_HOST=localhost TEST_DB_PORT=5432 go test ./tests/... -v
 # Test frontend CI locally
 cd sveltekit-taskmanager-frontend
 bun run api:generate
-bun test
+bun run validate
 
 # Test e2e locally with CI-like setup
 cd ..
@@ -322,7 +322,7 @@ cd sveltekit-taskmanager-frontend
 bun run format:check
 bun run lint
 bun run check
-bun run test
+bun run validate
 bun run build
 ```
 
@@ -451,6 +451,58 @@ The backend should validate against the OpenAPI spec. This can be added:
 - **Frontend Unit Tests**: >80% coverage
 - **E2E Tests**: Critical user journeys (login, create task, update, delete)
 
+## Test Coverage Strategy
+
+When improving test coverage, follow this pragmatic approach based on industry best practices:
+
+### Step-by-Step Coverage Improvement
+
+1. **Run coverage report to see actual data**
+   ```bash
+   cd sveltekit-taskmanager-frontend
+   bun run test:coverage
+   ```
+
+2. **Analyze which files have low coverage**
+   - Review the coverage report output
+   - Identify files with <80% coverage
+   - Prioritize critical business logic files
+
+3. **Determine approach based on file type**
+   - **Type definitions/error pages/boilerplate** → Exclude from coverage requirements
+   - **Business logic** → Add comprehensive tests
+   - **Mixed cases** → Consider appropriate thresholds
+
+### File Type Classification
+
+**Exclude from Coverage Requirements:**
+- Type definition files (`.d.ts`, interfaces, types)
+- Error pages and error handling UI
+- Boilerplate and configuration files
+- Auto-generated files (Orval-generated API handlers)
+- Utility functions with minimal business logic
+
+**Focus Testing Efforts On:**
+- Business logic functions
+- Data validation schemas
+- State management logic
+- API integration layers
+- Core utility functions with complex logic
+
+**Threshold Considerations:**
+- Simple utilities: 60-70% acceptable
+- Complex business logic: 80-90% required
+- Critical paths: 90-100% required
+- Mixed complexity: Adjust based on risk assessment
+
+### Pragmatic Coverage Goals
+
+Instead of blindly pursuing 100% coverage, focus on:
+- Testing critical business paths thoroughly
+- Ensuring high coverage for complex, error-prone code
+- Maintaining reasonable coverage for simple utilities
+- Excluding files that don't benefit from testing
+
 ## Summary
 
 This pyramid testing strategy ensures:
@@ -478,7 +530,7 @@ This pyramid testing strategy ensures:
    ```bash
    cd sveltekit-taskmanager-frontend
    bun run api:generate  # If API changed
-   bun run test
+   bun run validate
    bun run build
    ```
 
