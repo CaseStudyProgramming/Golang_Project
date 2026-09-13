@@ -471,14 +471,41 @@ Orval generates the following files from your OpenAPI spec:
 ```
 
 **Important Note on svelte-check:**
-Even with `tsconfig.json` exclusions, `svelte-check` may still check generated files. To handle this:
-- Added `// @ts-nocheck` directive to top of all Orval-generated files
-- Files: `src/lib/api/index.ts`, `src/lib/api/index.msw.ts`, `src/lib/api/index.faker.ts`
-- This directive tells TypeScript compiler to skip type checking for these files
-- Regenerated with `bun run api:generate` then manually added the directive
+Even with `tsconfig.json` exclusions, `svelte-check` may still check generated files. To handle this automatically:
 
-**Future Improvement:**
-Consider configuring Orval to automatically add `// @ts-nocheck` directive during generation. This can be done in `orval.config.ts` by adding a custom transformer or using Orval's hooks to prepend the directive to generated files.
+**✅ Automated Solution Implemented:**
+
+**1. Custom Script** (`scripts/add-ts-nocheck.mjs`):
+- Automatically adds `// @ts-nocheck` directive to Orval-generated TypeScript files
+- Processes known Orval output files: `index.ts`, `index.msw.ts`, `index.faker.ts`
+- Checks if directive already exists to avoid duplicates
+- Provides clear logging of processed files
+
+**2. Updated Package.json Script**:
+```json
+"api:generate": "orval --mock -i ../backendGoVanilaTaskmanager/swagger/openapi.yaml -o src/lib/api/index.ts && node scripts/add-ts-nocheck.mjs"
+```
+
+**3. Usage**:
+```bash
+# Generate API files with automatic @ts-nocheck directive
+cd sveltekit-taskmanager-frontend
+bun run api:generate
+```
+
+**Benefits of This Implementation**:
+- ✅ Automatic: No manual intervention needed after generation
+- ✅ Reliable: Works consistently across all environments
+- ✅ Maintainsable: Single script handles all Orval output files
+- ✅ Idempotent: Safe to run multiple times without side effects
+- ✅ Clear: Provides feedback on which files were modified
+
+**How It Works**:
+1. Orval generates files from OpenAPI spec
+2. Custom script runs immediately after generation
+3. Script adds `// @ts-nocheck` directive to all generated TypeScript files
+4. TypeScript compiler skips type checking for these files
+5. Development workflow remains clean and automated
 
 **Biome Configuration** (`biome.json`):
 ```json
@@ -543,6 +570,8 @@ bun run test:coverage  # ✅ src/lib/api/ files should not appear in coverage re
 - ✅ `bun run validate`: All checks pass (format → lint → type check → tests → build)
 - ✅ Coverage report: `index.ts`, `index.msw.ts`, `index.faker.ts` excluded from coverage
 - ✅ Only `handlers.ts` appears in coverage (intentional wrapper file)
+- ✅ Automated `@ts-nocheck` directive addition via custom script
+- ✅ Complete automation - no manual intervention needed
 
 **Why This Exclusion is Critical:**
 
