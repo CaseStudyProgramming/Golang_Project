@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Test database for CI environment
+  postgres-ci:
+    image: postgres:15
+    container_name: taskmanager-postgres-ci
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Berjuang#382
+      POSTGRES_DB: taskmanager_test
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_ci_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend server for CI
+  backend-ci:
+    build:
+      context: ./backendGoVanilaTaskmanager
+      dockerfile: Dockerfile
+    container_name: taskmanager-backend-ci
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres-ci
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: Berjuang#382
+      DB_NAME: taskmanager_test
+      SSL_MODE: disable
+      JWT_SECRET: test-secret-key-for-e2e-testing-only
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-ci:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Frontend for CI (optional - mainly for manual testing)
+  frontend-ci:
+    build:
+      context: ./sveltekit-taskmanager-frontend
+      dockerfile: Dockerfile
+    container_name: taskmanager-frontend-ci
+    restart: unless-stopped
+    environment:
+      PUBLIC_API_BASE_URL: http://backend-ci:8080
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend-ci:
+        condition: service_healthy
+
+volumes:
+  postgres_ci_data:

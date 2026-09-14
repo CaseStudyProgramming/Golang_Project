@@ -1,7 +1,7 @@
 <script lang="ts">
 import { fly } from 'svelte/transition'
 import { toastStore } from '../stores'
-import type { Toast as ToastType } from '../stores/toast.store'
+import type { Toast as ToastType } from '../stores/toast.store.svelte.ts'
 
 let {
 	onDismiss,

@@ -2,7 +2,7 @@
 import { toastStore } from '$lib/shared/stores'
 
 import type { CreateCategoryPayload, UpdateCategoryPayload } from '../schemas/category.schemas'
-import { categoryStore } from '../stores/category.store'
+import { categoryStore } from '../stores/category.store.svelte.ts'
 import type { Category } from '../types/category.types'
 
 let {

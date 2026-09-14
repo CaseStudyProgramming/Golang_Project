@@ -1,11 +1,12 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 import type { Tag } from '$lib/features/tags'
 import { tagStore } from '$lib/features/tags'
 
-let tags = $derived(tagStore.state.tags)
-let isLoading = $derived(tagStore.state.isLoading)
-let error = $derived(tagStore.state.error)
+let tags = $derived(browser ? tagStore.state.tags : [])
+let isLoading = $derived(browser ? tagStore.state.isLoading : false)
+let error = $derived(browser ? tagStore.state.error : null)
 
 let showForm = $state(false)
 let editingTag = $state<null | Tag>(null)
@@ -28,7 +29,9 @@ const predefinedColors = [
  * Load tags on mount
  */
 onMount(() => {
-	tagStore.fetchTags()
+	if (browser) {
+		tagStore.fetchTags()
+	}
 })
 
 /**

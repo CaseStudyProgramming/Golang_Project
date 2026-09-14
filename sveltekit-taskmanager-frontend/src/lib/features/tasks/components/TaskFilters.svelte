@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { categoryStore } from '$lib/features/categories'
 import { tagStore } from '$lib/features/tags'
 import TagInput from '$lib/features/tags/components/TagInput.svelte'
@@ -15,15 +16,17 @@ let {
 	onFilterChange?: (filters: TaskFilters) => void
 } = $props()
 
-let categories = $derived(categoryStore.state.categories)
-let availableTags = $derived(tagStore.state.tags)
+let categories = $derived(browser ? categoryStore.state.categories : [])
+let availableTags = $derived(browser ? tagStore.state.tags : [])
 
 /**
  * Initialize categories and tags on mount
  */
 $effect(() => {
-	categoryStore.fetchCategories()
-	tagStore.fetchTags()
+	if (browser) {
+		categoryStore.fetchCategories()
+		tagStore.fetchTags()
+	}
 })
 
 const statusOptions: { label: string; value: TaskStatus }[] = [
@@ -114,6 +117,7 @@ const hasActiveFilters = $derived(
 			<label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
 			<select
 				id="status"
+				data-testid="status-filter"
 				value={filters.status || ''}
 				onchange={(e) => handleFilterChange('status', e)}
 				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

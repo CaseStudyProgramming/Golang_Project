@@ -23,3 +23,13 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Orval-generated files
+# Note: We commit these files for team consistency and CI/CD
+# Regenerate with: bun run api:generate
+# If you need to ignore them locally, uncomment the lines below:
+# src/lib/api/index.ts
+# src/lib/api/index.msw.ts
+# src/lib/api/index.faker.ts
+# src/lib/api/handlers.ts
+# src/lib/api/model/

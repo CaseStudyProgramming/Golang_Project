@@ -10,7 +10,7 @@ import {
 } from './auth.interceptors'
 import { ApiError } from './error.utils'
 
-const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL
+const API_BASE_URL = publicEnv.PUBLIC_API_BASE_URL || ''
 
 /**
  * HTTP client configuration options

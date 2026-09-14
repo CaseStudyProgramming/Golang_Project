@@ -1,13 +1,14 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 import type { Category } from '$lib/features/categories'
 import { categoryStore } from '$lib/features/categories'
 import CategoryForm from '$lib/features/categories/components/CategoryForm.svelte'
 import CategoryList from '$lib/features/categories/components/CategoryList.svelte'
 
-let categories = $derived(categoryStore.state.categories)
-let isLoading = $derived(categoryStore.state.isLoading)
-let error = $derived(categoryStore.state.error)
+let categories = $derived(browser ? categoryStore.state.categories : [])
+let isLoading = $derived(browser ? categoryStore.state.isLoading : false)
+let error = $derived(browser ? categoryStore.state.error : null)
 
 let showForm = $state(false)
 let editingCategory = $state<Category | null>(null)
@@ -16,7 +17,9 @@ let editingCategory = $state<Category | null>(null)
  * Load categories on mount
  */
 onMount(() => {
-	categoryStore.fetchCategories()
+	if (browser) {
+		categoryStore.fetchCategories()
+	}
 })
 
 /**

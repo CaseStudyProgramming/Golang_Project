@@ -25,9 +25,23 @@ var (
 )
 
 func main() {
-	cfg, err := config.LoadConfig("env/config.yaml")
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+	// Try to load config from file, fallback to environment-only config
+	configPath := "env/config.yaml"
+	var cfg *config.Config
+	var err error
+
+	if _, statErr := os.Stat(configPath); os.IsNotExist(statErr) {
+		// Config file doesn't exist, use environment variables only
+		log.Println("Config file not found, using environment variables only")
+		cfg, err = config.LoadConfig("")
+		if err != nil {
+			log.Fatalf("failed to load config from environment: %v", err)
+		}
+	} else {
+		cfg, err = config.LoadConfig(configPath)
+		if err != nil {
+			log.Fatalf("failed to load config: %v", err)
+		}
 	}
 
 	db := config.NewPostgresDB(

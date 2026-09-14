@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 import type { TimePeriod } from '$lib/features/analytics'
 import { analyticsStore } from '$lib/features/analytics'
@@ -17,11 +18,13 @@ import { authStore } from '$lib/features/auth'
 import EmptyState from '$lib/shared/components/EmptyState.svelte'
 
 onMount(async () => {
-	try {
-		await taskStore.fetchTasks()
-		await analyticsStore.refreshAnalytics()
-	} catch (error) {
-		console.error('Failed to fetch data:', error)
+	if (browser) {
+		try {
+			await taskStore.fetchTasks()
+			await analyticsStore.refreshAnalytics()
+		} catch (error) {
+			console.error('Failed to fetch data:', error)
+		}
 	}
 })
 
@@ -30,9 +33,11 @@ function handlePeriodChange(period: TimePeriod): void {
 }
 
 const overdueTasks = $derived(
-	taskStore.state.tasks.filter(
-		(t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
-	)
+	browser
+		? taskStore.state.tasks.filter(
+				(t: Task) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'completed'
+			)
+		: []
 )
 
 const defaultStatistics: TaskStatistics = {

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 
 import { goto } from '$app/navigation'
@@ -10,7 +11,7 @@ import type { CreateTaskPayload } from '$lib/features/tasks/schemas/task.schemas
 let taskId = $derived($page.params.id || '')
 
 onMount(async () => {
-	if (!taskId) return
+	if (!taskId || !browser) return
 	try {
 		await taskStore.fetchTaskById(taskId)
 	} catch (error) {

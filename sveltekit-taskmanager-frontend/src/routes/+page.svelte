@@ -55,6 +55,20 @@ onMount(async () => {
 			>
 				Sign In
 			</a>
+			<a
+				href="/tasks"
+				onclick={(e) => { e.preventDefault(); goto('/tasks'); }}
+				class="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-lg font-medium"
+			>
+				Tasks
+			</a>
+			<a
+				href="/categories"
+				onclick={(e) => { e.preventDefault(); goto('/categories'); }}
+				class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-lg font-medium"
+			>
+				Categories
+			</a>
 		</div>
 	</div>
 </div>

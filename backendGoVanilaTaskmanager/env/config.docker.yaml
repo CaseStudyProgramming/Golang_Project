@@ -1,0 +1,24 @@
+# Docker Configuration
+# This is a default configuration for Docker environments
+# Most values can be overridden with environment variables
+
+server:
+  port: "8080"
+  env: "production"
+
+database:
+  host: "postgres"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  dbname: "taskmanager"
+  sslmode: "disable"
+
+jwt:
+  secret: "change-this-in-production"
+
+cors:
+  allowed_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+    - "http://localhost:8080"

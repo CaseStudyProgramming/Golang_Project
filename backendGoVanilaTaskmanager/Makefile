@@ -1,96 +1,76 @@
-.PHONY: build build-linux build-windows build-darwin clean test test-race lint format run dev help
+.PHONY: test test-unit test-integration test-performance test-all test-coverage build lint format clean help
 
-# Build variables
-BINARY_NAME=taskmanager-server
-VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
-LDFLAGS=-ldflags "-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME) -s -w"
+# Test commands
+test-unit:
+	go test ./... -v
 
-# Go parameters
-GOCMD=go
-GOBUILD=$(GOCMD) build
-GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
-GOMOD=$(GOCMD) mod
+test-integration:
+	go test ./tests/... -v
 
-help: ## Display this help screen
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+test-performance:
+	go test ./tests/performance_test.go ./tests/api_benchmark_test.go -v
 
-build: ## Build the application for current platform
-	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) main.go
+test-all: test-unit test-integration
+	@echo "✅ All tests completed"
 
-build-linux: ## Build for Linux
-	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME)-linux-amd64 main.go
+test-coverage:
+	go test ./... -cover -v
 
-build-windows: ## Build for Windows
-	GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME)-windows-amd64.exe main.go
+test-race:
+	go test ./... -race -v
 
-build-darwin: ## Build for macOS
-	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME)-darwin-amd64 main.go
+# Build commands
+build:
+	go build -o taskmanager-server main.go
 
-build-all: build-linux build-windows build-darwin ## Build for all platforms
+build-linux:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o taskmanager-server main.go
 
-clean: ## Clean build artifacts
-	$(GOCLEAN)
-	rm -f $(BINARY_NAME)*
-	rm -f *.exe
-	rm -f *.test
-	rm -f *.out
-
-test: ## Run tests
-	$(GOTEST) -v ./...
-
-test-race: ## Run tests with race detection
-	$(GOTEST) -race -v ./...
-
-test-coverage: ## Run tests with coverage
-	$(GOTEST) -coverprofile=coverage.out ./...
-	$(GOCMD) tool cover -html=coverage.out -o coverage.html
-
-lint: ## Run linter
+# Code quality
+lint:
 	golangci-lint run
 
-format: ## Format code
+format:
 	gofmt -w .
-	$(GOCMD) fmt ./...
 
-format-check: ## Check if code is formatted
+format-check:
 	gofmt -l .
 
-run: ## Run the application
-	$(GOBUILD) -o $(BINARY_NAME) main.go
-	./$(BINARY_NAME)
+vet:
+	go vet ./...
 
-dev: ## Run with live reload using air
-	air
+# Database
+db-migrate:
+	@echo "Run migrations manually or use your migration tool"
 
-deps: ## Download dependencies
-	$(GOGET) -u -t ./...
-	$(GOMOD) tidy
+# Development
+dev:
+	go run main.go
 
-deps-check: ## Check for dependency updates
-	$(GOGET) -u ./...
-	$(GOMOD) tidy
+dev-test:
+	TEST_DB_HOST=localhost TEST_DB_PORT=5433 go run main.go
 
-docker-build: ## Build Docker image
-	docker build -t taskmanager-backend:$(VERSION) .
+# Clean
+clean:
+	rm -f taskmanager-server
+	rm -rf test-results/
 
-docker-run: ## Run Docker container
-	docker run -p 8080:8080 taskmanager-backend:$(VERSION)
-
-security-scan: ## Run security scan
-	gosec ./...
-
-benchmark: ## Run benchmarks
-	$(GOTEST) -bench=. -benchmem ./...
-
-profiling-cpu: ## Run CPU profiling
-	$(GOBUILD) -o $(BINARY_NAME) main.go
-	./$(BINARY_NAME) &
-	$(GOCMD) tool pprof http://localhost:8080/debug/pprof/profile
-
-profiling-memory: ## Run memory profiling
-	$(GOBUILD) -o $(BINARY_NAME) main.go
-	./$(BINARY_NAME) &
-	$(GOCMD) tool pprof http://localhost:8080/debug/pprof/heap
+# Help
+help:
+	@echo "Available commands:"
+	@echo "  test-unit          - Run unit tests"
+	@echo "  test-integration   - Run integration tests (requires test DB)"
+	@echo "  test-performance   - Run performance tests"
+	@echo "  test-all           - Run all tests"
+	@echo "  test-coverage      - Run tests with coverage"
+	@echo "  test-race          - Run tests with race detection"
+	@echo "  build              - Build the application"
+	@echo "  build-linux        - Build for Linux"
+	@echo "  lint               - Run linter"
+	@echo "  format             - Format code"
+	@echo "  format-check       - Check code formatting"
+	@echo "  vet                - Run go vet"
+	@echo "  dev                - Run development server"
+	@echo "  dev-test           - Run development server with test DB"
+	@echo "  clean              - Clean build artifacts"
+	@echo "  help               - Show this help message"

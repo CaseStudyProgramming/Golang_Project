@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 import { goto } from '$app/navigation'
 import { taskStore } from '$lib/features/tasks'
@@ -12,10 +13,12 @@ let showCreateModal = $state(false)
 let searchQuery = $state('')
 
 onMount(async () => {
-	try {
-		await taskStore.fetchTasks()
-	} catch (error) {
-		console.error('Failed to fetch tasks:', error)
+	if (browser) {
+		try {
+			await taskStore.fetchTasks()
+		} catch (error) {
+			console.error('Failed to fetch tasks:', error)
+		}
 	}
 })
 
@@ -104,6 +107,7 @@ function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
 	<div class="flex items-center justify-between mb-6">
 		<h1 class="text-3xl font-bold text-gray-900">Tasks</h1>
 		<button
+			data-testid="create-task-button"
 			onclick={() => (showCreateModal = true)}
 			class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
 		>
@@ -119,6 +123,7 @@ function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
 		/>
 	</div>
 
+	{#if browser}
 	<TaskFilters
 		bind:filters={taskStore.state.filters}
 		onFilterChange={handleFilterChange}
@@ -134,13 +139,14 @@ function handleViewTask(task: (typeof taskStore.state.tasks)[0]): void {
 	/>
 
 	{#if taskStore.state.pagination.totalPages > 1}
-		<div class="mt-6">
-			<Pagination
-				bind:currentPage={taskStore.state.pagination.page}
-				totalPages={taskStore.state.pagination.totalPages}
-				onPageChange={handlePageChange}
-			/>
-		</div>
+	<div class="mt-6">
+		<Pagination
+			bind:currentPage={taskStore.state.pagination.page}
+			totalPages={taskStore.state.pagination.totalPages}
+			onPageChange={handlePageChange}
+		/>
+	</div>
+	{/if}
 	{/if}
 
 	{#if showCreateModal}

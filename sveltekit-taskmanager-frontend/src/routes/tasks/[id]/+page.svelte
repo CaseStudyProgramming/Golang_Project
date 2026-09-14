@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { onMount } from 'svelte'
 import { goto } from '$app/navigation'
 import { page } from '$app/stores'
@@ -13,11 +14,11 @@ let taskId = $derived($page.params.id || '')
 let isEditing = $state(false)
 let showDeleteConfirm = $state(false)
 
-let categories = $derived(categoryStore.state.categories)
-let tags = $derived(tagStore.state.tags)
+let categories = $derived(browser ? categoryStore.state.categories : [])
+let tags = $derived(browser ? tagStore.state.tags : [])
 
 onMount(async () => {
-	if (!taskId) return
+	if (!taskId || !browser) return
 	try {
 		await taskStore.fetchTaskById(taskId)
 		await activityStore.fetchActivities({ taskId })
