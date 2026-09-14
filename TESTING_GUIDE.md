@@ -869,9 +869,9 @@ When improving test coverage, follow this pragmatic approach based on industry b
 - Core utility functions with complex logic
 
 **Threshold Considerations:**
-- Simple utilities: 60-70% acceptable
-- Complex business logic: 80-90% required
-- Critical paths: 90-100% required
+- Simple utilities: >75% acceptable
+- Complex business logic: >90% required
+- Critical paths: >90% required
 - Mixed complexity: Adjust based on risk assessment
 
 ### Pragmatic Coverage Goals
