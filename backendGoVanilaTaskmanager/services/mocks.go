@@ -140,6 +140,10 @@ func (m *MockTagModel) GetAll(userID int64) ([]models.Tag, error) {
 	return result, nil
 }
 
+func (m *MockTagModel) setGetByIDError(err error) {
+	m.getByIDError = err
+}
+
 func (m *MockTagModel) GetByID(userID int64, id int64) (*models.Tag, error) {
 	if m.getByIDError != nil {
 		return nil, m.getByIDError

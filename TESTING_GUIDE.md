@@ -835,7 +835,7 @@ The backend should validate against the OpenAPI spec. This can be added:
 
 When improving test coverage, follow this pragmatic approach based on industry best practices:
 
-### Step-by-Step Coverage Improvement
+### Rule-Based Step-by-Step Coverage Improvement
 
 1. **Run coverage report to see actual data**
    ```bash

@@ -612,3 +612,237 @@ func TestRestore_Error(t *testing.T) {
 		t.Errorf("Expected error to contain 'restore failed', got %v", err)
 	}
 }
+
+func TestAddTagToTask_Success(t *testing.T) {
+	mockTask := &models.Task{
+		ID:    1,
+		Title: "Test Task",
+	}
+
+	mockTag := &models.Tag{
+		ID:     1,
+		UserID: 1,
+		Name:   "Test Tag",
+	}
+
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			if id == 1 {
+				return mockTask, nil
+			}
+			return nil, sql.ErrNoRows
+		},
+		AddTagToTaskFunc: func(taskID int64, tagID int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	// Create the tag in the mock with the correct user ID
+	mockTagModel.Create(mockTag)
+
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.AddTagToTask(1, 1, 1)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestAddTagToTask_TaskNotFound(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.AddTagToTask(1, 999, 1)
+
+	if err == nil {
+		t.Error("Expected error for non-existent task, got nil")
+	}
+}
+
+func TestAddTagToTask_TagNotFound(t *testing.T) {
+	mockTask := &models.Task{
+		ID:    1,
+		Title: "Test Task",
+	}
+
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			if id == 1 {
+				return mockTask, nil
+			}
+			return nil, sql.ErrNoRows
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	// Set the mock to return error for any GetByID call
+	mockTagModel.setGetByIDError(sql.ErrNoRows)
+
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.AddTagToTask(1, 1, 999)
+
+	if err == nil {
+		t.Error("Expected error for non-existent tag, got nil")
+	}
+}
+
+func TestRemoveTagFromTask_Success(t *testing.T) {
+	mockTask := &models.Task{
+		ID:    1,
+		Title: "Test Task",
+	}
+
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			if id == 1 {
+				return mockTask, nil
+			}
+			return nil, sql.ErrNoRows
+		},
+		RemoveTagFromTaskFunc: func(taskID int64, tagID int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.RemoveTagFromTask(1, 1, 1)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestRemoveTagFromTask_TaskNotFound(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.RemoveTagFromTask(1, 999, 1)
+
+	if err == nil {
+		t.Error("Expected error for non-existent task, got nil")
+	}
+}
+
+func TestGetAnalyticsSummary_Success(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetAnalyticsSummaryFunc: func(userID int64) (map[string]interface{}, error) {
+			return map[string]interface{}{
+				"total_active":    5,
+				"total_completed": 3,
+				"priority_distribution": map[string]int{
+					"HIGH":   2,
+					"MEDIUM": 3,
+				},
+			}, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	summary, err := service.GetAnalyticsSummary(1)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if summary["total_active"] != 5 {
+		t.Errorf("Expected total_active 5, got %v", summary["total_active"])
+	}
+}
+
+func TestGetAnalyticsSummary_Error(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetAnalyticsSummaryFunc: func(userID int64) (map[string]interface{}, error) {
+			return nil, errors.New("analytics error")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	_, err := service.GetAnalyticsSummary(1)
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+}
+
+func TestBulkDelete_Success(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkDeleteFunc: func(userID int64, taskIDs []int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	taskIDs := []int64{1, 2, 3}
+	err := service.BulkDelete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestBulkDelete_EmptyTaskIDs(t *testing.T) {
+	mockModel := &MockTaskModel{}
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.BulkDelete(1, []int64{}, "127.0.0.1", "test-agent")
+
+	// Bulk operations with empty arrays should succeed (no-op)
+	if err != nil {
+		t.Errorf("Expected no error for empty task IDs, got %v", err)
+	}
+}
+
+func TestBulkComplete_Success(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkCompleteFunc: func(userID int64, taskIDs []int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	taskIDs := []int64{1, 2, 3}
+	err := service.BulkComplete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestBulkComplete_EmptyTaskIDs(t *testing.T) {
+	mockModel := &MockTaskModel{}
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.BulkComplete(1, []int64{}, "127.0.0.1", "test-agent")
+
+	// Bulk operations with empty arrays should succeed (no-op)
+	if err != nil {
+		t.Errorf("Expected no error for empty task IDs, got %v", err)
+	}
+}

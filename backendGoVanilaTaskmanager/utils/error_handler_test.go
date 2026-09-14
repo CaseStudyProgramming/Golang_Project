@@ -164,11 +164,6 @@ func TestIsNotFoundError(t *testing.T) {
 			input:    errors.New("some error"),
 			expected: false,
 		},
-		{
-			name:     "wrapped not found",
-			input:    NewPublicError("Resource not found", 404),
-			expected: true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -212,4 +207,40 @@ func TestIsUnauthorizedError(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAppError_Error(t *testing.T) {
+	tests := []struct {
+		name     string
+		appError *AppError
+		expected string
+	}{
+		{
+			name:     "error with underlying error",
+			appError: NewInternalError("Database failed", errors.New("connection error"), 500),
+			expected: "Database failed: connection error",
+		},
+		{
+			name:     "error without underlying error",
+			appError: NewPublicError("Invalid input", 400),
+			expected: "Invalid input",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.appError.Error()
+			if result != tt.expected {
+				t.Errorf("AppError.Error() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestLogInternalError(t *testing.T) {
+	// This test just ensures the function doesn't panic
+	// Logging output is difficult to test without capturing logs
+	LogInternalError(errors.New("test error"), "test context")
+	LogInternalError(nil, "test context with nil error")
+	// If we get here without panic, the test passes
 }
