@@ -152,82 +152,6 @@ func (m *MockTaskModel) BulkComplete(userID int64, taskIDs []int64) error {
 	return nil
 }
 
-// MockTagModel is a mock implementation of TagModelInterface for testing
-type MockTagModel struct {
-	CreateFunc            func(tag *models.Tag) (*models.Tag, error)
-	GetAllFunc            func(userID int64) ([]models.Tag, error)
-	GetByIDFunc           func(userID int64, id int64) (*models.Tag, error)
-	UpdateFunc            func(userID int64, tag *models.Tag) error
-	DeleteFunc            func(userID int64, id int64) error
-	AddTagToTaskFunc      func(taskID int64, tagID int64) error
-	RemoveTagFromTaskFunc func(taskID int64, tagID int64) error
-	GetTagsByTaskIDFunc   func(taskID int64) ([]models.Tag, error)
-	GetTasksByTagIDFunc   func(tagID int64) ([]models.Task, error)
-}
-
-func (m *MockTagModel) Create(tag *models.Tag) (*models.Tag, error) {
-	if m.CreateFunc != nil {
-		return m.CreateFunc(tag)
-	}
-	return nil, nil
-}
-
-func (m *MockTagModel) GetAll(userID int64) ([]models.Tag, error) {
-	if m.GetAllFunc != nil {
-		return m.GetAllFunc(userID)
-	}
-	return nil, nil
-}
-
-func (m *MockTagModel) GetByID(userID int64, id int64) (*models.Tag, error) {
-	if m.GetByIDFunc != nil {
-		return m.GetByIDFunc(userID, id)
-	}
-	return nil, nil
-}
-
-func (m *MockTagModel) Update(userID int64, tag *models.Tag) error {
-	if m.UpdateFunc != nil {
-		return m.UpdateFunc(userID, tag)
-	}
-	return nil
-}
-
-func (m *MockTagModel) Delete(userID int64, id int64) error {
-	if m.DeleteFunc != nil {
-		return m.DeleteFunc(userID, id)
-	}
-	return nil
-}
-
-func (m *MockTagModel) AddTagToTask(taskID int64, tagID int64) error {
-	if m.AddTagToTaskFunc != nil {
-		return m.AddTagToTaskFunc(taskID, tagID)
-	}
-	return nil
-}
-
-func (m *MockTagModel) RemoveTagFromTask(taskID int64, tagID int64) error {
-	if m.RemoveTagFromTaskFunc != nil {
-		return m.RemoveTagFromTaskFunc(taskID, tagID)
-	}
-	return nil
-}
-
-func (m *MockTagModel) GetTagsByTaskID(taskID int64) ([]models.Tag, error) {
-	if m.GetTagsByTaskIDFunc != nil {
-		return m.GetTagsByTaskIDFunc(taskID)
-	}
-	return nil, nil
-}
-
-func (m *MockTagModel) GetTasksByTagID(tagID int64) ([]models.Task, error) {
-	if m.GetTasksByTagIDFunc != nil {
-		return m.GetTasksByTagIDFunc(tagID)
-	}
-	return nil, nil
-}
-
 func TestCreateTask_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
 		CreateFunc: func(task *models.Task) (*models.Task, error) {
@@ -238,7 +162,7 @@ func TestCreateTask_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	task := &models.Task{
@@ -263,7 +187,7 @@ func TestCreateTask_Success(t *testing.T) {
 
 func TestCreateTask_EmptyTitle(t *testing.T) {
 	mockModel := &MockTaskModel{}
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	task := &models.Task{
@@ -283,7 +207,7 @@ func TestCreateTask_EmptyTitle(t *testing.T) {
 
 func TestCreateTask_PastDueDate(t *testing.T) {
 	mockModel := &MockTaskModel{}
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	pastTime := utils.CurrentEpochMillis() - (24 * 60 * 60 * 1000) // 24 hours ago in milliseconds
@@ -313,7 +237,7 @@ func TestCreateTask_FutureDueDate(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	futureTime := utils.CurrentEpochMillis() + (24 * 60 * 60 * 1000) // 24 hours in the future in milliseconds
@@ -345,7 +269,7 @@ func TestGetAllTasks_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	tasks, meta, err := service.GetAll(1, nil, 1, 10, "", nil, nil, "", "")
@@ -378,7 +302,7 @@ func TestGetAllTasks_WithFilter(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	tasks, meta, err := service.GetAll(1, &completed, 1, 10, "", nil, nil, "", "")
@@ -411,7 +335,7 @@ func TestGetAllTasks_InvalidPage(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	// Request page 2 when only 1 page exists
@@ -434,7 +358,7 @@ func TestGetAllTasks_NoResults(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	_, _, err := service.GetAll(1, nil, 1, 10, "nonexistent", nil, nil, "", "")
@@ -464,7 +388,7 @@ func TestGetByID_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	task, err := service.GetByID(1, 1)
@@ -485,7 +409,7 @@ func TestGetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	_, err := service.GetByID(1, 999)
@@ -511,7 +435,7 @@ func TestUpdate_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	updatedTask := &models.Task{
@@ -532,7 +456,7 @@ func TestUpdate_Success(t *testing.T) {
 
 func TestUpdate_PastDueDate(t *testing.T) {
 	mockModel := &MockTaskModel{}
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	pastTime := utils.CurrentEpochMillis() - (24 * 60 * 60 * 1000) // 24 hours ago in milliseconds
@@ -559,7 +483,7 @@ func TestUpdate_NotFound(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	updatedTask := &models.Task{
@@ -589,7 +513,7 @@ func TestDelete_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Delete(1, 1, "127.0.0.1", "test-agent")
@@ -606,7 +530,7 @@ func TestDelete_NotFound(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Delete(1, 999, "127.0.0.1", "test-agent")
@@ -623,7 +547,7 @@ func TestMarkAsCompleted_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.MarkAsCompleted(1, 1, "127.0.0.1", "test-agent")
@@ -640,7 +564,7 @@ func TestMarkAsUncompleted_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.MarkAsUncompleted(1, 1, "127.0.0.1", "test-agent")
@@ -657,7 +581,7 @@ func TestRestore_Success(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Restore(1, 1)
@@ -674,7 +598,7 @@ func TestRestore_Error(t *testing.T) {
 		},
 	}
 
-	mockTagModel := &MockTagModel{}
+	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
 
 	err := service.Restore(1, 1)

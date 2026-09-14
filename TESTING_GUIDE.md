@@ -850,7 +850,7 @@ When improving test coverage, follow this pragmatic approach based on industry b
 
 3. **Determine approach based on file type**
    - **Type definitions/error pages/boilerplate** → Exclude from coverage requirements
-   - **Business logic** → Add comprehensive tests
+   - **Business logic must be 90%+ covered**  → Add comprehensive tests
    - **Mixed cases** → Consider appropriate thresholds
 
 ### File Type Classification

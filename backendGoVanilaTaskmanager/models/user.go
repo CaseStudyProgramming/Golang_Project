@@ -27,6 +27,7 @@ type UserModelInterface interface {
 	GetByID(id int64) (*User, error)
 	Update(user *User) error
 	UpdateTimezone(userID int64, timezone string) error
+	Delete(id int64) error
 }
 
 func NewUserModel(db *sql.DB) *UserModel {
@@ -99,5 +100,11 @@ func (m *UserModel) UpdateTimezone(userID int64, timezone string) error {
 	          SET timezone = $1, updated_at = $2 
 	          WHERE id = $3`
 	_, err := m.DB.Exec(query, timezone, currentTime, userID)
+	return err
+}
+
+func (m *UserModel) Delete(id int64) error {
+	query := `DELETE FROM users WHERE id = $1`
+	_, err := m.DB.Exec(query, id)
 	return err
 }

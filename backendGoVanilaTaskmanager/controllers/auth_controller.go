@@ -9,7 +9,7 @@ import (
 )
 
 type AuthController struct {
-	userService *services.UserService
+	userService UserServiceInterface
 }
 
 type UserServiceInterface interface {
@@ -19,7 +19,7 @@ type UserServiceInterface interface {
 	UpdateTimezone(userID int64, req *services.UpdateTimezoneRequest) (*models.User, error)
 }
 
-func NewAuthController(userService *services.UserService) *AuthController {
+func NewAuthController(userService UserServiceInterface) *AuthController {
 	return &AuthController{userService: userService}
 }
 
