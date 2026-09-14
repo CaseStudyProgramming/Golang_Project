@@ -826,14 +826,116 @@ The backend should validate against the OpenAPI spec. This can be added:
 
 ## Test Coverage Goals
 
-- **Backend Unit Tests**: >80% coverage
+- **Backend Unit Tests**: >90% coverage (overall), with file-type-specific thresholds
 - **Backend Integration Tests**: Critical API paths
-- **Frontend Unit Tests**: >80% coverage
+- **Frontend Unit Tests**: >90% coverage (overall), with file-type-specific thresholds
 - **E2E Tests**: Critical user journeys (login, create task, update, delete)
 
-## Test Coverage Strategy
+## Backend Coverage Strategy (Go)
 
-When improving test coverage, follow this pragmatic approach based on industry best practices:
+Backend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **90%+ overall coverage** with intelligent thresholds based on code importance and complexity.
+
+### Rule-Based Step-by-Step Coverage Improvement
+
+1. **Run coverage report to see actual data**
+   ```bash
+   cd backendGoVanilaTaskmanager
+   go test ./... -coverprofile=coverage.out -covermode=atomic
+   go tool cover -html=coverage.out -o coverage.html
+   # Open coverage.html in browser to see detailed report
+   ```
+
+2. **Analyze which files have low coverage**
+   - Review the coverage report output
+   - Identify files with <90% coverage
+   - Prioritize critical business logic files (services, repositories, controllers)
+
+3. **Determine approach based on file type**
+   - **Configuration/error types/boilerplate** → Exclude from coverage requirements
+   - **Business logic must be 93%+ covered** → Add comprehensive tests
+   - **Mixed cases** → Consider appropriate thresholds based on complexity
+
+### Backend File Type Classification
+
+**Exclude from Coverage Requirements:**
+- **Configuration files** (`config.go`, `config.yaml` handlers, environment setup)
+- **Error types and custom error definitions** (`errors.go`, custom error structs)
+- **Boilerplate HTTP handlers** (skeletal route handlers without business logic)
+- **Database migration files** (SQL files, migration scripts)
+- **Auto-generated code** (protobuf, wire dependency injection, swagger definitions)
+- **Simple DTOs/structs** (data transfer objects with only field definitions)
+
+**Focus Testing Efforts On:**
+- **Business logic in service layer** (`services/*.go`) - Core application logic
+- **Domain models with validation logic** (`models/*.go`) - Business rules
+- **Repository pattern implementations** (`repositories/*.go`) - Data access logic
+- **Controller logic with complexity** (not just route setup)
+- **Utility functions with complex logic** (`utils/*.go`)
+- **Middleware with important logic** (auth, validation, rate limiting)
+
+### Backend Threshold Considerations
+
+- **Repository methods**: >93% required (data access logic is critical)
+- **Service layer business logic**: >93% required (core application logic)
+- **Complex middleware**: >93% required (security, authentication logic)
+- **Simple utilities**: >75% acceptable (helper functions with straightforward logic)
+- **Controllers with validation**: >93% required (input validation and orchestration)
+
+### Backend Coverage Implementation
+
+**Generate Coverage Report:**
+```bash
+# Generate coverage for all packages
+cd backendGoVanilaTaskmanager
+go test ./... -coverprofile=coverage.out -covermode=atomic
+
+# View coverage in terminal
+go tool cover -func=coverage.out
+
+# Generate HTML report
+go tool cover -html=coverage.out -o coverage.html
+
+# Coverage by package
+go test ./... -cover
+```
+
+**Excluding Files from Coverage (Go Build Tags):**
+```go
+//go:build !coverage_tests
+// +build !coverage_tests
+
+package config
+
+// This file will be excluded from coverage when running with coverage build tag
+```
+
+**Run tests excluding specific files:**
+```bash
+# Run coverage excluding auto-generated files
+go test ./... -coverprofile=coverage.out -covermode=atomic -tags='!coverage_tests'
+```
+
+**CI Integration:**
+```yaml
+# In .github/workflows/backend-ci.yml
+- name: Run tests with coverage
+  run: |
+    go test ./... -coverprofile=coverage.out -covermode=atomic
+    go tool cover -func=coverage.out | grep total
+```
+
+### Backend Pragmatic Coverage Goals
+
+Instead of blindly pursuing 100% coverage, focus on:
+- Testing critical business paths thoroughly (service layer, repositories)
+- Ensuring high coverage for complex, error-prone code (middleware, validation)
+- Maintaining reasonable coverage for simple utilities and DTOs
+- Excluding files that don't benefit from testing (config, errors, boilerplate)
+- Prioritizing code that handles data persistence and business rules
+
+## Frontend Coverage Strategy (SvelteKit)
+
+Frontend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **90%+ overall coverage** with intelligent thresholds based on code importance and complexity.
 
 ### Rule-Based Step-by-Step Coverage Improvement
 
@@ -845,15 +947,15 @@ When improving test coverage, follow this pragmatic approach based on industry b
 
 2. **Analyze which files have low coverage**
    - Review the coverage report output
-   - Identify files with <80% coverage
+   - Identify files with <90% coverage
    - Prioritize critical business logic files
 
 3. **Determine approach based on file type**
    - **Type definitions/error pages/boilerplate** → Exclude from coverage requirements
-   - **Business logic must be 90%+ covered**  → Add comprehensive tests
+   - **Business logic must be 93%+ covered**  → Add comprehensive tests
    - **Mixed cases** → Consider appropriate thresholds
 
-### File Type Classification
+### Frontend File Type Classification
 
 **Exclude from Coverage Requirements:**
 - Type definition files (`.d.ts`, interfaces, types)
@@ -868,13 +970,13 @@ When improving test coverage, follow this pragmatic approach based on industry b
 - API integration layers
 - Core utility functions with complex logic
 
-**Threshold Considerations:**
+**Frontend Threshold Considerations:**
 - Simple utilities: >75% acceptable
 - Complex business logic: >90% required
 - Critical paths: >90% required
 - Mixed complexity: Adjust based on risk assessment
 
-### Pragmatic Coverage Goals
+### Frontend Pragmatic Coverage Goals
 
 Instead of blindly pursuing 100% coverage, focus on:
 - Testing critical business paths thoroughly
