@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"testing"
 
 	_ "github.com/lib/pq"
@@ -22,9 +23,16 @@ type TestDBConfig struct {
 
 // GetTestDBConfig returns the test database configuration from environment variables or defaults
 func GetTestDBConfig() TestDBConfig {
+	port := 5432
+	if portStr := getEnv("TEST_DB_PORT", ""); portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil {
+			port = p
+		}
+	}
+
 	return TestDBConfig{
 		Host:     getEnv("TEST_DB_HOST", "localhost"),
-		Port:     5432,
+		Port:     port,
 		User:     getEnv("TEST_DB_USER", "postgres"),
 		Password: getEnv("TEST_DB_PASSWORD", "Berjuang#382"),
 		DBName:   getEnv("TEST_DB_NAME", "taskmanager_test"),
