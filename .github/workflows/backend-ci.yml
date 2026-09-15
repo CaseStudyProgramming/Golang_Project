@@ -72,7 +72,13 @@ jobs:
         working-directory: backendGoVanilaTaskmanager
 
     - name: Run unit tests
-      run: go test -v ./...
+      run: go test -v ./... -short
+
+    - name: Clean test database
+      env:
+        PGPASSWORD: Berjuang#382
+      run: |
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
     - name: Run integration tests
       env:
@@ -85,7 +91,7 @@ jobs:
       run: go test -v ./tests/...
 
     - name: Run tests with race detection
-      run: go test -race ./...
+      run: go test -race ./... -short
 
     - name: Run tests with coverage
       run: go test -cover ./...
