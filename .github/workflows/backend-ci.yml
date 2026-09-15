@@ -88,7 +88,7 @@ jobs:
         TEST_DB_PASSWORD: Berjuang#382
         TEST_DB_NAME: taskmanager_test
         TEST_DB_SSLMODE: disable
-      run: go test -v ./tests/...
+      run: go test -v ./tests/... -p=1
 
     - name: Run tests with race detection
       run: go test -race ./... -short
