@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 
 run:
   go: "1.25"
@@ -11,7 +11,7 @@ linters:
     - unused
     - staticcheck
 
-linters-settings:
+settings:
   govet:
     enable-all: true
     disable:
@@ -29,7 +29,6 @@ linters-settings:
       - style
 
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
 
