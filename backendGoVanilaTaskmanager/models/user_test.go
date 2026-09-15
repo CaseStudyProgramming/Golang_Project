@@ -45,11 +45,11 @@ func cleanupUserTestDB(db *sql.DB) {
 func TestNewUserModel(t *testing.T) {
 	db := &sql.DB{}
 	model := NewUserModel(db)
-	
+
 	if model == nil {
 		t.Fatal("NewUserModel returned nil")
 	}
-	
+
 	if model.DB != db {
 		t.Error("NewUserModel did not set DB correctly")
 	}
@@ -60,7 +60,7 @@ func TestUserModel_Create(t *testing.T) {
 	defer cleanupUserTestDB(db)
 
 	model := NewUserModel(db)
-	
+
 	user := &User{
 		Name:         "Test User",
 		Email:        "test@example.com",
@@ -95,7 +95,7 @@ func TestUserModel_GetByEmail(t *testing.T) {
 	defer cleanupUserTestDB(db)
 
 	model := NewUserModel(db)
-	
+
 	user := &User{
 		Name:         "Test User",
 		Email:        "test@example.com",
@@ -133,7 +133,7 @@ func TestUserModel_GetByID(t *testing.T) {
 	defer cleanupUserTestDB(db)
 
 	model := NewUserModel(db)
-	
+
 	user := &User{
 		Name:         "Test User",
 		Email:        "test@example.com",
@@ -171,7 +171,7 @@ func TestUserModel_Update(t *testing.T) {
 	defer cleanupUserTestDB(db)
 
 	model := NewUserModel(db)
-	
+
 	user := &User{
 		Name:         "Original Name",
 		Email:        "test@example.com",
@@ -212,7 +212,7 @@ func TestUserModel_Delete(t *testing.T) {
 	defer cleanupUserTestDB(db)
 
 	model := NewUserModel(db)
-	
+
 	user := &User{
 		Name:         "Test User",
 		Email:        "test@example.com",

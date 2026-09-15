@@ -1,6 +1,9 @@
 package metrics
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -152,5 +155,116 @@ func TestPerformanceMonitor_InitPerformanceMonitor(t *testing.T) {
 
 	if GlobalMonitor == nil {
 		t.Fatal("GlobalMonitor is nil after initialization")
+	}
+}
+
+func TestPerformanceMonitor_MetricsHandler(t *testing.T) {
+	pm := NewPerformanceMonitor()
+	pm.RecordAPICall("GET /test", 100*time.Millisecond)
+
+	handler := pm.MetricsHandler()
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	w := httptest.NewRecorder()
+
+	handler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	if w.Header().Get("Content-Type") != "application/json" {
+		t.Errorf("Expected Content-Type application/json, got %s", w.Header().Get("Content-Type"))
+	}
+
+	var metrics map[string]interface{}
+	if err := json.NewDecoder(w.Body).Decode(&metrics); err != nil {
+		t.Errorf("Failed to decode metrics: %v", err)
+	}
+
+	// Just check that we got some metrics data
+	if len(metrics) == 0 {
+		t.Error("Expected non-empty metrics response")
+	}
+}
+
+func TestPerformanceMonitor_HealthHandler(t *testing.T) {
+	pm := NewPerformanceMonitor()
+	pm.RecordAPICall("GET /test", 100*time.Millisecond)
+
+	handler := pm.HealthHandler()
+	req := httptest.NewRequest("GET", "/health", nil)
+	w := httptest.NewRecorder()
+
+	handler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	if w.Header().Get("Content-Type") != "application/json" {
+		t.Errorf("Expected Content-Type application/json, got %s", w.Header().Get("Content-Type"))
+	}
+
+	var health map[string]interface{}
+	if err := json.NewDecoder(w.Body).Decode(&health); err != nil {
+		t.Errorf("Failed to decode health: %v", err)
+	}
+
+	if health["status"] != "healthy" {
+		t.Errorf("Expected status healthy, got %v", health["status"])
+	}
+
+	if health["metrics"] == nil {
+		t.Error("Expected metrics in health response")
+	}
+}
+
+func TestPerformanceMonitor_Middleware(t *testing.T) {
+	pm := NewPerformanceMonitor()
+
+	nextHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	}
+
+	middleware := pm.Middleware("GET /test", nextHandler)
+	req := httptest.NewRequest("GET", "/test", nil)
+	w := httptest.NewRecorder()
+
+	middleware(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	if pm.metrics.RequestCount != 1 {
+		t.Errorf("Expected request count 1, got %d", pm.metrics.RequestCount)
+	}
+
+	if pm.metrics.APICallCount["GET /test"] != 1 {
+		t.Errorf("Expected API call count 1, got %d", pm.metrics.APICallCount["GET /test"])
+	}
+}
+
+func TestPerformanceMonitor_Middleware_Error(t *testing.T) {
+	pm := NewPerformanceMonitor()
+
+	nextHandler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Error"))
+	}
+
+	middleware := pm.Middleware("GET /test", nextHandler)
+	req := httptest.NewRequest("GET", "/test", nil)
+	w := httptest.NewRecorder()
+
+	middleware(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status 500, got %d", w.Code)
+	}
+
+	if pm.metrics.ErrorCount != 1 {
+		t.Errorf("Expected error count 1, got %d", pm.metrics.ErrorCount)
 	}
 }

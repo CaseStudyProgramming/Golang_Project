@@ -103,3 +103,26 @@ func TestPredefinedErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestIsConflictError(t *testing.T) {
+	// Test with ErrConflict
+	if !IsConflictError(ErrConflict) {
+		t.Error("Expected ErrConflict to be detected as conflict error")
+	}
+
+	// Test with non-conflict error
+	if IsConflictError(ErrNotFound) {
+		t.Error("Expected ErrNotFound to not be detected as conflict error")
+	}
+
+	// Test with nil error
+	if IsConflictError(nil) {
+		t.Error("Expected nil to not be detected as conflict error")
+	}
+
+	// Test with different message (not ErrConflict message)
+	customErr := CreatePublicError("Custom conflict", 409)
+	if IsConflictError(customErr) {
+		t.Error("Expected custom 409 error with different message to not be detected as conflict error")
+	}
+}

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -79,6 +80,40 @@ func TestActivityLogController_GetUserActivityLogs_Success(t *testing.T) {
 	}
 }
 
+func TestActivityLogController_GetUserActivityLogs_InvalidPage(t *testing.T) {
+	mockService := &MockActivityLogService{}
+	controller := NewActivityLogController(mockService)
+
+	req := httptest.NewRequest("GET", "/activity-logs?page=0&limit=10", nil)
+	ctx := context.WithValue(context.Background(), "user_id", int64(1))
+	ctx = context.WithValue(ctx, "timezone", "UTC")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	controller.GetUserActivityLogs(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestActivityLogController_GetUserActivityLogs_InvalidLimit(t *testing.T) {
+	mockService := &MockActivityLogService{}
+	controller := NewActivityLogController(mockService)
+
+	req := httptest.NewRequest("GET", "/activity-logs?page=1&limit=0", nil)
+	ctx := context.WithValue(context.Background(), "user_id", int64(1))
+	ctx = context.WithValue(ctx, "timezone", "UTC")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	controller.GetUserActivityLogs(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
 func TestActivityLogController_GetUserActivityLogs_Error(t *testing.T) {
 	mockService := &MockActivityLogService{}
 	controller := NewActivityLogController(mockService)
@@ -101,89 +136,154 @@ func TestActivityLogController_GetUserActivityLogs_Error(t *testing.T) {
 }
 
 func TestActivityLogController_GetTaskActivityLogs_Success(t *testing.T) {
+	mockService := &MockActivityLogService{
+		getTaskLogsFunc: func(taskID int64, page int, limit int) ([]models.ActivityLog, map[string]interface{}, error) {
+			return []models.ActivityLog{{ID: 1, Action: "update"}}, map[string]interface{}{"page": 1, "limit": 10}, nil
+		},
+	}
+	controller := NewActivityLogController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}/activity-logs", controller.GetTaskActivityLogs)
+
+	req := httptest.NewRequest("GET", "/tasks/1/activity-logs?page=1&limit=10", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestActivityLogController_GetTaskActivityLogs_InvalidTaskID(t *testing.T) {
 	mockService := &MockActivityLogService{}
 	controller := NewActivityLogController(mockService)
 
-	mockService.getTaskLogsFunc = func(taskID int64, page int, limit int) ([]models.ActivityLog, map[string]interface{}, error) {
-		return []models.ActivityLog{{ID: 1, Action: "update"}}, map[string]interface{}{"page": 1, "limit": 10}, nil
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}/activity-logs", controller.GetTaskActivityLogs)
 
-	req := httptest.NewRequest("GET", "/tasks/1/activity-logs?page=1&limit=10", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req := httptest.NewRequest("GET", "/tasks/invalid/activity-logs?page=1&limit=10", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetTaskActivityLogs(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getTaskLogsFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
 	}
 }
 
 func TestActivityLogController_GetTaskActivityLogs_Error(t *testing.T) {
-	mockService := &MockActivityLogService{}
+	mockService := &MockActivityLogService{
+		getTaskLogsFunc: func(taskID int64, page int, limit int) ([]models.ActivityLog, map[string]interface{}, error) {
+			return nil, nil, errors.New("service error")
+		},
+	}
 	controller := NewActivityLogController(mockService)
 
-	mockService.getTaskLogsFunc = func(taskID int64, page int, limit int) ([]models.ActivityLog, map[string]interface{}, error) {
-		return nil, nil, errors.New("service error")
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}/activity-logs", controller.GetTaskActivityLogs)
 
 	req := httptest.NewRequest("GET", "/tasks/1/activity-logs?page=1&limit=10", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetTaskActivityLogs(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getTaskLogsFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status %d, got %d", http.StatusInternalServerError, w.Code)
 	}
 }
 
 func TestActivityLogController_GetActivityLogByID_Success(t *testing.T) {
-	mockService := &MockActivityLogService{}
+	mockService := &MockActivityLogService{
+		getByIDFunc: func(id int64) (*models.ActivityLog, error) {
+			return &models.ActivityLog{ID: id, Action: "create", UserID: 1}, nil
+		},
+	}
 	controller := NewActivityLogController(mockService)
 
-	mockService.getByIDFunc = func(id int64) (*models.ActivityLog, error) {
-		return &models.ActivityLog{ID: id, Action: "create"}, nil
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /activity-logs/{id}", controller.GetActivityLogByID)
 
 	req := httptest.NewRequest("GET", "/activity-logs/1", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetActivityLogByID(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getByIDFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }
 
-func TestActivityLogController_GetActivityLogByID_Error(t *testing.T) {
+func TestActivityLogController_GetActivityLogByID_NotFound(t *testing.T) {
+	mockService := &MockActivityLogService{
+		getByIDFunc: func(id int64) (*models.ActivityLog, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+	controller := NewActivityLogController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /activity-logs/{id}", controller.GetActivityLogByID)
+
+	req := httptest.NewRequest("GET", "/activity-logs/999", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+	}
+}
+
+func TestActivityLogController_GetActivityLogByID_Forbidden(t *testing.T) {
+	mockService := &MockActivityLogService{
+		getByIDFunc: func(id int64) (*models.ActivityLog, error) {
+			return &models.ActivityLog{ID: id, Action: "create", UserID: 2}, nil
+		},
+	}
+	controller := NewActivityLogController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /activity-logs/{id}", controller.GetActivityLogByID)
+
+	req := httptest.NewRequest("GET", "/activity-logs/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Errorf("Expected status %d, got %d", http.StatusForbidden, w.Code)
+	}
+}
+
+func TestActivityLogController_GetActivityLogByID_InvalidID(t *testing.T) {
 	mockService := &MockActivityLogService{}
 	controller := NewActivityLogController(mockService)
 
-	mockService.getByIDFunc = func(id int64) (*models.ActivityLog, error) {
-		return nil, errors.New("not found")
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /activity-logs/{id}", controller.GetActivityLogByID)
 
-	req := httptest.NewRequest("GET", "/activity-logs/999", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req := httptest.NewRequest("GET", "/activity-logs/invalid", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetActivityLogByID(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getByIDFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
 	}
 }

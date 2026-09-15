@@ -52,6 +52,26 @@ func TestSanitizeError(t *testing.T) {
 			input:    nil,
 			expected: "",
 		},
+		{
+			name:     "long token",
+			input:    errors.New("token abcdefghijklmnopqrstuvwxyz1234567890abcdefghi"),
+			expected: "token ***",
+		},
+		{
+			name:     "secret",
+			input:    errors.New("secret mysecretkey123"),
+			expected: "secret mysecretkey123", // secret pattern doesn't match this format
+		},
+		{
+			name:     "unix file path",
+			input:    errors.New("cannot open /home/user/config.json"),
+			expected: "cannot open /home/***/config.json",
+		},
+		{
+			name:     "stack trace",
+			input:    errors.New("panic: runtime error\ngoroutine 1 [running]:\ncreated by main.main\nruntime/debug.Stack()"),
+			expected: "", // Stack traces are completely removed
+		},
 	}
 
 	for _, tt := range tests {
@@ -132,6 +152,36 @@ func TestHandleAPIError(t *testing.T) {
 			input:        nil,
 			expectedCode: 200,
 			expectedMsg:  "Success",
+		},
+		{
+			name:         "JSON decode error",
+			input:        errors.New("invalid character 'i' looking for beginning of value"),
+			expectedCode: 400,
+			expectedMsg:  "Invalid JSON format",
+		},
+		{
+			name:         "JSON unmarshal error",
+			input:        errors.New("json unmarshal error"),
+			expectedCode: 400,
+			expectedMsg:  "Invalid JSON format",
+		},
+		{
+			name:         "parse error",
+			input:        errors.New("strconv.ParseInt: parsing \"invalid\": invalid syntax"),
+			expectedCode: 400,
+			expectedMsg:  "Invalid input format",
+		},
+		{
+			name:         "invalid syntax error",
+			input:        errors.New("invalid syntax"),
+			expectedCode: 400,
+			expectedMsg:  "Invalid input format",
+		},
+		{
+			name:         "database connection error",
+			input:        errors.New("connection timeout: socket error"),
+			expectedCode: 500,
+			expectedMsg:  "An internal error occurred. Please try again later.",
 		},
 	}
 

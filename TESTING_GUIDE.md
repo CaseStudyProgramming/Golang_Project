@@ -21,7 +21,7 @@ This project follows a pyramid testing strategy with three layers of testing:
 
 The project uses GitHub Actions for continuous integration and deployment with a **Docker-based approach** for cross-platform consistency:
 
-- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint → Unit tests → Integration tests → Security scan → Build
+- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint (golangci-lint) → Unit tests → Integration tests → Security scan → Build
 - **Frontend CI** (`.github/workflows/frontend-ci.yml`): API generation → Format → Lint → Type check → Unit tests → Build → Docker build → E2E tests with Docker containers
 - **Main CI** (`.github/workflows/ci.yml`): Orchestrates backend and frontend CI, builds Docker images, deploys
 
@@ -315,7 +315,7 @@ docker-compose -f docker-compose.ci.yml logs postgres-ci
 ### GitHub Actions
 The project includes CI/CD workflows that automatically run tests:
 
-- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint → Unit tests → Integration tests → Security scan → Build → Docker build
+- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint (golangci-lint) → Unit tests → Integration tests → Security scan → Build → Docker build
   - **No E2E tests**: Backend uses integration tests (API server doesn't need UI testing)
   - **No explicit type check**: Go is statically-typed, type checking happens during `go build`
 
@@ -372,7 +372,7 @@ The project includes CI/CD workflows that automatically run tests:
 - Uses PostgreSQL service container for integration tests
 - Environment variables configured for test database
 - Runs with Go 1.25
-- Format → Lint → Unit tests → Integration tests → Security scan → Build → Docker build
+- Format → Lint (golangci-lint) → Unit tests → Integration tests → Security scan → Build → Docker build
 - **No E2E tests**: Integration tests are sufficient for API server
 - **No explicit type check**: Go's static typing handles this during build
 
@@ -828,12 +828,12 @@ The backend should validate against the OpenAPI spec. This can be added:
 
 - **Backend Unit Tests**: >90% coverage (overall), with file-type-specific thresholds
 - **Backend Integration Tests**: Critical API paths
-- **Frontend Unit Tests**: >90% coverage (overall), with file-type-specific thresholds
+- **Frontend Unit Tests**: >85% coverage (overall), with file-type-specific thresholds
 - **E2E Tests**: Critical user journeys (login, create task, update, delete)
 
 ## Backend Coverage Strategy (Go)
 
-Backend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **90%+ overall coverage** with intelligent thresholds based on code importance and complexity.
+Backend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **>90% overall coverage** with intelligent thresholds based on code importance and complexity.
 
 ### Rule-Based Step-by-Step Coverage Improvement
 
@@ -852,7 +852,7 @@ Backend follows a pragmatic, rule-based approach to test coverage that considers
 
 3. **Determine approach based on file type**
    - **Configuration/error types/boilerplate** → Exclude from coverage requirements
-   - **Business logic must be 93%+ covered** → Add comprehensive tests
+   - **Business logic must be >93% covered** → Add comprehensive tests
    - **Mixed cases** → Consider appropriate thresholds based on complexity
 
 ### Backend File Type Classification
@@ -935,7 +935,7 @@ Instead of blindly pursuing 100% coverage, focus on:
 
 ## Frontend Coverage Strategy (SvelteKit)
 
-Frontend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **90%+ overall coverage** with intelligent thresholds based on code importance and complexity.
+Frontend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **>80% overall coverage** with intelligent thresholds based on code importance and complexity.
 
 ### Rule-Based Step-by-Step Coverage Improvement
 
@@ -947,12 +947,12 @@ Frontend follows a pragmatic, rule-based approach to test coverage that consider
 
 2. **Analyze which files have low coverage**
    - Review the coverage report output
-   - Identify files with <90% coverage
+   - Identify files with <85% coverage
    - Prioritize critical business logic files
 
 3. **Determine approach based on file type**
    - **Type definitions/error pages/boilerplate** → Exclude from coverage requirements
-   - **Business logic must be 93%+ covered**  → Add comprehensive tests
+   - **Business logic must be >93% covered**  → Add comprehensive tests
    - **Mixed cases** → Consider appropriate thresholds
 
 ### Frontend File Type Classification

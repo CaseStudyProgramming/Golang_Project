@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -68,14 +70,16 @@ func TestNewCategoryController(t *testing.T) {
 }
 
 func TestCategoryController_CreateCategory_Basic(t *testing.T) {
-	mockService := &MockCategoryService{}
+	mockService := &MockCategoryService{
+		createFunc: func(userID int64, category *models.Category) (*models.Category, error) {
+			return &models.Category{ID: 1, Name: category.Name, UserID: userID}, nil
+		},
+	}
 	controller := NewCategoryController(mockService)
 
-	mockService.createFunc = func(userID int64, category *models.Category) (*models.Category, error) {
-		return &models.Category{ID: 1, Name: category.Name, UserID: userID}, nil
-	}
-
-	req := httptest.NewRequest("POST", "/categories", nil)
+	categoryJSON := `{"name": "Work"}`
+	req := httptest.NewRequest("POST", "/categories", bytes.NewBufferString(categoryJSON))
+	req.Header.Set("Content-Type", "application/json")
 	ctx := context.WithValue(context.Background(), "user_id", int64(1))
 	ctx = context.WithValue(ctx, "timezone", "UTC")
 	req = req.WithContext(ctx)
@@ -83,9 +87,15 @@ func TestCategoryController_CreateCategory_Basic(t *testing.T) {
 	w := httptest.NewRecorder()
 	controller.CreateCategory(w, req)
 
-	// Should fail due to empty body, but service method exists
-	if mockService.createFunc == nil {
-		t.Error("Service method should have been called")
+	if w.Code != http.StatusCreated {
+		t.Errorf("Expected status %d, got %d", http.StatusCreated, w.Code)
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	if response["status"] != "success" {
+		t.Errorf("Expected success status, got %v", response["status"])
 	}
 }
 
@@ -131,46 +141,144 @@ func TestCategoryController_GetAllCategories_Error(t *testing.T) {
 	}
 }
 
-func TestCategoryController_GetCategoryByID_NotFound(t *testing.T) {
-	mockService := &MockCategoryService{}
+func TestCategoryController_GetCategoryByID_Success(t *testing.T) {
+	mockService := &MockCategoryService{
+		getByIDFunc: func(userID int64, id int64) (*models.Category, error) {
+			return &models.Category{ID: id, Name: "Work", UserID: userID}, nil
+		},
+	}
 	controller := NewCategoryController(mockService)
 
-	mockService.getByIDFunc = func(userID int64, id int64) (*models.Category, error) {
-		return nil, sql.ErrNoRows
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /categories/{id}", controller.GetCategoryByID)
+
+	req := httptest.NewRequest("GET", "/categories/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 	}
+}
+
+func TestCategoryController_GetCategoryByID_NotFound(t *testing.T) {
+	mockService := &MockCategoryService{
+		getByIDFunc: func(userID int64, id int64) (*models.Category, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+	controller := NewCategoryController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /categories/{id}", controller.GetCategoryByID)
 
 	req := httptest.NewRequest("GET", "/categories/999", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetCategoryByID(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getByIDFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+	}
+}
+
+func TestCategoryController_UpdateCategory_Success(t *testing.T) {
+	mockService := &MockCategoryService{
+		updateFunc: func(userID int64, id int64, category *models.Category) (*models.Category, error) {
+			return &models.Category{ID: id, Name: category.Name, UserID: userID}, nil
+		},
+	}
+	controller := NewCategoryController(mockService)
+
+	categoryJSON := `{"name": "Updated Category"}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /categories/{id}", controller.UpdateCategory)
+
+	req := httptest.NewRequest("PUT", "/categories/1", bytes.NewBufferString(categoryJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestCategoryController_UpdateCategory_NotFound(t *testing.T) {
+	mockService := &MockCategoryService{
+		updateFunc: func(userID int64, id int64, category *models.Category) (*models.Category, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+	controller := NewCategoryController(mockService)
+
+	categoryJSON := `{"name": "Updated Category"}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /categories/{id}", controller.UpdateCategory)
+
+	req := httptest.NewRequest("PUT", "/categories/999", bytes.NewBufferString(categoryJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+	}
+}
+
+func TestCategoryController_DeleteCategory_Success(t *testing.T) {
+	mockService := &MockCategoryService{
+		deleteFunc: func(userID int64, id int64) error {
+			return nil
+		},
+	}
+	controller := NewCategoryController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /categories/{id}", controller.DeleteCategory)
+
+	req := httptest.NewRequest("DELETE", "/categories/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusAccepted {
+		t.Errorf("Expected status %d, got %d", http.StatusAccepted, w.Code)
 	}
 }
 
 func TestCategoryController_DeleteCategory_NotFound(t *testing.T) {
-	mockService := &MockCategoryService{}
+	mockService := &MockCategoryService{
+		deleteFunc: func(userID int64, id int64) error {
+			return sql.ErrNoRows
+		},
+	}
 	controller := NewCategoryController(mockService)
 
-	mockService.deleteFunc = func(userID int64, id int64) error {
-		return sql.ErrNoRows
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /categories/{id}", controller.DeleteCategory)
 
 	req := httptest.NewRequest("DELETE", "/categories/999", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.DeleteCategory(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.deleteFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
 	}
 }

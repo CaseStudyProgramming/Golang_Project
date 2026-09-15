@@ -1,7 +1,9 @@
 package services
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"strings"
 	"taskmanager/models"
@@ -523,6 +525,34 @@ func TestDelete_Success(t *testing.T) {
 	}
 }
 
+func TestDelete_WithActivityLogging(t *testing.T) {
+	mockTask := &models.Task{
+		ID:        1,
+		Title:     "Test Task",
+		Completed: false,
+	}
+
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return mockTask, nil
+		},
+		DeleteFunc: func(userID int64, id int64, softDelete bool) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	mockActivityModel := NewMockActivityLogModel()
+	activityService := NewActivityLogService(mockActivityModel)
+	service := NewTaskService(mockModel, mockTagModel, activityService)
+
+	err := service.Delete(1, 1, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
 func TestDelete_NotFound(t *testing.T) {
 	mockModel := &MockTaskModel{
 		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
@@ -540,8 +570,41 @@ func TestDelete_NotFound(t *testing.T) {
 	}
 }
 
+func TestDelete_ModelError(t *testing.T) {
+	mockTask := &models.Task{
+		ID:        1,
+		Title:     "Test Task",
+		Completed: false,
+	}
+
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return mockTask, nil
+		},
+		DeleteFunc: func(userID int64, id int64, softDelete bool) error {
+			return errors.New("delete failed")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.Delete(1, 1, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to delete task") {
+		t.Errorf("Expected error to contain 'failed to delete task', got %v", err)
+	}
+}
+
 func TestMarkAsCompleted_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
 		MarkTaskAsCompletedFunc: func(userID int64, id int64) error {
 			return nil
 		},
@@ -557,8 +620,78 @@ func TestMarkAsCompleted_Success(t *testing.T) {
 	}
 }
 
+func TestMarkAsCompleted_TaskNotFound(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.MarkAsCompleted(1, 999, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error for non-existent task, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to get task") {
+		t.Errorf("Expected error to contain 'failed to get task', got %v", err)
+	}
+}
+
+func TestMarkAsCompleted_ModelError(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+		MarkTaskAsCompletedFunc: func(userID int64, id int64) error {
+			return errors.New("model error")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.MarkAsCompleted(1, 1, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to mark task") {
+		t.Errorf("Expected error to contain 'failed to mark task', got %v", err)
+	}
+}
+
+func TestMarkAsCompleted_WithActivityLogging(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+		MarkTaskAsCompletedFunc: func(userID int64, id int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	mockActivityModel := NewMockActivityLogModel()
+	activityService := NewActivityLogService(mockActivityModel)
+	service := NewTaskService(mockModel, mockTagModel, activityService)
+
+	err := service.MarkAsCompleted(1, 1, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
 func TestMarkAsUncompleted_Success(t *testing.T) {
 	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
 		MarkTaskAsUncompletedFunc: func(userID int64, id int64) error {
 			return nil
 		},
@@ -566,6 +699,73 @@ func TestMarkAsUncompleted_Success(t *testing.T) {
 
 	mockTagModel := NewMockTagModel()
 	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.MarkAsUncompleted(1, 1, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestMarkAsUncompleted_TaskNotFound(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.MarkAsUncompleted(1, 999, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error for non-existent task, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to get task") {
+		t.Errorf("Expected error to contain 'failed to get task', got %v", err)
+	}
+}
+
+func TestMarkAsUncompleted_ModelError(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+		MarkTaskAsUncompletedFunc: func(userID int64, id int64) error {
+			return errors.New("model error")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.MarkAsUncompleted(1, 1, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to mark task") {
+		t.Errorf("Expected error to contain 'failed to mark task', got %v", err)
+	}
+}
+
+func TestMarkAsUncompleted_WithActivityLogging(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+		MarkTaskAsUncompletedFunc: func(userID int64, id int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	mockActivityModel := NewMockActivityLogModel()
+	activityService := NewActivityLogService(mockActivityModel)
+	service := NewTaskService(mockModel, mockTagModel, activityService)
 
 	err := service.MarkAsUncompleted(1, 1, "127.0.0.1", "test-agent")
 
@@ -844,5 +1044,280 @@ func TestBulkComplete_EmptyTaskIDs(t *testing.T) {
 	// Bulk operations with empty arrays should succeed (no-op)
 	if err != nil {
 		t.Errorf("Expected no error for empty task IDs, got %v", err)
+	}
+}
+
+func TestComplete_Success(t *testing.T) {
+	mockModel := &MockTaskModel{
+		CompleteFunc: func(userID int64, id int64) error {
+			return nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.Complete(1, 1)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestComplete_Error(t *testing.T) {
+	mockModel := &MockTaskModel{
+		CompleteFunc: func(userID int64, id int64) error {
+			return errors.New("complete failed")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	err := service.Complete(1, 1)
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "complete failed") {
+		t.Errorf("Expected error to contain 'complete failed', got %v", err)
+	}
+}
+
+func TestBulkDelete_LargeBatch(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkDeleteFunc: func(userID int64, taskIDs []int64) error {
+			return nil
+		},
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	// Create a large batch of task IDs
+	taskIDs := make([]int64, 50)
+	for i := 0; i < 50; i++ {
+		taskIDs[i] = int64(i + 1)
+	}
+
+	err := service.BulkDelete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error for large batch, got %v", err)
+	}
+}
+
+func TestBulkComplete_LargeBatch(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkCompleteFunc: func(userID int64, taskIDs []int64) error {
+			return nil
+		},
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	// Create a large batch of task IDs
+	taskIDs := make([]int64, 50)
+	for i := 0; i < 50; i++ {
+		taskIDs[i] = int64(i + 1)
+	}
+
+	err := service.BulkComplete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error for large batch, got %v", err)
+	}
+}
+
+func TestBulkDelete_WithActivityLogging(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkDeleteFunc: func(userID int64, taskIDs []int64) error {
+			return nil
+		},
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	mockActivityModel := NewMockActivityLogModel()
+	activityService := NewActivityLogService(mockActivityModel)
+	service := NewTaskService(mockModel, mockTagModel, activityService)
+
+	taskIDs := []int64{1, 2, 3}
+	err := service.BulkDelete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestBulkComplete_WithActivityLogging(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkCompleteFunc: func(userID int64, taskIDs []int64) error {
+			return nil
+		},
+		GetByIDFunc: func(userID int64, id int64) (*models.Task, error) {
+			return &models.Task{ID: id, Title: "Test Task"}, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	mockActivityModel := NewMockActivityLogModel()
+	activityService := NewActivityLogService(mockActivityModel)
+	service := NewTaskService(mockModel, mockTagModel, activityService)
+
+	taskIDs := []int64{1, 2, 3}
+	err := service.BulkComplete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+}
+
+func TestBulkDelete_Error(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkDeleteFunc: func(userID int64, taskIDs []int64) error {
+			return errors.New("bulk delete failed")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	taskIDs := []int64{1, 2, 3}
+	err := service.BulkDelete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "bulk delete failed") {
+		t.Errorf("Expected error to contain 'bulk delete failed', got %v", err)
+	}
+}
+
+func TestBulkComplete_Error(t *testing.T) {
+	mockModel := &MockTaskModel{
+		BulkCompleteFunc: func(userID int64, taskIDs []int64) error {
+			return errors.New("bulk complete failed")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	taskIDs := []int64{1, 2, 3}
+	err := service.BulkComplete(1, taskIDs, "127.0.0.1", "test-agent")
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "bulk complete failed") {
+		t.Errorf("Expected error to contain 'bulk complete failed', got %v", err)
+	}
+}
+
+func TestExportToCSV_Success(t *testing.T) {
+	mockTasks := []models.Task{
+		{ID: 1, Title: "Task 1", Completed: false, CreatedAt: utils.CurrentEpochMillis(), UpdatedAt: utils.CurrentEpochMillis()},
+		{ID: 2, Title: "Task 2", Completed: true, CreatedAt: utils.CurrentEpochMillis(), UpdatedAt: utils.CurrentEpochMillis()},
+	}
+
+	mockModel := &MockTaskModel{
+		GetAllFunc: func(userID int64, completed *bool, offset, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, int, error) {
+			return mockTasks, 2, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	csvData, err := service.ExportToCSV(1, nil, "", nil, nil, "UTC")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if csvData == nil {
+		t.Error("Expected CSV data, got nil")
+	}
+
+	if len(csvData) == 0 {
+		t.Error("Expected non-empty CSV data")
+	}
+
+	// Verify CSV structure
+	reader := csv.NewReader(bytes.NewReader(csvData))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Errorf("Failed to parse CSV: %v", err)
+	}
+
+	// Should have header + 2 data rows
+	if len(records) != 3 {
+		t.Errorf("Expected 3 CSV rows (header + 2 tasks), got %d", len(records))
+	}
+
+	// Verify header
+	if len(records) > 0 && records[0][0] != "ID" {
+		t.Errorf("Expected CSV header to start with 'ID', got %s", records[0][0])
+	}
+}
+
+func TestExportToCSV_NoTasks(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetAllFunc: func(userID int64, completed *bool, offset, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, int, error) {
+			return []models.Task{}, 0, nil
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	csvData, err := service.ExportToCSV(1, nil, "", nil, nil, "UTC")
+
+	// ExportToCSV should succeed even with no tasks (empty CSV with header)
+	if err != nil {
+		t.Errorf("Expected no error for no tasks, got %v", err)
+	}
+
+	if csvData == nil {
+		t.Error("Expected CSV data, got nil")
+	}
+
+	// Should contain header even with no tasks
+	if len(csvData) == 0 {
+		t.Error("Expected CSV header, got empty data")
+	}
+}
+
+func TestExportToCSV_Error(t *testing.T) {
+	mockModel := &MockTaskModel{
+		GetAllFunc: func(userID int64, completed *bool, offset, limit int, search string, priority *models.Priority, categoryID *int64, sortBy string, sortOrder string) ([]models.Task, int, error) {
+			return nil, 0, errors.New("database error")
+		},
+	}
+
+	mockTagModel := NewMockTagModel()
+	service := NewTaskService(mockModel, mockTagModel, nil)
+
+	_, err := service.ExportToCSV(1, nil, "", nil, nil, "UTC")
+
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "database error") {
+		t.Errorf("Expected error to contain 'database error', got %v", err)
 	}
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"sync"
 	"taskmanager/models"
 )
 
@@ -250,6 +251,7 @@ func (m *MockTagModel) GetTasksByTagID(tagID int64) ([]models.Task, error) {
 
 // MockActivityLogModel is a mock implementation of ActivityLogModelInterface for testing
 type MockActivityLogModel struct {
+	mu           sync.RWMutex
 	logs         map[int64]*models.ActivityLog
 	nextID       int64
 	createError  error
@@ -266,6 +268,9 @@ func NewMockActivityLogModel() *MockActivityLogModel {
 }
 
 func (m *MockActivityLogModel) Create(log *models.ActivityLog) (*models.ActivityLog, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.createError != nil {
 		return nil, m.createError
 	}
@@ -277,6 +282,9 @@ func (m *MockActivityLogModel) Create(log *models.ActivityLog) (*models.Activity
 }
 
 func (m *MockActivityLogModel) GetByUserID(userID int64, offset int, limit int) ([]models.ActivityLog, int, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	if m.getUserError != nil {
 		return nil, 0, m.getUserError
 	}
@@ -307,6 +315,9 @@ func (m *MockActivityLogModel) GetByUserID(userID int64, offset int, limit int) 
 }
 
 func (m *MockActivityLogModel) GetByTaskID(taskID int64, offset int, limit int) ([]models.ActivityLog, int, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	if m.getTaskError != nil {
 		return nil, 0, m.getTaskError
 	}
@@ -337,6 +348,9 @@ func (m *MockActivityLogModel) GetByTaskID(taskID int64, offset int, limit int) 
 }
 
 func (m *MockActivityLogModel) GetByID(id int64) (*models.ActivityLog, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	if m.getByIDError != nil {
 		return nil, m.getByIDError
 	}

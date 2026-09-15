@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -125,90 +127,259 @@ func TestTagController_GetAllTags_Error(t *testing.T) {
 	}
 }
 
-func TestTagController_GetTagByID_NotFound(t *testing.T) {
-	mockService := &MockTagService{}
+func TestTagController_GetTagByID_Success(t *testing.T) {
+	mockService := &MockTagService{
+		getByIDFunc: func(userID int64, id int64) (*models.Tag, error) {
+			return &models.Tag{ID: id, Name: "Test Tag", UserID: userID}, nil
+		},
+	}
 	controller := NewTagController(mockService)
 
-	mockService.getByIDFunc = func(userID int64, id int64) (*models.Tag, error) {
-		return nil, sql.ErrNoRows
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tags/{id}", controller.GetTagByID)
+
+	req := httptest.NewRequest("GET", "/tags/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 	}
+}
+
+func TestTagController_GetTagByID_NotFound(t *testing.T) {
+	mockService := &MockTagService{
+		getByIDFunc: func(userID int64, id int64) (*models.Tag, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+	controller := NewTagController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tags/{id}", controller.GetTagByID)
 
 	req := httptest.NewRequest("GET", "/tags/999", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetTagByID(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getByIDFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+	}
+}
+
+func TestTagController_DeleteTag_Success(t *testing.T) {
+	mockService := &MockTagService{
+		deleteFunc: func(userID int64, id int64) error {
+			return nil
+		},
+	}
+	controller := NewTagController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tags/{id}", controller.DeleteTag)
+
+	req := httptest.NewRequest("DELETE", "/tags/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusAccepted {
+		t.Errorf("Expected status %d, got %d", http.StatusAccepted, w.Code)
 	}
 }
 
 func TestTagController_DeleteTag_NotFound(t *testing.T) {
-	mockService := &MockTagService{}
+	mockService := &MockTagService{
+		deleteFunc: func(userID int64, id int64) error {
+			return sql.ErrNoRows
+		},
+	}
 	controller := NewTagController(mockService)
 
-	mockService.deleteFunc = func(userID int64, id int64) error {
-		return sql.ErrNoRows
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tags/{id}", controller.DeleteTag)
 
 	req := httptest.NewRequest("DELETE", "/tags/999", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.DeleteTag(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.deleteFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
 	}
 }
 
 func TestTagController_GetTagsByTaskID_Success(t *testing.T) {
-	mockService := &MockTagService{}
+	mockService := &MockTagService{
+		getTagsByTaskFunc: func(taskID int64) ([]models.Tag, error) {
+			return []models.Tag{{ID: 1, Name: "Urgent"}}, nil
+		},
+	}
 	controller := NewTagController(mockService)
 
-	mockService.getTagsByTaskFunc = func(taskID int64) ([]models.Tag, error) {
-		return []models.Tag{{ID: 1, Name: "Urgent"}}, nil
-	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tasks/{id}/tags", controller.GetTagsByTaskID)
 
 	req := httptest.NewRequest("GET", "/tasks/1/tags", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetTagsByTaskID(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getTagsByTaskFunc == nil {
-		t.Error("Service method should have been called")
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }
 
 func TestTagController_GetTasksByTagID_Success(t *testing.T) {
+	mockService := &MockTagService{
+		getTasksByTagFunc: func(tagID int64) ([]models.Task, error) {
+			return []models.Task{{ID: 1, Title: "Test Task"}}, nil
+		},
+	}
+	controller := NewTagController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /tags/{id}/tasks", controller.GetTasksByTagID)
+
+	req := httptest.NewRequest("GET", "/tags/1/tasks", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestTagController_CreateTag_Success(t *testing.T) {
+	mockService := &MockTagService{
+		createFunc: func(userID int64, tag *models.Tag) (*models.Tag, error) {
+			return &models.Tag{ID: 1, Name: tag.Name, UserID: userID}, nil
+		},
+	}
+	controller := NewTagController(mockService)
+
+	tagJSON := `{"name": "Urgent"}`
+	req := httptest.NewRequest("POST", "/tags", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	controller.CreateTag(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("Expected status %d, got %d", http.StatusCreated, w.Code)
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	if response["status"] != "success" {
+		t.Errorf("Expected success status, got %v", response["status"])
+	}
+}
+
+func TestTagController_CreateTag_InvalidRequest(t *testing.T) {
 	mockService := &MockTagService{}
 	controller := NewTagController(mockService)
 
-	mockService.getTasksByTagFunc = func(tagID int64) ([]models.Task, error) {
-		return []models.Task{{ID: 1, Title: "Test Task"}}, nil
-	}
-
-	req := httptest.NewRequest("GET", "/tags/1/tasks", nil)
-	ctx := context.WithValue(context.Background(), "user_id", int64(1))
-	ctx = context.WithValue(ctx, "timezone", "UTC")
-	req = req.WithContext(ctx)
-
+	invalidJSON := `{"name": invalid}`
+	req := httptest.NewRequest("POST", "/tags", bytes.NewBufferString(invalidJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
 	w := httptest.NewRecorder()
-	controller.GetTasksByTagID(w, req)
 
-	// Should fail due to missing path parameter, but service method exists
-	if mockService.getTasksByTagFunc == nil {
-		t.Error("Service method should have been called")
+	controller.CreateTag(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status %d for invalid request, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestTagController_CreateTag_ServiceError(t *testing.T) {
+	mockService := &MockTagService{
+		createFunc: func(userID int64, tag *models.Tag) (*models.Tag, error) {
+			return nil, errors.New("service error")
+		},
+	}
+	controller := NewTagController(mockService)
+
+	tagJSON := `{"name": "Urgent"}`
+	req := httptest.NewRequest("POST", "/tags", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	controller.CreateTag(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status %d for service error, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestTagController_UpdateTag_Success(t *testing.T) {
+	mockService := &MockTagService{
+		updateFunc: func(userID int64, id int64, tag *models.Tag) (*models.Tag, error) {
+			return &models.Tag{ID: id, Name: tag.Name, UserID: userID}, nil
+		},
+	}
+	controller := NewTagController(mockService)
+
+	tagJSON := `{"name": "Updated Tag"}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /tags/{id}", controller.UpdateTag)
+
+	req := httptest.NewRequest("PUT", "/tags/1", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestTagController_UpdateTag_NotFound(t *testing.T) {
+	mockService := &MockTagService{
+		updateFunc: func(userID int64, id int64, tag *models.Tag) (*models.Tag, error) {
+			return nil, sql.ErrNoRows
+		},
+	}
+	controller := NewTagController(mockService)
+
+	tagJSON := `{"name": "Updated Tag"}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("PUT /tags/{id}", controller.UpdateTag)
+
+	req := httptest.NewRequest("PUT", "/tags/999", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
 	}
 }
