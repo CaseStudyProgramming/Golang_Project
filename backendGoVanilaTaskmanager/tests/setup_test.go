@@ -69,12 +69,31 @@ func SetupTestDB(t *testing.T) *sql.DB {
 
 // RunTestMigrations runs the database migrations for testing
 func RunTestMigrations(db *sql.DB, t *testing.T) {
-	// Drop existing tables to ensure clean state
+	// Drop existing tables and sequences to ensure clean state
 	tables := []string{"activity_logs", "subtasks", "task_tags", "tasks", "tags", "categories", "users"}
 	for _, table := range tables {
 		_, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table))
 		if err != nil {
 			t.Logf("Warning: Failed to drop table %s: %v", table, err)
+		}
+	}
+
+	// Drop sequences for SERIAL columns
+	sequences := []string{"users_id_seq", "categories_id_seq", "tags_id_seq", "tasks_id_seq", "subtasks_id_seq", "activity_logs_id_seq"}
+	for _, seq := range sequences {
+		_, err := db.Exec(fmt.Sprintf("DROP SEQUENCE IF EXISTS %s CASCADE", seq))
+		if err != nil {
+			t.Logf("Warning: Failed to drop sequence %s: %v", seq, err)
+		}
+	}
+
+	// Ensure clean slate by checking for any remaining objects
+	for _, table := range tables {
+		var exists bool
+		checkQuery := fmt.Sprintf("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '%s')", table)
+		err := db.QueryRow(checkQuery).Scan(&exists)
+		if err == nil && exists {
+			t.Logf("Warning: Table %s still exists after drop attempt", table)
 		}
 	}
 
