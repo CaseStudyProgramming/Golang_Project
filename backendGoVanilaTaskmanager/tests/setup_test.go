@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"testing"
 
 	_ "github.com/lib/pq"
@@ -22,9 +23,16 @@ type TestDBConfig struct {
 
 // GetTestDBConfig returns the test database configuration from environment variables or defaults
 func GetTestDBConfig() TestDBConfig {
+	port := 5432
+	if portStr := getEnv("TEST_DB_PORT", ""); portStr != "" {
+		if p, err := strconv.Atoi(portStr); err == nil {
+			port = p
+		}
+	}
+
 	return TestDBConfig{
 		Host:     getEnv("TEST_DB_HOST", "localhost"),
-		Port:     5432,
+		Port:     port,
 		User:     getEnv("TEST_DB_USER", "postgres"),
 		Password: getEnv("TEST_DB_PASSWORD", "Berjuang#382"),
 		DBName:   getEnv("TEST_DB_NAME", "taskmanager_test"),
@@ -61,12 +69,32 @@ func SetupTestDB(t *testing.T) *sql.DB {
 
 // RunTestMigrations runs the database migrations for testing
 func RunTestMigrations(db *sql.DB, t *testing.T) {
-	// Drop existing tables to ensure clean state
+	// Use a transaction to ensure atomic schema creation
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction for migrations: %v", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Drop existing tables and sequences to ensure clean state
 	tables := []string{"activity_logs", "subtasks", "task_tags", "tasks", "tags", "categories", "users"}
 	for _, table := range tables {
-		_, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table))
+		_, err := tx.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table))
 		if err != nil {
 			t.Logf("Warning: Failed to drop table %s: %v", table, err)
+		}
+	}
+
+	// Drop sequences for SERIAL columns
+	sequences := []string{"users_id_seq", "categories_id_seq", "tags_id_seq", "tasks_id_seq", "subtasks_id_seq", "activity_logs_id_seq"}
+	for _, seq := range sequences {
+		_, err := tx.Exec(fmt.Sprintf("DROP SEQUENCE IF EXISTS %s CASCADE", seq))
+		if err != nil {
+			t.Logf("Warning: Failed to drop sequence %s: %v", seq, err)
 		}
 	}
 
@@ -145,10 +173,15 @@ func RunTestMigrations(db *sql.DB, t *testing.T) {
 	}
 
 	for _, migration := range migrations {
-		_, err := db.Exec(migration)
+		_, err = tx.Exec(migration)
 		if err != nil {
 			t.Fatalf("Migration failed: %v", err)
 		}
+	}
+
+	// Commit the transaction to make schema changes permanent
+	if err := tx.Commit(); err != nil {
+		t.Fatalf("Failed to commit migration transaction: %v", err)
 	}
 
 	log.Println("✅ Test database migrations completed")

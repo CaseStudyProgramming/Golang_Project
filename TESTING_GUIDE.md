@@ -19,21 +19,51 @@ This project follows a pyramid testing strategy with three layers of testing:
 
 ## CI/CD Overview
 
-The project uses GitHub Actions for continuous integration and deployment:
+The project uses GitHub Actions for continuous integration and deployment with a **Docker-based approach** for cross-platform consistency:
 
-- **Backend CI** (`.github/workflows/backend-ci.yml`): Unit tests, integration tests, security scan, build
-- **Frontend CI** (`.github/workflows/frontend-ci.yml`): Quality checks, unit tests, build, e2e tests with real backend
+- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint (golangci-lint) → Unit tests → Integration tests → Security scan → Build
+- **Frontend CI** (`.github/workflows/frontend-ci.yml`): API generation → Format → Lint → Type check → Unit tests → Build → Docker build → E2E tests with Docker containers
 - **Main CI** (`.github/workflows/ci.yml`): Orchestrates backend and frontend CI, builds Docker images, deploys
 
 ### Key CI Features
 
+- **Docker-based E2E**: E2E tests use Docker containers for backend (production parity)
 - **MSW from OpenAPI**: Frontend unit tests use MSW handlers based on OpenAPI spec
-- **Real Backend in E2E**: E2E tests use real backend with test database
+- **Cross-platform Support**: Docker/Podman compatible for macOS, Linux, Windows teams
+- **Environment-only Config**: Backend supports environment variables without config files
 - **Parallel Execution**: Tests run in parallel when possible
 - **Artifact Upload**: Test results and coverage reports are uploaded
 - **Docker Caching**: Build optimization with Docker layer caching
 
 ## Backend Testing (Go)
+
+### Type Checking in Go
+**Important**: Go does not require explicit type checking in CI because:
+
+- **Go is statically-typed**: Type checking happens at compile time
+- **`go build` performs type checking**: Build fails if there are type errors
+- **`go test` also type-checks**: Tests won't run if code has type errors
+- **No separate type check needed**: Type safety is built into the language
+
+**Type Safety in Go vs TypeScript:**
+- **Go**: Compile-time type checking (happens automatically during build)
+- **TypeScript**: Runtime language, needs explicit type checking tools (`tsc`, `svelte-check`)
+
+This is why `backend-ci.yml` does not have a separate type check step - the `go build` command already handles it.
+
+### E2E Tests in Backend
+**Backend does not have E2E tests** because:
+
+- **Backend is an API server**: No UI to test with browser automation
+- **Integration tests are sufficient**: Real database testing covers API functionality
+- **Performance overhead**: E2E tests are slower and unnecessary for pure API
+- **Frontend handles E2E**: Frontend CI tests the complete system including backend
+
+Backend uses **integration tests** instead:
+- Real PostgreSQL database
+- Complete request/response cycle testing
+- API contract validation
+- Business logic verification
 
 ### Unit Tests
 Fast tests for individual functions and business logic with mocked dependencies.
@@ -138,12 +168,12 @@ bun run validate src/lib/features/tasks/stores/task.store.logic.test.ts
 - This ensures frontend mocks match backend API contract with minimal manual effort
 
 ### E2E Tests
-End-to-end tests using Playwright with real backend and frontend.
+End-to-end tests using Playwright with real backend via Docker containers.
 
 ```bash
 cd sveltekit-taskmanager-frontend
 
-# Start test environment (backend + frontend + test DB)
+# Start test environment (backend + frontend + test DB via Docker)
 cd ..
 docker-compose -f docker-compose.test.yml up -d
 
@@ -161,12 +191,35 @@ bun run test:e2e:debug
 bun run test:e2e task-management.e2e.ts
 ```
 
+**Docker-based E2E Testing (Alternative for macOS/Podman):**
+```bash
+# Build backend Docker image
+cd backendGoVanilaTaskmanager
+docker build -t taskmanager-backend:test .
+
+# Run backend container with test database
+docker run -d --name taskmanager-backend-e2e --network host \
+  -e DB_HOST=localhost -e DB_PORT=5432 \
+  -e DB_USER=postgres -e DB_PASSWORD=Berjuang#382 \
+  -e DB_NAME=taskmanager_test \
+  -e JWT_SECRET=test-secret \
+  taskmanager-backend:test
+
+# Run e2e tests
+cd ../sveltekit-taskmanager-frontend
+PUBLIC_API_BASE_URL=http://localhost:8080 bun test:e2e
+
+# Cleanup
+docker stop taskmanager-backend-e2e
+docker rm taskmanager-backend-e2e
+```
+
 **E2E Test Configuration:**
-- Uses real backend server (Go)
-- Uses real PostgreSQL test database
-- Frontend runs on http://localhost:5173
-- Backend runs on http://localhost:8080
+- Uses real backend server via Docker container (production parity)
+- Uses real PostgreSQL test database via service container
+- Backend runs on http://localhost:8080 (Docker --network host)
 - Tests run on Chromium, Firefox, WebKit, and mobile browsers
+- Docker-based for cross-platform consistency (macOS, Linux, Windows)
 
 ## Running All Tests
 
@@ -262,9 +315,56 @@ docker-compose -f docker-compose.ci.yml logs postgres-ci
 ### GitHub Actions
 The project includes CI/CD workflows that automatically run tests:
 
-- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint → Unit tests → Integration tests → Security scan → Build
-- **Frontend CI** (`.github/workflows/frontend-ci.yml`): API generation → Format → Lint → Type check → Unit tests → Build → E2E tests
-- **Main CI** (`.github/workflows/ci.yml`): Orchestrates both CIs, builds Docker images, deploys
+- **Backend CI** (`.github/workflows/backend-ci.yml`): Format → Lint (golangci-lint) → Unit tests → Integration tests → Security scan → Build → Docker build
+  - **No E2E tests**: Backend uses integration tests (API server doesn't need UI testing)
+  - **No explicit type check**: Go is statically-typed, type checking happens during `go build`
+
+- **Frontend CI** (`.github/workflows/frontend-ci.yml`): Quality checks → Unit tests → Build → **E2E tests with Docker**
+  - **E2E tests are here**: Playwright tests with real backend Docker container
+  - **Type check included**: Explicit TypeScript/Svelte type checking with `svelte-check`
+  - **Docker-based backend**: Builds and runs backend in container for E2E tests
+
+- **Main CI** (`.github/workflows/ci.yml`): Orchestrates backend and frontend CI, builds Docker images, deploys
+  - **No direct tests**: Delegates testing to individual workflows
+  - **No E2E here**: E2E runs in frontend-ci.yml which is called by this workflow
+
+### E2E Test Distribution Across Workflows
+
+**Where are E2E tests run?**
+
+| Workflow | Has E2E? | Why? |
+|----------|---------|------|
+| `backend-ci.yml` | ❌ No | Backend is API server, integration tests are sufficient |
+| `frontend-ci.yml` | ✅ Yes | Frontend needs browser automation and user journey testing |
+| `ci.yml` | ❌ No | Orchestrator workflow, delegates to individual workflows |
+
+**E2E Test Location Strategy:**
+
+1. **Backend CI (`backend-ci.yml`)**:
+   - Focuses on API functionality
+   - Uses integration tests with real database
+   - No UI to test, so no E2E needed
+   - `go test ./tests/...` covers API testing
+
+2. **Frontend CI (`frontend-ci.yml`)**:
+   - Has dedicated `e2e` job
+   - Uses Playwright for browser automation
+   - Tests complete user journeys (login, create task, etc.)
+   - Requires real backend server (runs via Docker container)
+   - Job structure: `quality-checks` → `test` → `build` → `e2e`
+
+3. **Main CI (`ci.yml`)**:
+   - Orchestrates both backend and frontend CI
+   - Calls `frontend-ci.yml` which includes E2E
+   - Focuses on build, push, and deployment
+   - No direct test execution
+
+**Why This Distribution?**
+
+- **Separation of Concerns**: Each workflow has a focused responsibility
+- **Efficiency**: Backend doesn't need browser automation overhead
+- **Relevance**: Frontend is the only component that needs UI testing
+- **Maintainability**: E2E tests live where they're most relevant
 
 ### CI Environment Setup
 
@@ -272,18 +372,29 @@ The project includes CI/CD workflows that automatically run tests:
 - Uses PostgreSQL service container for integration tests
 - Environment variables configured for test database
 - Runs with Go 1.25
+- Format → Lint (golangci-lint) → Unit tests → Integration tests → Security scan → Build → Docker build
+- **No E2E tests**: Integration tests are sufficient for API server
+- **No explicit type check**: Go's static typing handles this during build
 
 **Frontend CI:**
+- Has **4 separate jobs**: quality-checks, test, build, e2e
 - Generates MSW handlers from OpenAPI spec automatically
-- Uses PostgreSQL service container for e2e tests
-- Starts backend server for e2e tests
+- Quality checks: Format → Lint → Type check → Unit tests
+- Build job: Builds frontend Docker image
+- **E2E job**: Uses PostgreSQL service container + Docker backend container
+- **Builds Docker image** for backend (production parity)
+- **Starts backend via Docker container** for e2e tests
 - Runs with Bun and Node.js 24
+- Database initialization via SQL scripts
+- Docker-based for cross-platform consistency
 
 **E2E Tests in CI:**
-- Real backend server (compiled Go binary)
-- Real PostgreSQL test database
+- **Real backend server via Docker container** (not compiled binary)
+- Real PostgreSQL test database via service container
+- Docker --network host for localhost access
 - Playwright browsers installed with system dependencies
 - Tests run on Chromium, Firefox, WebKit, and mobile browsers
+- Environment-only configuration (no config files needed)
 
 ### Running Tests in CI Context
 
@@ -300,11 +411,24 @@ cd sveltekit-taskmanager-frontend
 bun run api:generate
 bun run validate
 
-# Test e2e locally with CI-like setup
+# Test e2e locally with CI-like Docker setup
 cd ..
 docker-compose -f docker-compose.ci.yml up -d
 cd sveltekit-taskmanager-frontend
 CI=true PUBLIC_API_BASE_URL=http://localhost:8080 bun test:e2e
+
+# Alternative: Manual Docker testing (for macOS/Podman)
+cd backendGoVanilaTaskmanager
+docker build -t taskmanager-backend:test .
+docker run -d --name test-backend --network host \
+  -e DB_HOST=localhost -e DB_PORT=5432 \
+  -e DB_USER=postgres -e DB_PASSWORD=Berjuang#382 \
+  -e DB_NAME=taskmanager_test \
+  -e JWT_SECRET=test-secret \
+  taskmanager-backend:test
+cd ../sveltekit-taskmanager-frontend
+PUBLIC_API_BASE_URL=http://localhost:8080 bun test:e2e
+docker stop test-backend && docker rm test-backend
 ```
 
 ### Local CI Simulation
@@ -324,6 +448,10 @@ bun run lint
 bun run check
 bun run validate
 bun run build
+
+# Docker build simulation (matches CI)
+cd backendGoVanilaTaskmanager
+docker build -t taskmanager-backend:test .
 ```
 
 ## Test Data Management
@@ -357,8 +485,17 @@ Integration tests automatically clean up test data after each test run:
 ### E2E Tests Fail
 - Ensure test environment is running: `docker-compose -f docker-compose.test.yml ps`
 - Check backend health: `curl http://localhost:8080/health`
-- Check frontend is accessible: `curl http://localhost:5173`
-- Verify test user can be created via API
+- Verify Docker containers are running: `docker ps`
+- Check backend container logs: `docker logs taskmanager-backend-e2e`
+- Ensure database schema is initialized
+- Verify environment variables are set correctly
+
+### Docker Build Failures
+- Ensure Docker/Podman is installed and running
+- Check Go version in Dockerfile matches go.mod (currently 1.25)
+- Verify Dockerfile syntax: `docker build -t test .`
+- Check for sufficient disk space
+- Ensure base images can be pulled: `docker pull golang:1.25-alpine`
 
 ### Port Conflicts
 If ports are already in use:
@@ -382,6 +519,90 @@ If ports are already in use:
 12. **Test CI workflows locally** - Use docker-compose.ci.yml to simulate CI environment
 13. **Keep OpenAPI spec updated** - Single source of truth for API contract
 14. **Use environment-specific configurations** - Local vs CI environments
+15. **Leverage Docker for consistency** - Same containers for local, CI, and production
+16. **Support environment-only config** - Backend should work without config files using env vars
+17. **Test on multiple platforms** - Docker/Podman compatibility for macOS, Linux, Windows teams
+18. **Clean up Docker resources** - Remove containers and volumes after testing
+
+## Docker Environment Support
+
+The project uses **Docker-based environments** for cross-platform consistency, especially important for teams with macOS members using Docker Desktop or Podman.
+
+### Docker Configuration Files
+- `docker-compose.yml` - Main development environment
+- `docker-compose.test.yml` - Testing environment with test database
+- `docker-compose.ci.yml` - CI simulation environment
+- `Dockerfile` - Backend container build (Go 1.25-alpine)
+- `env/config.docker.yaml` - Default Docker configuration
+
+### Docker Configuration Benefits
+- **Cross-platform**: Works on macOS, Linux, Windows with Docker/Podman
+- **Production parity**: Same containers in development, CI, and production
+- **Isolated dependencies**: No host system dependencies
+- **Team consistency**: Same environment for all team members
+- **Environment-only config**: Backend supports running without config files
+
+### Backend Configuration System
+The backend supports **environment-only configuration** for Docker environments:
+
+**Priority Order:**
+1. Environment variables (highest priority)
+2. Config file values (if exists)
+3. Default values (lowest priority)
+
+**Environment Variables:**
+- `SERVER_PORT` - Server port (default: 8080)
+- `DB_HOST` - Database host (default: localhost)
+- `DB_PORT` - Database port (default: 5432)
+- `DB_USER` - Database user (default: postgres)
+- `DB_PASSWORD` - Database password (default: postgres)
+- `DB_NAME` - Database name (default: taskmanager)
+- `DB_SSLMODE` - SSL mode (default: disable)
+- `JWT_SECRET` - JWT secret key (required)
+- `APP_ENV` - Application environment (default: development)
+- `CORS_ALLOWED_ORIGINS` - Comma-separated CORS origins
+
+**Config Files:**
+- `env/config.yaml` - Local development config (gitignored)
+- `env/config.example.yaml` - Example config for reference
+- `env/config.docker.yaml` - Default Docker config (copied in Dockerfile)
+
+### Running Tests with Docker
+```bash
+# Start test environment
+docker-compose -f docker-compose.test.yml up -d
+
+# Run tests
+cd backendGoVanilaTaskmanager
+go test ./... -v
+
+# Stop environment
+docker-compose -f docker-compose.test.yml down -v
+```
+
+### Manual Docker Testing (Alternative Approach)
+```bash
+# Build backend image
+cd backendGoVanilaTaskmanager
+docker build -t taskmanager-backend:test .
+
+# Run with environment variables (no config file needed)
+docker run -d --name test-backend --network host \
+  -e DB_HOST=localhost \
+  -e DB_PORT=5432 \
+  -e DB_USER=postgres \
+  -e DB_PASSWORD=Berjuang#382 \
+  -e DB_NAME=taskmanager_test \
+  -e JWT_SECRET=test-secret \
+  taskmanager-backend:test
+
+# Health check
+curl http://localhost:8080/health
+
+# Cleanup
+docker stop test-backend
+docker rm test-backend
+```
 
 ## OpenAPI & MSW Integration
 
@@ -605,16 +826,118 @@ The backend should validate against the OpenAPI spec. This can be added:
 
 ## Test Coverage Goals
 
-- **Backend Unit Tests**: >80% coverage
+- **Backend Unit Tests**: >90% coverage (overall), with file-type-specific thresholds
 - **Backend Integration Tests**: Critical API paths
-- **Frontend Unit Tests**: >80% coverage
+- **Frontend Unit Tests**: >85% coverage (overall), with file-type-specific thresholds
 - **E2E Tests**: Critical user journeys (login, create task, update, delete)
 
-## Test Coverage Strategy
+## Backend Coverage Strategy (Go)
 
-When improving test coverage, follow this pragmatic approach based on industry best practices:
+Backend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **>90% overall coverage** with intelligent thresholds based on code importance and complexity.
 
-### Step-by-Step Coverage Improvement
+### Rule-Based Step-by-Step Coverage Improvement
+
+1. **Run coverage report to see actual data**
+   ```bash
+   cd backendGoVanilaTaskmanager
+   go test ./... -coverprofile=coverage.out -covermode=atomic
+   go tool cover -html=coverage.out -o coverage.html
+   # Open coverage.html in browser to see detailed report
+   ```
+
+2. **Analyze which files have low coverage**
+   - Review the coverage report output
+   - Identify files with <90% coverage
+   - Prioritize critical business logic files (services, repositories, controllers)
+
+3. **Determine approach based on file type**
+   - **Configuration/error types/boilerplate** → Exclude from coverage requirements
+   - **Business logic must be >93% covered** → Add comprehensive tests
+   - **Mixed cases** → Consider appropriate thresholds based on complexity
+
+### Backend File Type Classification
+
+**Exclude from Coverage Requirements:**
+- **Configuration files** (`config.go`, `config.yaml` handlers, environment setup)
+- **Error types and custom error definitions** (`errors.go`, custom error structs)
+- **Boilerplate HTTP handlers** (skeletal route handlers without business logic)
+- **Database migration files** (SQL files, migration scripts)
+- **Auto-generated code** (protobuf, wire dependency injection, swagger definitions)
+- **Simple DTOs/structs** (data transfer objects with only field definitions)
+
+**Focus Testing Efforts On:**
+- **Business logic in service layer** (`services/*.go`) - Core application logic
+- **Domain models with validation logic** (`models/*.go`) - Business rules
+- **Repository pattern implementations** (`repositories/*.go`) - Data access logic
+- **Controller logic with complexity** (not just route setup)
+- **Utility functions with complex logic** (`utils/*.go`)
+- **Middleware with important logic** (auth, validation, rate limiting)
+
+### Backend Threshold Considerations
+
+- **Repository methods**: >93% required (data access logic is critical)
+- **Service layer business logic**: >93% required (core application logic)
+- **Complex middleware**: >93% required (security, authentication logic)
+- **Simple utilities**: >75% acceptable (helper functions with straightforward logic)
+- **Controllers with validation**: >93% required (input validation and orchestration)
+
+### Backend Coverage Implementation
+
+**Generate Coverage Report:**
+```bash
+# Generate coverage for all packages
+cd backendGoVanilaTaskmanager
+go test ./... -coverprofile=coverage.out -covermode=atomic
+
+# View coverage in terminal
+go tool cover -func=coverage.out
+
+# Generate HTML report
+go tool cover -html=coverage.out -o coverage.html
+
+# Coverage by package
+go test ./... -cover
+```
+
+**Excluding Files from Coverage (Go Build Tags):**
+```go
+//go:build !coverage_tests
+// +build !coverage_tests
+
+package config
+
+// This file will be excluded from coverage when running with coverage build tag
+```
+
+**Run tests excluding specific files:**
+```bash
+# Run coverage excluding auto-generated files
+go test ./... -coverprofile=coverage.out -covermode=atomic -tags='!coverage_tests'
+```
+
+**CI Integration:**
+```yaml
+# In .github/workflows/backend-ci.yml
+- name: Run tests with coverage
+  run: |
+    go test ./... -coverprofile=coverage.out -covermode=atomic
+    go tool cover -func=coverage.out | grep total
+```
+
+### Backend Pragmatic Coverage Goals
+
+Instead of blindly pursuing 100% coverage, focus on:
+- Testing critical business paths thoroughly (service layer, repositories)
+- Ensuring high coverage for complex, error-prone code (middleware, validation)
+- Maintaining reasonable coverage for simple utilities and DTOs
+- Excluding files that don't benefit from testing (config, errors, boilerplate)
+- Prioritizing code that handles data persistence and business rules
+
+## Frontend Coverage Strategy (SvelteKit)
+
+Frontend follows a pragmatic, rule-based approach to test coverage that considers file types and complexity. The goal is **>80% overall coverage** with intelligent thresholds based on code importance and complexity.
+
+### Rule-Based Step-by-Step Coverage Improvement
 
 1. **Run coverage report to see actual data**
    ```bash
@@ -624,15 +947,15 @@ When improving test coverage, follow this pragmatic approach based on industry b
 
 2. **Analyze which files have low coverage**
    - Review the coverage report output
-   - Identify files with <80% coverage
+   - Identify files with <85% coverage
    - Prioritize critical business logic files
 
 3. **Determine approach based on file type**
    - **Type definitions/error pages/boilerplate** → Exclude from coverage requirements
-   - **Business logic** → Add comprehensive tests
+   - **Business logic must be >93% covered**  → Add comprehensive tests
    - **Mixed cases** → Consider appropriate thresholds
 
-### File Type Classification
+### Frontend File Type Classification
 
 **Exclude from Coverage Requirements:**
 - Type definition files (`.d.ts`, interfaces, types)
@@ -647,13 +970,13 @@ When improving test coverage, follow this pragmatic approach based on industry b
 - API integration layers
 - Core utility functions with complex logic
 
-**Threshold Considerations:**
-- Simple utilities: 60-70% acceptable
-- Complex business logic: 80-90% required
-- Critical paths: 90-100% required
+**Frontend Threshold Considerations:**
+- Simple utilities: >75% acceptable
+- Complex business logic: >90% required
+- Critical paths: >90% required
 - Mixed complexity: Adjust based on risk assessment
 
-### Pragmatic Coverage Goals
+### Frontend Pragmatic Coverage Goals
 
 Instead of blindly pursuing 100% coverage, focus on:
 - Testing critical business paths thoroughly

@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -733,6 +734,182 @@ func TestRestoreDeletedTaskHandler_InvalidID(t *testing.T) {
 
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestAddTagToTaskHandler_Success(t *testing.T) {
+	mockService := &MockTaskService{
+		AddTagToTaskFunc: func(userID int64, taskID int64, tagID int64) error {
+			return nil
+		},
+	}
+	controller := NewTaskController(mockService)
+
+	tagJSON := `{"tag_id": 1}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /tasks/{id}/tags", controller.AddTagToTask)
+
+	req := httptest.NewRequest("POST", "/tasks/1/tags", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+}
+
+func TestAddTagToTaskHandler_InvalidTaskID(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	tagJSON := `{"tag_id": 1}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /tasks/{id}/tags", controller.AddTagToTask)
+
+	req := httptest.NewRequest("POST", "/tasks/invalid/tags", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestAddTagToTaskHandler_MissingTagID(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	tagJSON := `{}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /tasks/{id}/tags", controller.AddTagToTask)
+
+	req := httptest.NewRequest("POST", "/tasks/1/tags", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestAddTagToTaskHandler_ServiceError(t *testing.T) {
+	mockService := &MockTaskService{
+		AddTagToTaskFunc: func(userID int64, taskID int64, tagID int64) error {
+			return errors.New("service error")
+		},
+	}
+	controller := NewTaskController(mockService)
+
+	tagJSON := `{"tag_id": 1}`
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /tasks/{id}/tags", controller.AddTagToTask)
+
+	req := httptest.NewRequest("POST", "/tasks/1/tags", bytes.NewBufferString(tagJSON))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status 500, got %d", w.Code)
+	}
+}
+
+func TestRemoveTagFromTaskHandler_Success(t *testing.T) {
+	mockService := &MockTaskService{
+		RemoveTagFromTaskFunc: func(userID int64, taskID int64, tagID int64) error {
+			return nil
+		},
+	}
+	controller := NewTaskController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}/tags/{tagId}", controller.RemoveTagFromTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/1/tags/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+}
+
+func TestRemoveTagFromTaskHandler_InvalidTaskID(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}/tags/{tagId}", controller.RemoveTagFromTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/invalid/tags/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestRemoveTagFromTaskHandler_InvalidTagID(t *testing.T) {
+	mockService := &MockTaskService{}
+	controller := NewTaskController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}/tags/{tagId}", controller.RemoveTagFromTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/1/tags/invalid", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+func TestRemoveTagFromTaskHandler_ServiceError(t *testing.T) {
+	mockService := &MockTaskService{
+		RemoveTagFromTaskFunc: func(userID int64, taskID int64, tagID int64) error {
+			return errors.New("service error")
+		},
+	}
+	controller := NewTaskController(mockService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("DELETE /tasks/{id}/tags/{tagId}", controller.RemoveTagFromTask)
+
+	req := httptest.NewRequest("DELETE", "/tasks/1/tags/1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), "user_id", int64(1)))
+	req = req.WithContext(context.WithValue(req.Context(), "timezone", "UTC"))
+	w := httptest.NewRecorder()
+
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status 500, got %d", w.Code)
 	}
 }
 

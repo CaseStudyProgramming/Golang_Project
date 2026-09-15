@@ -8,6 +8,15 @@ bin/
 tmp/
 backendGoVanilaTaskmanager/tmp/
 
+# Coverage reports
+*.out
+coverage.html
+coverage-integration.html
+backendGoVanilaTaskmanager/coverage.out
+backendGoVanilaTaskmanager/coverage.html
+backendGoVanilaTaskmanager/coverage-integration.out
+backendGoVanilaTaskmanager/coverage-integration.html
+
 # Environment files
 .env
 .env.*

@@ -32,7 +32,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
         ports:
           - 5432:5432
 
@@ -55,6 +55,15 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        sleep 10
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+        echo "PostgreSQL is ready"
+
     - name: Check code formatting
       run: |
         if [ -n "$(gofmt -l .)" ]; then
@@ -64,8 +73,21 @@ jobs:
         fi
         echo "✅ All Go files are properly formatted"
 
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v9
+      with:
+        version: latest
+        args: --timeout=5m
+        working-directory: backendGoVanilaTaskmanager
+
     - name: Run unit tests
-      run: go test -v ./...
+      run: go test -v ./... -short
+
+    - name: Clean test database
+      env:
+        PGPASSWORD: Berjuang#382
+      run: |
+        psql -h localhost -U postgres -d taskmanager_test -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
     - name: Run integration tests
       env:
@@ -75,10 +97,10 @@ jobs:
         TEST_DB_PASSWORD: Berjuang#382
         TEST_DB_NAME: taskmanager_test
         TEST_DB_SSLMODE: disable
-      run: go test -v ./tests/...
+      run: go test -v ./tests/... -p=1
 
     - name: Run tests with race detection
-      run: go test -race ./...
+      run: go test -race ./... -short
 
     - name: Run tests with coverage
       run: go test -cover ./...

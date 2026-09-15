@@ -1,0 +1,12 @@
+version: "2"
+
+run:
+  go: "1.25"
+  timeout: 5m
+
+linters:
+  disable:
+    - errcheck
+    - ineffassign
+    - unused
+    - staticcheck

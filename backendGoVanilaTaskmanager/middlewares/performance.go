@@ -193,3 +193,17 @@ func ResetMetrics() {
 	GlobalMetrics.ErrorCounts = make(map[string]int64)
 	GlobalMetrics.LastRequestTime = time.Now()
 }
+
+// RecordAPICall manually records an API call for testing purposes
+func RecordAPICall(endpoint string, duration time.Duration, isError bool) {
+	GlobalMetrics.mu.Lock()
+	defer GlobalMetrics.mu.Unlock()
+
+	GlobalMetrics.RequestCounts[endpoint]++
+	GlobalMetrics.ResponseTimes[endpoint] = append(GlobalMetrics.ResponseTimes[endpoint], duration)
+	GlobalMetrics.LastRequestTime = time.Now()
+
+	if isError {
+		GlobalMetrics.ErrorCounts[endpoint]++
+	}
+}

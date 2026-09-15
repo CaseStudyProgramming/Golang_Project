@@ -86,6 +86,9 @@ func LoadConfig(filePath string) (*Config, error) {
 		var portInt int
 		if _, err := fmt.Sscanf(port, "%d", &portInt); err == nil {
 			cfg.Database.Port = portInt
+		} else {
+			// If port is invalid, use default
+			cfg.Database.Port = 5432
 		}
 	} else if cfg.Database.Port == 0 {
 		cfg.Database.Port = 5432
